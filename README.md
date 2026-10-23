@@ -1,4 +1,3 @@
-
 # FleetSync
 
 Fleet Management System
@@ -21,7 +20,7 @@ transportation and logistics operations.
 
 ## Team
 
-Developed collaboratively by a five-member team.
+Developed collaboratively by a five-member team named as devSync.
 
 ## Development
 
