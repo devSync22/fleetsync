@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FleetSync.Api/FleetSync.Api.csproj" />
+    <Project Path="src/FleetSync.Application/FleetSync.Application.csproj" />
+    <Project Path="src/FleetSync.Domain/FleetSync.Domain.csproj" />
+    <Project Path="src/FleetSync.Infrastructure/FleetSync.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FleetSync.UnitTests/FleetSync.UnitTests.csproj" />
+  </Folder>
+</Solution>

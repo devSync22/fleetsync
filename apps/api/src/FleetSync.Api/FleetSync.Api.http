@@ -1,0 +1,6 @@
+@FleetSync.Api_HostAddress = http://localhost:5215
+
+GET {{FleetSync.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
