@@ -21,7 +21,7 @@ transportation and logistics operations.
 
 ## Team
 
-Developed collaboratively by a five-member team.
+Developed collaboratively by devSync.
 
 ## Development
 
