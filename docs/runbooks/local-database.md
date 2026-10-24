@@ -1,58 +1,66 @@
+## ASP.NET Core Database Configuration
 
-# FleetSync — Local Database Setup
+FleetSync uses Entity Framework Core with the Npgsql PostgreSQL provider.
 
-## Prerequisites
+### Local connection settings
 
-- Docker Desktop or Docker Engine
-- Docker Compose
+- Host: `127.0.0.1`
+- Port: `5432`
+- Database: `fleetsync_dev`
+- Username: `fleetsync`
+- Password: The local PostgreSQL password configured through Docker Compose
 
-## Configuration
+### Configure API User Secrets
 
-1. Open the repository root.
-2. Copy `.env.example` to `.env`.
-3. Set your local `POSTGRES_PASSWORD`.
-4. Do not commit `.env`.
+Initialize User Secrets for `FleetSync.Api` if they are not already enabled.
 
-## Start Database
+Configure the secret key:
 
-```bash
-docker compose up -d postgres
-```
+`ConnectionStrings:FleetSyncDatabase`
 
-## Check Status
+Its value must be a valid PostgreSQL connection string containing the local database credentials.
 
-```bash
-docker compose ps
-```
+Do not store real passwords in tracked application configuration files.
 
-## Connect with psql
+### Run the API
 
-```bash
-docker compose exec postgres psql \
-  -U fleetsync -d fleetsync_dev
-```
+Start PostgreSQL through Docker Compose.
 
-## Stop Database
+Run `FleetSync.Api` in the `Development` environment so that ASP.NET Core loads local User Secrets.
 
-```bash
-docker compose down
-```
+The `/health` endpoint confirms basic application availability. Database connectivity is verified separately.
 
-Data is preserved in a Docker named volume.
+### Notes
 
-## Database Connection Settings
+- Each developer configures their own local secrets.
+- The Docker `.env` file and ASP.NET Core User Secrets must use matching database credentials.
+- Production credentials will be supplied through secure deployment configuration.
+- Database migrations are managed through EF Core tooling.
 
-Host: 127.0.0.1
-Port: 5432
-Database: fleetsync_dev
-Username: fleetsync
-Password: Value configured in local .env
+### API Database Health Checks
 
-## Important Notes
+FleetSync exposes separate liveness and readiness endpoints.
 
-- Each developer has their own local database.
-- Do not commit real credentials.
-- Do not use `docker compose down -v` unless
-  you intentionally want to remove local data.
-- EF Core migrations will be introduced in
-  FMS-002.3.
+| Endpoint | Purpose |
+|---|---|
+| `GET /health` | Basic API liveness |
+| `GET /health/live` | Explicit API liveness |
+| `GET /health/ready` | PostgreSQL database connectivity |
+
+The readiness endpoint uses the Entity Framework Core `FleetSyncDbContext` health check.
+
+When PostgreSQL is available, `/health/ready` returns HTTP 200.
+
+When PostgreSQL cannot be reached, `/health/ready` returns HTTP 503.
+
+To verify recovery during local development:
+
+1. Start the API and PostgreSQL.
+2. Confirm `/health/ready` returns Healthy.
+3. Stop PostgreSQL using `docker compose stop postgres`.
+4. Confirm `/health/ready` returns Unhealthy while `/health/live` remains Healthy.
+5. Restart PostgreSQL and confirm readiness returns Healthy.
+
+These checks validate database connectivity, not application schema or migration state.
+
+Do not expose connection strings, credentials or detailed database errors in public health responses.
