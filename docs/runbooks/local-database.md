@@ -36,3 +36,31 @@ The `/health` endpoint confirms basic application availability. Database connect
 - The Docker `.env` file and ASP.NET Core User Secrets must use matching database credentials.
 - Production credentials will be supplied through secure deployment configuration.
 - Database migrations are managed through EF Core tooling.
+
+### API Database Health Checks
+
+FleetSync exposes separate liveness and readiness endpoints.
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /health` | Basic API liveness |
+| `GET /health/live` | Explicit API liveness |
+| `GET /health/ready` | PostgreSQL database connectivity |
+
+The readiness endpoint uses the Entity Framework Core `FleetSyncDbContext` health check.
+
+When PostgreSQL is available, `/health/ready` returns HTTP 200.
+
+When PostgreSQL cannot be reached, `/health/ready` returns HTTP 503.
+
+To verify recovery during local development:
+
+1. Start the API and PostgreSQL.
+2. Confirm `/health/ready` returns Healthy.
+3. Stop PostgreSQL using `docker compose stop postgres`.
+4. Confirm `/health/ready` returns Unhealthy while `/health/live` remains Healthy.
+5. Restart PostgreSQL and confirm readiness returns Healthy.
+
+These checks validate database connectivity, not application schema or migration state.
+
+Do not expose connection strings, credentials or detailed database errors in public health responses.
