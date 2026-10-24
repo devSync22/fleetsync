@@ -6,6 +6,7 @@
     <Project Path="src/FleetSync.Infrastructure/FleetSync.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/FleetSync.IntegrationTests/FleetSync.IntegrationTests.csproj" />
     <Project Path="tests/FleetSync.UnitTests/FleetSync.UnitTests.csproj" />
   </Folder>
 </Solution>
