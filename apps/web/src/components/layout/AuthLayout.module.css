@@ -1,0 +1,95 @@
+.page {
+  display: flex;
+  min-height: 100svh;
+  background: var(--color-neutral-surface);
+}
+
+.brandPanel {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: 600px;
+  padding: 56px 64px;
+  background: var(--color-text-default);
+  overflow: hidden;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wordmark {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-neutral-surface);
+}
+
+.wordmarkAccent {
+  color: var(--color-brand-green);
+}
+
+/* Equal auto margins centre the pitch in the space below the logo. */
+.pitch {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-block: auto;
+}
+
+.headline {
+  max-width: 472px;
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 44px;
+  letter-spacing: -0.72px;
+  color: var(--color-neutral-surface);
+}
+
+.description {
+  max-width: 440px;
+  font-size: 15px;
+  line-height: 24px;
+  color: var(--color-text-faint);
+}
+
+.highlights {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 16px 0 0;
+  list-style: none;
+}
+
+.highlight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--color-neutral-line);
+}
+
+.formPanel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 24px 16px;
+}
+
+@media (max-width: 1024px) {
+  .brandPanel {
+    width: 440px;
+    padding: 48px 40px;
+  }
+}
+
+@media (max-width: 768px) {
+  .brandPanel {
+    display: none;
+  }
+}
