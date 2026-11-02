@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router'
 import { CoordinatorDashboardPage } from '@/features/coordinator-dashboard/pages/CoordinatorDashboardPage'
+import { SubmittedOrdersPage } from '@/features/orders/pages/SubmittedOrdersPage'
 import { CoordinatorLayout } from './layouts/CoordinatorLayout'
 import { NotFoundPage } from './NotFoundPage'
 
@@ -12,6 +13,7 @@ export const router = createBrowserRouter([
     element: <CoordinatorLayout />,
     children: [
       { index: true, element: <CoordinatorDashboardPage /> },
+      { path: 'orders', element: <SubmittedOrdersPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

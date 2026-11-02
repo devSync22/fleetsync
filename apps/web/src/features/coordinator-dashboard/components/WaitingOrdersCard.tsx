@@ -1,11 +1,11 @@
 import { Package } from 'lucide-react'
 import { Link } from 'react-router'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { ListCell } from '@/components/shared/ListCell'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { Button } from '@/components/ui/button'
 import type { WaitingOrder, WaitingOrderStatus } from '../types'
 import { DashboardCard } from './DashboardCard'
-import { ListCell } from './ListCell'
 
 /** The next step for the coordinator depends on where the order is. */
 const nextAction: Record<

@@ -1,13 +1,13 @@
 import { Clock } from 'lucide-react'
 import { Link } from 'react-router'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { ListCell } from '@/components/shared/ListCell'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { Button } from '@/components/ui/button'
 import { formatLKR } from '@/lib/utils'
 import { formatMinutes, plural } from '../format'
 import type { ExpiringQuotation } from '../types'
 import { DashboardCard } from './DashboardCard'
-import { ListCell } from './ListCell'
 
 /** Under an hour left turns the badge from pending to danger. */
 const URGENT_MINUTES = 60

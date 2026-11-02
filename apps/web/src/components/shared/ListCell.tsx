@@ -8,7 +8,7 @@ type ListCellProps = {
   className?: string
 }
 
-/** Two-line cell used in the dashboard's list rows. */
+/** Two-line cell (value + muted detail) used in list rows and table cells. */
 export function ListCell({ primary, secondary, mono = false, className }: ListCellProps) {
   return (
     <div className={cn('flex shrink-0 flex-col gap-[3px] whitespace-nowrap', className)}>
