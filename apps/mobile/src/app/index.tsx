@@ -1,6 +1,13 @@
 import { Redirect } from 'expo-router';
 
-/** Until sign-in is built (branch mobile-auth), the app opens on the driver tabs. */
+import { useAuth } from '@/contexts/AuthContext';
+
+/** Entry point: sends each user to their own area. The root layout's guards keep them there. */
 export default function Index() {
-  return <Redirect href="/driver/home" />;
+  const { user } = useAuth();
+
+  if (!user) {
+    return <Redirect href="/sign-in" />;
+  }
+  return <Redirect href={user.role === 'driver' ? '/driver/home' : '/mechanic/queue'} />;
 }

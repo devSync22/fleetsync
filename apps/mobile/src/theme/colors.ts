@@ -23,6 +23,11 @@ export const colors = {
   dangerSoft: '#FEE2E2',
 } as const;
 
+/** Colours used only inside the FleetSync logo / wordmark — never as UI colours. */
+export const logoColors = {
+  sync: '#217A3E',
+} as const;
+
 export type ColorToken = keyof typeof colors;
 
 /** The six status tones from the Figma "Status colour map". */

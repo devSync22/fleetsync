@@ -1,19 +1,22 @@
-import { router } from 'expo-router';
 import { User } from 'lucide-react-native';
 
 import { PlaceholderScreen } from '@/components/PlaceholderScreen';
 import { StatusBadge } from '@/components/ui';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function MechanicProfileRoute() {
+  const { user, signOut } = useAuth();
+
   return (
     <PlaceholderScreen
       title="Profile"
-      subtitle="Ishara Bandara · MEC-012"
+      subtitle={user ? `${user.name} · ${user.staffId}` : undefined}
       headerRight={<StatusBadge label="Active" />}
       icon={User}
       emptyTitle="Profile coming soon"
       emptyDescription="Contact details and password settings will be shown here."
-      action={{ label: 'Sign out', variant: 'secondary', onPress: () => router.replace('/sign-in') }}
+      // Signing out changes the route guards, which return to Sign in.
+      action={{ label: 'Sign out', variant: 'secondary', onPress: signOut }}
     />
   );
 }

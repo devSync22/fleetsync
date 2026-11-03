@@ -50,3 +50,24 @@ export function formatDistance(km: number): string {
   const fractionDigits = Number.isInteger(km) ? 0 : 1;
   return `${groupThousands(km, fractionDigits)} km`;
 }
+
+/** Day and month: "17 Oct". */
+export function formatDayMonth(value: DateInput): string {
+  const date = toDate(value);
+  return `${date.getDate()} ${MONTHS[date.getMonth()]}`;
+}
+
+/** Date and time: "17 Oct 2026, 10:12", or "17 Oct, 10:12" without the year. */
+export function formatDateTime(value: DateInput, { withYear = true }: { withYear?: boolean } = {}): string {
+  const date = toDate(value);
+  const year = withYear ? ` ${date.getFullYear()}` : '';
+  return `${formatDayMonth(date)}${year}, ${formatTime(date)}`;
+}
+
+/** File size as shown in upload lists: 655360 → "640 KB", 1153434 → "1.1 MB". */
+export function formatFileSize(bytes: number): string {
+  if (bytes >= 1024 * 1024) {
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+  return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+}

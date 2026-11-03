@@ -17,14 +17,22 @@ export const fonts = {
 
 /** Font sizes used in the Figma mobile frames. */
 export const fontSizes = {
+  /** File-type tile label ("PDF"). */
+  tag: 9,
+  xxs: 10,
   xs: 11,
   sm: 12,
   md: 13,
   base: 14,
+  /** Option card titles ("Driver", "Mechanic"). */
+  option: 15,
   lg: 16,
   xl: 18,
   xxl: 20,
   display: 22,
+  title: 24,
+  headline: 26,
+  hero: 28,
 } as const;
 
 /**
@@ -38,6 +46,29 @@ export const typography = {
     fontSize: fontSizes.display,
     lineHeight: 28,
     letterSpacing: -0.22,
+    color: colors.text,
+  },
+  /** Large page title on auth screens — "Sign in". */
+  hero: {
+    fontFamily: fonts.bold,
+    fontSize: fontSizes.hero,
+    lineHeight: 34,
+    letterSpacing: -0.28,
+    color: colors.text,
+  },
+  /** Centered result title — "Request sent". */
+  headline: {
+    fontFamily: fonts.bold,
+    fontSize: fontSizes.headline,
+    lineHeight: 32,
+    letterSpacing: -0.26,
+    color: colors.text,
+  },
+  /** Title next to a result icon — "Request approved". */
+  title: {
+    fontFamily: fonts.bold,
+    fontSize: fontSizes.title,
+    lineHeight: 30,
     color: colors.text,
   },
   /** Big number on a stat tile — "2 Driver issues". */
@@ -99,6 +130,18 @@ export const typography = {
     fontSize: fontSizes.xs,
     letterSpacing: 0.66,
     textTransform: 'uppercase',
+    color: colors.muted,
+  },
+  /** Inline text link — "Forgot password?", "Sign in". */
+  link: {
+    fontFamily: fonts.semiBold,
+    fontSize: fontSizes.md,
+    color: colors.accent,
+  },
+  /** Smallest metadata — step dates "17 Oct". */
+  tiny: {
+    fontFamily: fonts.regular,
+    fontSize: fontSizes.xxs,
     color: colors.muted,
   },
   /** Tiny field label inside tiles — "Pickup", "Vehicle". */
