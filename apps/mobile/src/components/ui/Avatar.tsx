@@ -8,6 +8,11 @@ type AvatarProps = {
   /** Use when only a first name is known but the design shows two letters (e.g. "KJ"). */
   initials?: string;
   size?: number;
+  /**
+   * accent = the signed-in user (Driver — Home header);
+   * neutral = other people in a list (Trip details → "People on this trip").
+   */
+  tone?: 'accent' | 'neutral';
 };
 
 export function getInitials(name: string): string {
@@ -18,14 +23,17 @@ export function getInitials(name: string): string {
   return (first + last).toUpperCase();
 }
 
-/** Round initials avatar with the accent-soft background (Driver — Home, Mechanic — Queue). */
-export function Avatar({ name, initials, size = sizes.avatar }: AvatarProps) {
+/** Round initials avatar (Driver — Home, Mechanic — Queue, Trip details people list). */
+export function Avatar({ name, initials, size = sizes.avatar, tone = 'accent' }: AvatarProps) {
+  const isNeutral = tone === 'neutral';
+  const textStyle = size < sizes.avatar ? typography.avatarSmall : typography.avatar;
+
   return (
     <View
       accessibilityRole="image"
       accessibilityLabel={name}
-      style={[styles.avatar, { width: size, height: size }]}>
-      <Text style={typography.avatar}>{initials ?? getInitials(name)}</Text>
+      style={[styles.avatar, isNeutral && styles.neutral, { width: size, height: size }]}>
+      <Text style={[textStyle, isNeutral && styles.neutralText]}>{initials ?? getInitials(name)}</Text>
     </View>
   );
 }
@@ -37,5 +45,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
+  },
+  neutral: {
+    backgroundColor: colors.greySoft,
+  },
+  neutralText: {
+    color: colors.muted,
   },
 });

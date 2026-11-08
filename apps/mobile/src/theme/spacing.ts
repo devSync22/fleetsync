@@ -35,6 +35,8 @@ export const sizes = {
   touchTarget: 44,
   /** Avatar / round icon button. */
   avatar: 40,
+  /** Small avatar / round icon button inside cards (call, chat). */
+  iconButton: 36,
   /** Empty-state icon circle. */
   emptyIconCircle: 56,
   /** Bottom tab bar height, excluding the bottom safe area. */

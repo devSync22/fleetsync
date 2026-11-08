@@ -51,6 +51,12 @@ export function formatDistance(km: number): string {
   return `${groupThousands(km, fractionDigits)} km`;
 }
 
+/** Tonnes: 2.1 → "2.1 t", 3.5 → "3.5 t", 4 → "4 t". */
+export function formatWeight(tonnes: number): string {
+  const fractionDigits = Number.isInteger(tonnes) ? 0 : 1;
+  return `${groupThousands(tonnes, fractionDigits)} t`;
+}
+
 /** Day and month: "17 Oct". */
 export function formatDayMonth(value: DateInput): string {
   const date = toDate(value);
