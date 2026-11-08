@@ -3,12 +3,11 @@ import { CircleX, Truck, Wrench } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Button, Checkbox, InfoBanner, ScreenHeader, Select, TextField } from '@/components/ui';
+import { Button, Checkbox, InfoBanner, KeyboardAwareScroll, ScreenHeader, Select, TextField } from '@/components/ui';
 import { colors, sizes, spacing, typography } from '@/theme';
 
 import { AddDocumentButton } from '../components/AddDocumentButton';
 import { DocumentRow } from '../components/DocumentRow';
-import { KeyboardAwareScroll } from '../components/KeyboardAwareScroll';
 import { RoleOption } from '../components/RoleOption';
 import { LICENCE_CLASS_OPTIONS } from '../constants';
 import { useRequestAccountForm } from '../hooks/useRequestAccountForm';

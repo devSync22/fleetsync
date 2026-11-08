@@ -33,6 +33,8 @@ export const fontSizes = {
   title: 24,
   headline: 26,
   hero: 28,
+  /** Big odometer value being entered (Driver — Complete trip). */
+  odometer: 32,
 } as const;
 
 /**
@@ -238,6 +240,43 @@ export const typography = {
     fontFamily: fonts.monoMedium,
     fontSize: fontSizes.lg,
     color: colors.text,
+  },
+  /** Mono plate in a card header — "WP LB-7702" on Complete trip. */
+  monoPlate: {
+    fontFamily: fonts.monoMedium,
+    fontSize: fontSizes.option,
+    color: colors.text,
+  },
+  /** Odometer reading being entered on the keypad — "84,274". */
+  odometer: {
+    fontFamily: fonts.monoMedium,
+    fontSize: fontSizes.odometer,
+    lineHeight: 38,
+    color: colors.text,
+  },
+  /** Unit next to the odometer value — "km". */
+  odometerUnit: {
+    fontFamily: fonts.medium,
+    fontSize: fontSizes.lg,
+    color: colors.muted,
+  },
+  /** Digit on the on-screen number keypad. */
+  keypadKey: {
+    fontFamily: fonts.medium,
+    fontSize: fontSizes.xxl,
+    color: colors.text,
+  },
+  /** Small label on top of a photo — "Photo 1 · 11:14". */
+  photoLabel: {
+    fontFamily: fonts.medium,
+    fontSize: fontSizes.xs,
+    color: colors.text,
+  },
+  /** Small accent action — "Clear", "Add photo". */
+  linkSmall: {
+    fontFamily: fonts.semiBold,
+    fontSize: fontSizes.sm,
+    color: colors.accent,
   },
   /** Mono value typed into a text field. */
   monoInput: {

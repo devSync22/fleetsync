@@ -3,12 +3,11 @@ import { Info, LockKeyhole } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Button, InfoBanner, PasswordRules, PasswordStrengthMeter, TextField } from '@/components/ui';
+import { Button, InfoBanner, KeyboardAwareScroll, PasswordRules, PasswordStrengthMeter, TextField } from '@/components/ui';
 import { colors, sizes, spacing, typography } from '@/theme';
 
 import { AuthIcon } from '../components/AuthIcon';
 import { BackLink } from '../components/BackLink';
-import { KeyboardAwareScroll } from '../components/KeyboardAwareScroll';
 import { useResetPassword } from '../hooks/useResetPassword';
 
 /**

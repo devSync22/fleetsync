@@ -8,17 +8,21 @@ import type { Trip, WeeklyStats } from '../types';
  * work whenever the app is opened: TRP-2208 starts today at 09:30, TRP-2207 in three days at 07:00
  * (Monday 19 Oct → Wed 22 Oct in the frames).
  *
+ * TRP-2208 is In progress by default, as on "Driver — Active trip" and "Driver — Complete trip":
+ * started 09:41 at 84,236 km, with 2 trip notes and 1 reported issue.
+ *
  * Not in the frames (filled in to match): contact phone numbers, and TRP-2207's order ID,
  * addresses, contacts and cargo.
  */
 
 /**
  * Switch to see the other Home / Trip details states in Expo Go:
- * - 'default'      — the frames' data
+ * - 'default'      — the frames' data; TRP-2208 is In progress (Complete trip is available)
+ * - 'notStarted'   — TRP-2208 is still Assigned (Start trip / late-start banner)
  * - 'noTripToday'  — no trip today (empty state); upcoming trips and stats still load
  * - 'error'        — every request fails (error state with Retry)
  */
-export type MockScenario = 'default' | 'noTripToday' | 'error';
+export type MockScenario = 'default' | 'notStarted' | 'noTripToday' | 'error';
 export const MOCK_SCENARIO: MockScenario = 'default';
 
 /** `daysFromToday` days from now at hh:mm local time, as an ISO string. */
@@ -32,6 +36,28 @@ function atDay(now: Date, daysFromToday: number, hours: number, minutes: number)
 const coordinator = { id: 'usr-crd-003', name: 'Nimal Perera', role: 'Coordinator' } as const;
 const mechanic = { id: 'usr-mec-012', name: 'Ishara Bandara', role: 'Mechanic', detail: 'MEC-012' } as const;
 
+/**
+ * Changes made while the app is running (e.g. a trip completed with proof of delivery), applied on top
+ * of the generated trips. In memory only: reloading the app resets the mocks.
+ */
+const tripUpdates = new Map<string, Partial<Trip>>();
+
+export function saveMockTripUpdate(tripId: string, update: Partial<Trip>) {
+  tripUpdates.set(tripId, { ...tripUpdates.get(tripId), ...update });
+}
+
+export function applyMockTripUpdates(trips: Trip[]): Trip[] {
+  return trips.map((trip) => ({ ...trip, ...tripUpdates.get(trip.id) }));
+}
+
+/** TRP-2208's progress so far ("Started 09:41 · 84,236 km"), unless the scenario is 'notStarted'. */
+function todayTripProgress(now: Date): Pick<Trip, 'status' | 'startedAt' | 'startOdometerKm'> {
+  if (MOCK_SCENARIO === 'notStarted') {
+    return { status: 'Assigned' };
+  }
+  return { status: 'In progress', startedAt: atDay(now, 0, 9, 41), startOdometerKm: 84_236 };
+}
+
 /** All trips assigned to the signed-in driver (Kasun, DRV-014). */
 export function createMockTrips(now: Date): Trip[] {
   return [
@@ -39,7 +65,7 @@ export function createMockTrips(now: Date): Trip[] {
       id: 'TRP-2208',
       orderId: 'ORD-1053',
       customerName: 'Colombo Pharma',
-      status: 'Assigned',
+      ...todayTripProgress(now),
       scheduledStart: atDay(now, 0, 9, 30),
       deliverBy: atDay(now, 0, 12, 0),
       distanceKm: 38,
@@ -77,6 +103,8 @@ export function createMockTrips(now: Date): Trip[] {
         mechanic,
         coordinator,
       ],
+      noteCount: 2,
+      issueCount: 1,
     },
     {
       id: 'TRP-2207',
@@ -115,6 +143,8 @@ export function createMockTrips(now: Date): Trip[] {
         mechanic,
         coordinator,
       ],
+      noteCount: 0,
+      issueCount: 0,
     },
   ];
 }

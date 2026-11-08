@@ -2,11 +2,10 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Button, Checkbox, InfoBanner, TextField } from '@/components/ui';
+import { Button, Checkbox, InfoBanner, KeyboardAwareScroll, TextField } from '@/components/ui';
 import { colors, radii, spacing, typography } from '@/theme';
 
 import { BrandHeader } from '../components/BrandHeader';
-import { KeyboardAwareScroll } from '../components/KeyboardAwareScroll';
 import { PASSWORD_UPDATED_NOTICE } from '../hooks/useResetPassword';
 import { useSignInForm } from '../hooks/useSignInForm';
 

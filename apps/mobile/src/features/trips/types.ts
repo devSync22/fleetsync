@@ -74,6 +74,24 @@ export type Trip = {
   cargo: TripCargo;
   coordinatorNote?: TripNote;
   people: TripPerson[];
+  /** ISO date-time the driver started the trip (set by Start trip). */
+  startedAt?: string;
+  /** Odometer reading entered on Start trip, in km. Trip progress uses odometer readings only — no GPS. */
+  startOdometerKm?: number;
+  /** ISO date-time the trip was completed with proof of delivery. */
+  completedAt?: string;
+  /** Odometer reading entered on Complete trip, in km. */
+  endOdometerKm?: number;
+  /** Trip notes the driver added on the way — "Notes 2" on Complete trip. */
+  noteCount: number;
+  /** Vehicle issues the driver reported on this trip — "Issues 1" on Complete trip. */
+  issueCount: number;
+};
+
+/** What the trip records when the driver completes it (sent with the proof of delivery). */
+export type TripCompletion = {
+  completedAt: string;
+  endOdometerKm: number;
 };
 
 /** "This week" tiles on Driver — Home. */

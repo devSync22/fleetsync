@@ -3,13 +3,12 @@ import { Check } from 'lucide-react-native';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Button, EmptyState, InfoBanner, PasswordRules, TextField } from '@/components/ui';
+import { Button, EmptyState, InfoBanner, KeyboardAwareScroll, PasswordRules, TextField } from '@/components/ui';
 import { formatDayMonth } from '@/lib/format';
 import { colors, radii, sizes, spacing, typography } from '@/theme';
 
 import { ApprovalSteps } from '../components/ApprovalSteps';
 import { DetailRow } from '../components/DetailRow';
-import { KeyboardAwareScroll } from '../components/KeyboardAwareScroll';
 import { ROLE_LABELS, STAFF_ID_LABELS } from '../constants';
 import { useAccountApproval } from '../hooks/useAccountApproval';
 

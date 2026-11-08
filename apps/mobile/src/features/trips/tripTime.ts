@@ -31,3 +31,8 @@ export function isLateToStart(trip: Trip, now: Date): boolean {
 export function canStartTrip(trip: Trip, now: Date): boolean {
   return trip.status === 'Assigned' && isScheduledToday(trip, now);
 }
+
+/** The driver can complete (proof of delivery + ending odometer) a trip that is In progress. */
+export function canCompleteTrip(trip: Trip): boolean {
+  return trip.status === 'In progress';
+}

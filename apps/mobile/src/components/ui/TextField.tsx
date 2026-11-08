@@ -14,6 +14,11 @@ type TextFieldProps = Omit<TextInputProps, 'style' | 'placeholderTextColor'> & {
   success?: string;
   /** Use JetBrains Mono for data values (odometer, references, plates). */
   mono?: boolean;
+  /**
+   * Hide the visible label when the screen already shows a section title above the field
+   * (Proof of delivery → "Received by"). The label is still read by screen readers.
+   */
+  hideLabel?: boolean;
 };
 
 /** Label above, field, then helper or validation message below (Style Guide → Form fields). */
@@ -23,6 +28,7 @@ export function TextField({
   error,
   success,
   mono = false,
+  hideLabel = false,
   onFocus,
   onBlur,
   ...inputProps
@@ -35,7 +41,7 @@ export function TextField({
 
   return (
     <View style={styles.container}>
-      <Text style={typography.label}>{label}</Text>
+      {hideLabel ? null : <Text style={typography.label}>{label}</Text>}
       <View
         style={[
           styles.field,
@@ -55,7 +61,11 @@ export function TextField({
             setFocused(false);
             onBlur?.(event);
           }}
-          style={[styles.input, mono ? typography.monoInput : typography.body]}
+          style={[
+            styles.input,
+            mono ? typography.monoInput : typography.body,
+            inputProps.multiline ? styles.multiline : null,
+          ]}
         />
       </View>
       {message ? (
@@ -98,6 +108,10 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.ml,
     // Line height on a single-line TextInput clips text on Android; padding sets the height instead.
     lineHeight: undefined,
+  },
+  multiline: {
+    minHeight: sizes.textArea - 2 * sizes.hairline,
+    textAlignVertical: 'top',
   },
   message: {
     flexDirection: 'row',

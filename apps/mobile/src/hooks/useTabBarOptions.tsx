@@ -15,6 +15,8 @@ export function useTabBarOptions(): BottomTabNavigationOptions {
 
   return {
     headerShown: false,
+    // Android: don't push the tab bar up on top of the keyboard while typing in a form.
+    tabBarHideOnKeyboard: true,
     tabBarActiveTintColor: colors.accent,
     tabBarInactiveTintColor: colors.muted,
     tabBarStyle: {

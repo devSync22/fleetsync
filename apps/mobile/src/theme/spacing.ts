@@ -50,5 +50,17 @@ export const sizes = {
   iconXl: 24,
   /** Border widths. */
   hairline: 1,
+  /** Selected choice chip, dashed "Add photo" tile. */
+  selectedBorder: 1.5,
   focusBorder: 2,
+  /** Delivery photo tile (Driver — Proof of delivery). */
+  photoTile: 112,
+  /** Receiver signature pad height. */
+  signaturePad: 132,
+  /** Pen width inside the signature pad. */
+  signatureStroke: 2.5,
+  /** Minimum height of a multi-line text field (notes). */
+  textArea: 88,
+  /** Text cursor next to the big odometer value. */
+  odometerCursor: 30,
 } as const;

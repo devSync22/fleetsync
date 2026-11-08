@@ -2,24 +2,29 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { CircleX, SearchX } from 'lucide-react-native';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
-import { EmptyState, ScreenHeader, StatusBadge } from '@/components/ui';
+import { ActionBar, EmptyState, InfoBanner, ScreenHeader, StatusBadge } from '@/components/ui';
 import { formatDate, formatDistance, formatTime } from '@/lib/format';
 import { colors, spacing } from '@/theme';
 
 import { CargoCard } from '../components/CargoCard';
 import { PeopleCard } from '../components/PeopleCard';
 import { RouteCard } from '../components/RouteCard';
-import { TripActionBar } from '../components/TripActionBar';
 import { TripDetailsSkeleton } from '../components/TripDetailsSkeleton';
 import { useTrip } from '../hooks/useTrip';
-import { tripStartHref } from '../routes';
-import { canStartTrip, isSameDay } from '../tripTime';
+import { proofOfDeliveryHref, tripStartHref } from '../routes';
+import { canCompleteTrip, canStartTrip, isSameDay } from '../tripTime';
 import type { Trip } from '../types';
 
 /** "Today · 09:30 – 12:00 · 38 km", or "Wed 22 Oct · 07:00 – 10:30 · 94 km" for a later day. */
 function tripSubtitle(trip: Trip, now: Date) {
   const day = isSameDay(trip.scheduledStart, now) ? 'Today' : formatDate(trip.scheduledStart, 'short');
   return `${day} · ${formatTime(trip.scheduledStart)} – ${formatTime(trip.deliverBy)} · ${formatDistance(trip.distanceKm)}`;
+}
+
+/** "Delivered at 11:22 · ending odometer 84,274 km". */
+function completedMessage(completedAt: string, endOdometerKm: number | undefined) {
+  const odometer = endOdometerKm === undefined ? '' : ` · ending odometer ${formatDistance(endOdometerKm)}`;
+  return `Delivered at ${formatTime(completedAt)}${odometer}. The coordinator and the customer can see it.`;
 }
 
 /** Driver — Trip details (Figma 169:6500). Opened from Home: "View trip details" or an upcoming trip. */
@@ -57,6 +62,9 @@ export function TripDetailsScreen() {
 
   const { trip, checkedAt } = state;
   const showStart = canStartTrip(trip, checkedAt);
+  // Temporary entry point (KAN-316): Complete trip lives on "Driver — Active trip" in Figma, which is
+  // built in the trip-flow branch. Until then, an In-progress trip offers it here.
+  const showComplete = canCompleteTrip(trip);
 
   return (
     <View style={styles.screen}>
@@ -67,11 +75,31 @@ export function TripDetailsScreen() {
         right={<StatusBadge label={trip.status} />}
       />
       <ScrollView contentContainerStyle={styles.body}>
+        {trip.status === 'Completed' && trip.completedAt ? (
+          <InfoBanner
+            tone="success"
+            title="Trip completed"
+            message={completedMessage(trip.completedAt, trip.endOdometerKm)}
+          />
+        ) : null}
         <RouteCard trip={trip} />
         <CargoCard trip={trip} />
         <PeopleCard trip={trip} />
       </ScrollView>
-      {showStart ? <TripActionBar onStart={() => router.push(tripStartHref(trip.id))} /> : null}
+      {showStart ? (
+        <ActionBar
+          label="Start trip"
+          hint="You will enter the starting odometer reading next."
+          onPress={() => router.push(tripStartHref(trip.id))}
+        />
+      ) : null}
+      {showComplete ? (
+        <ActionBar
+          label="Complete trip"
+          hint="Tap when the cargo is delivered. You will add proof of delivery and the ending odometer."
+          onPress={() => router.push(proofOfDeliveryHref(trip.id))}
+        />
+      ) : null}
     </View>
   );
 }
