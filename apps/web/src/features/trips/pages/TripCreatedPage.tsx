@@ -7,11 +7,11 @@ import { StatusBadge } from '@/components/shared/StatusBadge'
 import { TableSkeleton } from '@/components/shared/TableSkeleton'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Breadcrumbs } from '../components/Breadcrumbs'
-import { DriverNotificationPreview } from '../components/DriverNotificationPreview'
-import { KeyValueRow } from '../components/KeyValueRow'
-import { NotificationsTable } from '../components/NotificationsTable'
-import { ResultHeader } from '../components/ResultHeader'
+import { Breadcrumbs } from '@/components/shared/Breadcrumbs'
+import { NotificationPreview } from '@/components/shared/NotificationPreview'
+import { KeyValueRow } from '@/components/shared/KeyValueRow'
+import { NotificationsTable } from '@/components/shared/NotificationsTable'
+import { ResultHeader } from '@/components/shared/ResultHeader'
 import { useTripCreation } from '../hooks/useTripCreation'
 
 /** "Trip assigned" (130:4437): shown right after Assign & create trip. */
@@ -84,7 +84,7 @@ export function TripCreatedPage() {
                 notifications={state.data.notifications}
                 footnote="If a notification is not opened 2 hours before the start time, it appears on your dashboard."
               />
-              <DriverNotificationPreview
+              <NotificationPreview audience="driver"
                 title={state.data.driverPreview.title}
                 body={state.data.driverPreview.body}
                 effects={[

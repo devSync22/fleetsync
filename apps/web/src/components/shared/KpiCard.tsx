@@ -1,10 +1,11 @@
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-export type KpiTone = 'neutral' | 'info' | 'success' | 'pending' | 'danger'
+export type KpiTone = 'neutral' | 'accent' | 'info' | 'success' | 'pending' | 'danger'
 
 const chipClasses: Record<KpiTone, string> = {
   neutral: 'bg-secondary text-foreground',
+  accent: 'bg-brand-soft text-brand',
   info: 'bg-info-soft text-info',
   success: 'bg-success-soft text-success',
   pending: 'bg-pending-soft text-pending',

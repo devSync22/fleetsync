@@ -1,16 +1,19 @@
 import { ChevronDown } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 type FilterSelectProps<T extends string> = {
   label: string
   value: T
   options: { id: T; label: string }[]
   onChange: (value: T) => void
+  /** Width override, e.g. "w-[170px]" (default 230px). */
+  className?: string
 }
 
-/** Style Guide Select (native under the hood) used for sorting and filtering card lists. */
-export function FilterSelect<T extends string>({ label, value, options, onChange }: FilterSelectProps<T>) {
+/** Style Guide Select (native under the hood) used for sorting and filtering lists. */
+export function FilterSelect<T extends string>({ label, value, options, onChange, className }: FilterSelectProps<T>) {
   return (
-    <label className="relative flex w-[230px] shrink-0 items-center">
+    <label className={cn('relative flex w-[230px] shrink-0 items-center', className)}>
       <span className="sr-only">{label}</span>
       <select
         value={value}

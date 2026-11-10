@@ -5,7 +5,7 @@ import { SectionCard } from '@/components/shared/SectionCard'
 import { StatusTabs } from '@/components/shared/StatusTabs'
 import { parseTripTab, sortTrips, tripSortOptions, tripTabs, type TripSort } from '../tripTabs'
 import type { TripListItem, TripStatus } from '../types'
-import { FilterSelect } from './FilterSelect'
+import { FilterSelect } from '@/components/shared/FilterSelect'
 import { TripsTable } from './TripsTable'
 
 export function AllTripsCard({ trips }: { trips: TripListItem[] }) {

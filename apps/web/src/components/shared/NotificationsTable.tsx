@@ -4,7 +4,17 @@ import { InitialsAvatar } from '@/components/shared/InitialsAvatar'
 import { SectionCard } from '@/components/shared/SectionCard'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { Button } from '@/components/ui/button'
-import type { SentNotification } from '../types'
+
+export type SentNotification = {
+  name: string
+  initials: string
+  /** "Driver · DRV-018", "Customer". */
+  role: string
+  /** "Driver app", "Email", "Customer account". */
+  sentTo: string
+  sentAt: string
+  status: 'opened' | 'not-opened' | 'delivered'
+}
 
 type NotificationsTableProps = {
   title: string
@@ -15,7 +25,7 @@ type NotificationsTableProps = {
 
 const headCell = 'px-4 py-2.5 text-xs font-medium text-muted-foreground'
 
-/** Who was told about the trip, where, when, and whether they opened it. */
+/** Who was told about a trip or quotation, where, when, and whether they opened it. */
 export function NotificationsTable({ title, subtitle, notifications, footnote }: NotificationsTableProps) {
   return (
     <SectionCard title={title} subtitle={subtitle}>
@@ -32,7 +42,7 @@ export function NotificationsTable({ title, subtitle, notifications, footnote }:
           </thead>
           <tbody>
             {notifications.map((n) => (
-              <tr key={n.name} className="border-b">
+              <tr key={`${n.name}-${n.sentTo}`} className="border-b">
                 <td className="py-3 pr-4 pl-5">
                   <div className="flex items-center gap-2.5">
                     <InitialsAvatar initials={n.initials} />

@@ -1,39 +1,39 @@
-export type VehicleStatus = 'available' | 'on-trip' | 'assigned' | 'in-maintenance'
-export type DriverStatus = 'available' | 'on-trip' | 'assigned' | 'off-duty'
-export type MechanicStatus = 'available' | 'off-duty'
+/** Times are "HH:MM" on the selected day. */
+export interface Booking {
+  kind: 'trip' | 'service'
+  /** Trip ID for trips, "Service" for maintenance. */
+  label: string
+  start: string
+  end: string
+}
 
-export interface Vehicle {
+export interface ScheduledVehicle {
   plate: string
-  type: string
-  capacityKg: number
-  odometerKm: number
-  status: VehicleStatus
-  /** The assigned or in-progress trip using this vehicle. */
-  tripId: string | null
-  /** Maintenance reason, for vehicles in maintenance. */
-  note: string | null
+  model: string
+  capacityTonnes: number
+  bookings: Booking[]
 }
 
-export interface Driver {
+export interface ScheduledPerson {
   name: string
-  licence: string
-  status: DriverStatus
-  tripId: string | null
+  initials: string
+  /** "Heavy · DRV-022", "Heavy vehicle · Kurunegala". */
+  detail: string
+  bookings: { start: string; end: string }[]
 }
 
-export interface Mechanic {
-  name: string
-  speciality: string
-  status: MechanicStatus
-  /** Assigned or in-progress trips this mechanic is matched to. */
-  activeTripCount: number
+export interface DaySchedule {
+  date: string
+  vehicles: ScheduledVehicle[]
+  drivers: ScheduledPerson[]
+  mechanics: ScheduledPerson[]
 }
 
-export interface Availability {
-  vehicles: Vehicle[]
-  drivers: Driver[]
-  mechanics: Mechanic[]
-}
+export type VehicleWindowStatus = 'free' | 'busy' | 'maintenance'
 
-/** Tabs of the Availability page; also the `?resource=` URL value. */
-export type ResourceKind = keyof Availability
+export interface TimeWindow {
+  id: string
+  label: string
+  start: string
+  end: string
+}

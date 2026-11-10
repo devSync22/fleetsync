@@ -1,6 +1,6 @@
 import { SectionCard } from '@/components/shared/SectionCard'
 import type { TripDetail } from '../types'
-import { KeyValueRow } from './KeyValueRow'
+import { KeyValueRow } from '@/components/shared/KeyValueRow'
 
 const km = (value: number) => `${value.toLocaleString('en-LK')} km`
 

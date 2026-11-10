@@ -8,11 +8,11 @@ import { TableSkeleton } from '@/components/shared/TableSkeleton'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatLKR } from '@/lib/utils'
-import { Breadcrumbs } from '../components/Breadcrumbs'
-import { DriverNotificationPreview } from '../components/DriverNotificationPreview'
-import { KeyValueRow } from '../components/KeyValueRow'
-import { NotificationsTable } from '../components/NotificationsTable'
-import { ResultHeader } from '../components/ResultHeader'
+import { Breadcrumbs } from '@/components/shared/Breadcrumbs'
+import { NotificationPreview } from '@/components/shared/NotificationPreview'
+import { KeyValueRow } from '@/components/shared/KeyValueRow'
+import { NotificationsTable } from '@/components/shared/NotificationsTable'
+import { ResultHeader } from '@/components/shared/ResultHeader'
 import { useTripCancellation } from '../hooks/useTripCancellation'
 
 /** "Trip cancelled" (405:8350): who was notified and what was freed. */
@@ -87,7 +87,7 @@ export function TripCancelledPage() {
                 notifications={state.data.notifications}
                 footnote="The trip moves to the Cancelled tab. The driver’s app stops the trip and removes it from their list."
               />
-              <DriverNotificationPreview
+              <NotificationPreview audience="driver"
                 title={state.data.driverPreview.title}
                 body={state.data.driverPreview.body}
                 effects={[

@@ -2,7 +2,7 @@ import { SectionCard } from '@/components/shared/SectionCard'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { formatLKR } from '@/lib/utils'
 import type { TripDetail } from '../types'
-import { KeyValueRow } from './KeyValueRow'
+import { KeyValueRow } from '@/components/shared/KeyValueRow'
 
 export function OrderCustomerCard({ trip }: { trip: TripDetail }) {
   return (

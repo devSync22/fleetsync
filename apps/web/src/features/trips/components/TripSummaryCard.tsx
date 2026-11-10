@@ -4,7 +4,7 @@ import { SectionCard } from '@/components/shared/SectionCard'
 import { Button } from '@/components/ui/button'
 import type { ApiError } from '@/services/apiClient'
 import type { DriverCandidate, MechanicCandidate, ReadyOrder, VehicleCandidate } from '../types'
-import { KeyValueRow } from './KeyValueRow'
+import { KeyValueRow } from '@/components/shared/KeyValueRow'
 
 type TripSummaryCardProps = {
   tripId: string

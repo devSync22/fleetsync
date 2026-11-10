@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils'
 import { statusMeta, type DomainStatus, type StatusTone } from './statusTones'
 
 const toneClasses: Record<StatusTone, string> = {
-  neutral: 'bg-secondary text-muted-foreground',
+  neutral: 'bg-secondary text-foreground',
   pending: 'bg-pending-soft text-pending',
   accent: 'bg-brand-soft text-brand',
   info: 'bg-info-soft text-info',

@@ -2,17 +2,24 @@ import { Check } from 'lucide-react'
 import logoIcon from '@/assets/logo-icon.svg'
 import { SectionCard } from '@/components/shared/SectionCard'
 
-type DriverNotificationPreviewProps = {
+type NotificationPreviewProps = {
+  /** Who receives it, e.g. "driver" → "What the driver sees". */
+  audience: 'driver' | 'customer'
   title: string
   body: string
-  /** What happens on the driver's side, shown as a checklist next to the preview. */
+  /** What happens on their side, shown as a checklist next to the preview. */
   effects: string[]
 }
 
-/** "What the driver sees": a mock push notification as it appears on the Driver app. */
-export function DriverNotificationPreview({ title, body, effects }: DriverNotificationPreviewProps) {
+const subtitles = {
+  driver: 'Preview of the push notification on the Driver app',
+  customer: 'Preview of the notification in the customer’s account',
+}
+
+/** "What the driver / customer sees": a mock FleetSync notification next to what it does. */
+export function NotificationPreview({ audience, title, body, effects }: NotificationPreviewProps) {
   return (
-    <SectionCard title="What the driver sees" subtitle="Preview of the push notification on the Driver app">
+    <SectionCard title={`What the ${audience} sees`} subtitle={subtitles[audience]}>
       <div className="flex flex-wrap items-center gap-6 p-5">
         <div className="w-full max-w-[380px] rounded-[14px] bg-secondary p-5">
           <div className="flex gap-3 rounded-[10px] border bg-card p-3 shadow-sm">

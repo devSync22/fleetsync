@@ -1,64 +1,52 @@
-import { Archive, Clock, Package, Truck, type LucideIcon } from 'lucide-react'
+import { Archive, Clock, FilePen, Package, Truck, type LucideIcon } from 'lucide-react'
 import type { OrderStatus, OrderTab, SubmittedOrder } from './types'
+
+const closedStatuses: OrderStatus[] = ['completed', 'trip-cancelled', 'quotation-expired', 'declined']
 
 type OrderTabConfig = {
   id: OrderTab
   label: string
-  /** Statuses shown in this tab; null shows every order. */
-  statuses: OrderStatus[] | null
+  matches: (order: SubmittedOrder) => boolean
+  /** Shown after "Showing x of y" in the table toolbar. */
+  hint: string | null
   empty: { icon: LucideIcon; title: string; description: string }
 }
 
 export const orderTabs: OrderTabConfig[] = [
   {
-    id: 'all',
-    label: 'All',
-    statuses: null,
-    empty: {
-      icon: Package,
-      title: 'No submitted orders',
-      description: 'Orders customers submit will appear here for you to review.',
-    },
+    id: 'all-open',
+    label: 'All open',
+    matches: (o) => !closedStatuses.includes(o.status),
+    hint: null,
+    empty: { icon: Package, title: 'No open orders', description: 'Orders customers submit will appear here.' },
   },
   {
     id: 'needs-quotation',
     label: 'Needs quotation',
-    statuses: ['pending-review'],
-    empty: {
-      icon: Package,
-      title: 'No orders need a quotation',
-      description: 'New orders will appear here for you to review and quote.',
-    },
+    matches: (o) => o.status === 'pending-review',
+    hint: 'waiting for a quotation',
+    empty: { icon: FilePen, title: 'No orders need a quotation', description: 'New orders will appear here for you to review and quote.' },
   },
   {
     id: 'quoted',
     label: 'Quoted',
-    statuses: ['quoted', 'awaiting-payment', 'payment-failed'],
-    empty: {
-      icon: Clock,
-      title: 'No quotations waiting',
-      description: 'Quoted orders stay here until the customer pays or the quotation expires.',
-    },
+    matches: (o) => o.status === 'quoted',
+    hint: 'waiting for the customer',
+    empty: { icon: Clock, title: 'No quotations waiting', description: 'Quoted orders stay here until the customer accepts or declines.' },
   },
   {
     id: 'ready-for-trip',
     label: 'Ready for a trip',
-    statuses: ['paid'],
-    empty: {
-      icon: Truck,
-      title: 'No paid orders waiting',
-      description: 'Orders appear here once the customer has paid, ready for you to create a trip.',
-    },
+    matches: (o) => o.status === 'accepted' && o.payment === 'paid',
+    hint: 'accepted and paid',
+    empty: { icon: Truck, title: 'No orders ready for a trip', description: 'Orders appear here once the customer has accepted and paid.' },
   },
   {
     id: 'closed',
     label: 'Closed',
-    statuses: ['assigned', 'completed', 'cancelled'],
-    empty: {
-      icon: Archive,
-      title: 'No closed orders yet',
-      description: 'Orders move here once a trip is created or the order is cancelled.',
-    },
+    matches: (o) => closedStatuses.includes(o.status),
+    hint: null,
+    empty: { icon: Archive, title: 'No closed orders', description: 'Delivered, declined and expired orders move here.' },
   },
 ]
 
@@ -66,16 +54,8 @@ export function parseOrderTab(value: string | null): OrderTabConfig {
   return orderTabs.find((tab) => tab.id === value) ?? orderTabs[0]
 }
 
-export function ordersInTab(orders: SubmittedOrder[], tab: OrderTabConfig) {
-  const { statuses } = tab
-  return statuses ? orders.filter((order) => statuses.includes(order.status)) : orders
-}
-
-/** Matches order ID, customer or route, ignoring case. */
-export function searchOrders(orders: SubmittedOrder[], query: string) {
+/** Matches order ID, customer or either place on the route, ignoring case. */
+export function matchesSearch(order: SubmittedOrder, query: string) {
   const needle = query.trim().toLowerCase()
-  if (!needle) return orders
-  return orders.filter((order) =>
-    [order.orderId, order.customerName, order.route].some((field) => field.toLowerCase().includes(needle)),
-  )
+  return !needle || [order.orderId, order.customerName, order.route].some((f) => f.toLowerCase().includes(needle))
 }
