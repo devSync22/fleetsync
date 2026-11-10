@@ -1,0 +1,55 @@
+import type { AppNotification } from '../types'
+
+/** Copied from "Coordinator — Notifications" (457:11263). */
+export const notificationsMock: AppNotification[] = [
+  {
+    id: 'n1',
+    kind: 'new-order',
+    title: 'New order to quote',
+    message: 'ORD-1054 from Ceylon Agro Ltd needs a fare quotation.',
+    timeLabel: '10:42',
+    group: 'today',
+    unread: true,
+    to: '/coordinator/orders/ORD-1054',
+  },
+  {
+    id: 'n2',
+    kind: 'payment',
+    title: 'Quotation accepted and paid',
+    message: 'Lanka Tiles PLC paid LKR 31,410 for ORD-1049. Create the trip.',
+    timeLabel: '10:20',
+    group: 'today',
+    unread: true,
+    to: '/coordinator/trips/new',
+  },
+  {
+    id: 'n3',
+    kind: 'vehicle-issue',
+    title: 'Vehicle issue reported',
+    message: 'WP LB-7702 · tyres · driver can continue. Ishara Bandara is notified.',
+    timeLabel: '10:15',
+    group: 'today',
+    unread: true,
+    to: '/coordinator/availability',
+  },
+  {
+    id: 'n4',
+    kind: 'trip-update',
+    title: 'Cargo picked up',
+    message: 'TRP-2208 · Kasun Jayasinghe loaded 40 cool boxes.',
+    timeLabel: '09:56',
+    group: 'today',
+    unread: false,
+    to: '/coordinator/trips/TRP-2208',
+  },
+  {
+    id: 'n5',
+    kind: 'mail',
+    title: 'New mail from Ayesha Silva',
+    message: 'Fuel card policy from 1 November.',
+    timeLabel: 'Yesterday, 17:05',
+    group: 'earlier',
+    unread: false,
+    to: '/coordinator/mail?folder=inbox&id=m1',
+  },
+]

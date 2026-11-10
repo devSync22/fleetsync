@@ -6,6 +6,7 @@ import { MailPage } from '@/features/mail/pages/MailPage'
 import { OrderReviewPage } from '@/features/orders/pages/OrderReviewPage'
 import { QuotationSentPage } from '@/features/orders/pages/QuotationSentPage'
 import { SubmittedOrdersPage } from '@/features/orders/pages/SubmittedOrdersPage'
+import { ProfileSettingsPage } from '@/features/profile/pages/ProfileSettingsPage'
 import { ReportsPage } from '@/features/reports/pages/ReportsPage'
 import { CreateTripPage } from '@/features/trips/pages/CreateTripPage'
 import { TripCancelledPage } from '@/features/trips/pages/TripCancelledPage'
@@ -37,6 +38,8 @@ export const router = createBrowserRouter([
       { path: 'chat', element: <ChatPage /> },
       { path: 'mail', element: <MailPage /> },
       { path: 'reports', element: <ReportsPage /> },
+      // One route for both tabs so switching between them keeps the loaded profile.
+      { path: 'profile/security?', element: <ProfileSettingsPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

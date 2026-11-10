@@ -11,6 +11,7 @@ import {
 import { Outlet } from 'react-router'
 import { AppSidebar, type SidebarNavItem } from '@/components/shared/AppSidebar'
 import { TopBar } from '@/components/shared/TopBar'
+import { NotificationsBell } from '@/features/notifications/components/NotificationsBell'
 
 const navItems: SidebarNavItem[] = [
   { label: 'Dashboard', to: '/coordinator', icon: LayoutGrid, end: true },
@@ -44,7 +45,7 @@ export function CoordinatorLayout() {
           userRole={currentUser.role}
           initials={currentUser.initials}
           searchPlaceholder="Search orders, trips, vehicles…"
-          hasUnreadNotifications
+          notifications={<NotificationsBell />}
         />
         <main className="flex-1 px-8 pt-7 pb-10">
           <Outlet />

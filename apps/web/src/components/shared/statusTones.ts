@@ -32,6 +32,7 @@ export const statusMeta = {
   'in-progress': { label: 'In progress', tone: 'info' },
   'on-trip': { label: 'On trip', tone: 'info' },
   delivered: { label: 'Delivered', tone: 'info' },
+  'password-changed': { label: 'Password changed', tone: 'info' },
   accepted: { label: 'Accepted', tone: 'info' },
   // success — active / completed / paid
   active: { label: 'Active', tone: 'success' },
@@ -41,12 +42,17 @@ export const statusMeta = {
   paid: { label: 'Paid', tone: 'success' },
   opened: { label: 'Opened', tone: 'success' },
   'trip-created': { label: 'Trip created', tone: 'success' },
+  approved: { label: 'Approved', tone: 'success' },
+  'signed-in': { label: 'Success', tone: 'success' },
+  'this-device': { label: 'This device', tone: 'success' },
   // danger — overdue / failed / suspended / cancelled
   overdue: { label: 'Overdue', tone: 'danger' },
   'payment-failed': { label: 'Payment failed', tone: 'danger' },
   suspended: { label: 'Suspended', tone: 'danger' },
   cancelled: { label: 'Cancelled', tone: 'danger' },
   'trip-cancelled': { label: 'Trip cancelled', tone: 'danger' },
+  rejected: { label: 'Rejected', tone: 'danger' },
+  'wrong-password': { label: 'Wrong password', tone: 'danger' },
 } as const satisfies Record<string, { label: string; tone: StatusTone }>
 
 export type DomainStatus = keyof typeof statusMeta
