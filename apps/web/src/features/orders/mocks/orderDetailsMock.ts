@@ -1,11 +1,11 @@
-import type { OrderDetail } from '../types'
+import type { OrderFacts } from '../types'
 
 /**
  * From "Review order / Fare estimation" (123:4232, ORD-1049 palletised) and its cargo variants
  * (392:13377 ORD-1053 bags, 392:13135 ORD-1052 cartons, 392:13619 ORD-1054 loose items).
  * ORD-1048 and ORD-1047 have no frame; their contacts, addresses and fares are placeholders.
  */
-export const orderDetailsMock: OrderDetail[] = [
+export const orderDetailsMock: OrderFacts[] = [
   {
     orderId: 'ORD-1049',
     status: 'pending-review',

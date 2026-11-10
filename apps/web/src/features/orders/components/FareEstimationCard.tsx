@@ -59,7 +59,7 @@ export function FareEstimationCard({ order }: { order: OrderDetail }) {
 
   async function sendIt() {
     const result = await send.run(order.orderId, input)
-    if (result) navigate(`/coordinator/orders/${order.orderId}/quotation-sent`)
+    if (result) navigate(`/coordinator/orders/${order.orderId}/quotation-sent`, { state: { justSent: true } })
   }
 
   const error = send.error ?? save.error

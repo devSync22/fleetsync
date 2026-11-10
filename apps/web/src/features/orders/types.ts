@@ -85,7 +85,29 @@ export interface OrderDetail {
   }
   quotation: QuotationInfo | null
   tripId: string | null
+  /** What has happened to the order so far, oldest first. */
+  history: OrderEvent[]
+  /** "Delivered 19 Oct, 11:40", "Declined 12 Oct" — set once the order is closed. */
+  closedNote: string | null
 }
+
+/** The order facts the mocks author; the service adds the history. */
+export type OrderFacts = Omit<OrderDetail, 'history' | 'closedNote'>
+
+export interface OrderEvent {
+  id: string
+  title: string
+  detail?: string
+  when: string
+  tone: 'neutral' | 'accent' | 'info' | 'success' | 'pending' | 'danger'
+}
+
+/** How the customer has answered a quotation. */
+export type QuotationResponse =
+  | { status: 'awaiting'; note: string }
+  | { status: 'accepted'; note: string; paid: boolean }
+  | { status: 'declined'; note: string; reason: string }
+  | { status: 'expired'; note: string }
 
 export interface QuotationInput {
   vehicleClass: VehicleClass
@@ -106,7 +128,9 @@ export interface SentQuotation {
   total: number
   validUntilLabel: string
   sentBy: string
+  /** Time only ("11:20") for today, or "17 Oct, 15:10". */
   sentAt: string
   message: string
   delivery: { email: 'delivered' | 'not-opened'; account: 'opened' | 'not-opened' }
+  response: QuotationResponse
 }
