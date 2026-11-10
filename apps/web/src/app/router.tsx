@@ -2,9 +2,11 @@ import { createBrowserRouter, Navigate } from 'react-router'
 import { AvailabilityPage } from '@/features/availability/pages/AvailabilityPage'
 import { ChatPage } from '@/features/chat/pages/ChatPage'
 import { CoordinatorDashboardPage } from '@/features/coordinator-dashboard/pages/CoordinatorDashboardPage'
+import { MailPage } from '@/features/mail/pages/MailPage'
 import { OrderReviewPage } from '@/features/orders/pages/OrderReviewPage'
 import { QuotationSentPage } from '@/features/orders/pages/QuotationSentPage'
 import { SubmittedOrdersPage } from '@/features/orders/pages/SubmittedOrdersPage'
+import { ReportsPage } from '@/features/reports/pages/ReportsPage'
 import { CreateTripPage } from '@/features/trips/pages/CreateTripPage'
 import { TripCancelledPage } from '@/features/trips/pages/TripCancelledPage'
 import { TripCreatedPage } from '@/features/trips/pages/TripCreatedPage'
@@ -33,6 +35,8 @@ export const router = createBrowserRouter([
       { path: 'trips/:tripId/created', element: <TripCreatedPage /> },
       { path: 'availability', element: <AvailabilityPage /> },
       { path: 'chat', element: <ChatPage /> },
+      { path: 'mail', element: <MailPage /> },
+      { path: 'reports', element: <ReportsPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },
