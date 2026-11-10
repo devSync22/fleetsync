@@ -7,14 +7,14 @@ import { Button } from '@/components/ui/button'
 import { formatLKR } from '@/lib/utils'
 import { formatMinutes, plural } from '../format'
 import type { ExpiringQuotation } from '../types'
-import { DashboardCard } from './DashboardCard'
+import { SectionCard } from '@/components/shared/SectionCard'
 
 /** Under an hour left turns the badge from pending to danger. */
 const URGENT_MINUTES = 60
 
 export function ExpiringQuotationsCard({ quotations }: { quotations: ExpiringQuotation[] }) {
   return (
-    <DashboardCard
+    <SectionCard
       title="Quotations expiring soon"
       subtitle="The customer has not answered · shown 2 hours before the quotation expires"
       link={{ label: 'All quoted orders', to: '/coordinator/orders?status=quoted' }}
@@ -59,6 +59,6 @@ export function ExpiringQuotationsCard({ quotations }: { quotations: ExpiringQuo
           ))}
         </ul>
       )}
-    </DashboardCard>
+    </SectionCard>
   )
 }

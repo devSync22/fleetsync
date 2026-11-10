@@ -5,7 +5,7 @@ import { ListCell } from '@/components/shared/ListCell'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { Button } from '@/components/ui/button'
 import type { WaitingOrder, WaitingOrderStatus } from '../types'
-import { DashboardCard } from './DashboardCard'
+import { SectionCard } from '@/components/shared/SectionCard'
 
 /** The next step for the coordinator depends on where the order is. */
 const nextAction: Record<
@@ -19,7 +19,7 @@ const nextAction: Record<
 
 export function WaitingOrdersCard({ orders }: { orders: WaitingOrder[] }) {
   return (
-    <DashboardCard
+    <SectionCard
       title="Orders waiting for you"
       subtitle="Newest first"
       link={{ label: 'All orders', to: '/coordinator/orders' }}
@@ -55,6 +55,6 @@ export function WaitingOrdersCard({ orders }: { orders: WaitingOrder[] }) {
           })}
         </ul>
       )}
-    </DashboardCard>
+    </SectionCard>
   )
 }

@@ -4,11 +4,11 @@ import { useSearchParams } from 'react-router'
 import { Banner } from '@/components/shared/Banner'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { PageHeader } from '@/components/shared/PageHeader'
+import { SearchInput } from '@/components/shared/SearchInput'
+import { StatusTabs } from '@/components/shared/StatusTabs'
 import { TableSkeleton } from '@/components/shared/TableSkeleton'
 import { Button } from '@/components/ui/button'
-import { OrderSearch } from '../components/OrderSearch'
 import { OrdersTable } from '../components/OrdersTable'
-import { OrderTabs } from '../components/OrderTabs'
 import { useSubmittedOrders } from '../hooks/useSubmittedOrders'
 import { orderTabs, ordersInTab, parseOrderTab, searchOrders } from '../orderTabs'
 import type { OrderTab } from '../types'
@@ -29,9 +29,11 @@ export function SubmittedOrdersPage() {
   }
 
   const orders = state.status === 'success' ? state.data : null
-  const counts = orders
-    ? (Object.fromEntries(orderTabs.map((tab) => [tab.id, ordersInTab(orders, tab).length])) as Record<OrderTab, number>)
-    : null
+  const tabs = orderTabs.map((tab) => ({
+    id: tab.id,
+    label: tab.label,
+    count: orders ? ordersInTab(orders, tab).length : undefined,
+  }))
   const visibleOrders = orders ? searchOrders(ordersInTab(orders, activeTab), query) : []
 
   return (
@@ -39,13 +41,18 @@ export function SubmittedOrdersPage() {
       <PageHeader
         title="Submitted orders"
         description="Review new orders, send fare quotations and create a trip once the customer has paid."
-        actions={<OrderSearch value={query} onChange={setQuery} />}
+        actions={
+          <SearchInput
+            value={query}
+            onChange={setQuery}
+            placeholder="Search order ID, customer or route…"
+            label="Search orders"
+          />
+        }
       />
 
       <div className="flex flex-col gap-4">
-        <div className="border-b">
-          <OrderTabs activeTab={activeTab.id} counts={counts} onChange={selectTab} />
-        </div>
+        <StatusTabs label="Order status" tabs={tabs} activeId={activeTab.id} onChange={selectTab} />
 
         {state.status === 'loading' && (
           <div aria-busy="true" aria-label="Loading orders">

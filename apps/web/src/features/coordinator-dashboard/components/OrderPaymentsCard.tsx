@@ -4,11 +4,11 @@ import { StatusBadge } from '@/components/shared/StatusBadge'
 import { formatLKR } from '@/lib/utils'
 import { plural } from '../format'
 import type { PaymentSummary } from '../types'
-import { DashboardCard } from './DashboardCard'
+import { SectionCard } from '@/components/shared/SectionCard'
 
 export function OrderPaymentsCard({ payments }: { payments: PaymentSummary[] }) {
   return (
-    <DashboardCard title="Order payments" subtitle="This week" link={{ label: 'View all', to: '/coordinator/orders' }}>
+    <SectionCard title="Order payments" subtitle="This week" link={{ label: 'View all', to: '/coordinator/orders' }}>
       {payments.length === 0 ? (
         <EmptyState
           bare
@@ -27,6 +27,6 @@ export function OrderPaymentsCard({ payments }: { payments: PaymentSummary[] }) 
           ))}
         </ul>
       )}
-    </DashboardCard>
+    </SectionCard>
   )
 }

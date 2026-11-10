@@ -10,11 +10,14 @@ export const statusMeta = {
   draft: { label: 'Draft', tone: 'neutral' },
   inactive: { label: 'Inactive', tone: 'neutral' },
   'off-duty': { label: 'Off duty', tone: 'neutral' },
+  'in-maintenance': { label: 'In maintenance', tone: 'neutral' },
   // pending — pending / due soon
   pending: { label: 'Pending', tone: 'pending' },
   'pending-review': { label: 'Pending review', tone: 'pending' },
   'awaiting-payment': { label: 'Awaiting payment', tone: 'pending' },
   'due-soon': { label: 'Due soon', tone: 'pending' },
+  'service-soon': { label: 'Service soon', tone: 'pending' },
+  'not-opened': { label: 'Not opened', tone: 'pending' },
   // accent — assigned / quoted / scheduled
   quoted: { label: 'Quoted', tone: 'accent' },
   assigned: { label: 'Assigned', tone: 'accent' },
@@ -22,11 +25,13 @@ export const statusMeta = {
   // info — on trip / in progress
   'in-progress': { label: 'In progress', tone: 'info' },
   'on-trip': { label: 'On trip', tone: 'info' },
+  delivered: { label: 'Delivered', tone: 'info' },
   // success — active / completed / paid
   active: { label: 'Active', tone: 'success' },
   available: { label: 'Available', tone: 'success' },
   completed: { label: 'Completed', tone: 'success' },
   paid: { label: 'Paid', tone: 'success' },
+  opened: { label: 'Opened', tone: 'success' },
   // danger — overdue / failed / suspended / cancelled
   overdue: { label: 'Overdue', tone: 'danger' },
   'payment-failed': { label: 'Payment failed', tone: 'danger' },

@@ -1,5 +1,5 @@
 import type { ResourceAvailability } from '../types'
-import { DashboardCard } from './DashboardCard'
+import { SectionCard } from '@/components/shared/SectionCard'
 
 type AvailabilityCardProps = {
   vehicles: ResourceAvailability
@@ -35,7 +35,7 @@ function AvailabilityMeter({ label, resource }: { label: string; resource: Resou
 
 export function AvailabilityCard({ vehicles, drivers }: AvailabilityCardProps) {
   return (
-    <DashboardCard
+    <SectionCard
       title="Availability today"
       subtitle="Checked before a trip is assigned"
       link={{ label: 'Check availability', to: '/coordinator/availability' }}
@@ -44,6 +44,6 @@ export function AvailabilityCard({ vehicles, drivers }: AvailabilityCardProps) {
         <AvailabilityMeter label="Vehicles" resource={vehicles} />
         <AvailabilityMeter label="Drivers" resource={drivers} />
       </div>
-    </DashboardCard>
+    </SectionCard>
   )
 }

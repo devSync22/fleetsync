@@ -1,7 +1,7 @@
 import { Link } from 'react-router'
 import { Button } from '@/components/ui/button'
 import type { CoordinatorDashboard } from '../types'
-import { DashboardCard } from './DashboardCard'
+import { SectionCard } from '@/components/shared/SectionCard'
 
 type OperationalReportCardProps = {
   report: CoordinatorDashboard['report']
@@ -9,7 +9,7 @@ type OperationalReportCardProps = {
 
 export function OperationalReportCard({ report }: OperationalReportCardProps) {
   return (
-    <DashboardCard title="Operational report" subtitle="Trips, distance and on-time rate">
+    <SectionCard title="Operational report" subtitle="Trips, distance and on-time rate">
       <div className="flex flex-col gap-3 px-5 py-4">
         <p className="text-[13px] text-muted-foreground">
           {report
@@ -26,6 +26,6 @@ export function OperationalReportCard({ report }: OperationalReportCardProps) {
           </Button>
         </div>
       </div>
-    </DashboardCard>
+    </SectionCard>
   )
 }

@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { Button } from '@/components/ui/button'
 import type { ActiveTrip } from '../types'
-import { DashboardCard } from './DashboardCard'
+import { SectionCard } from '@/components/shared/SectionCard'
 
 type ActiveTripsCardProps = {
   trips: ActiveTrip[]
@@ -12,7 +12,7 @@ type ActiveTripsCardProps = {
 
 export function ActiveTripsCard({ trips, inProgressCount }: ActiveTripsCardProps) {
   return (
-    <DashboardCard
+    <SectionCard
       title="Active trips"
       subtitle={`${inProgressCount} in progress`}
       link={{ label: 'View trips', to: '/coordinator/trips' }}
@@ -44,6 +44,6 @@ export function ActiveTripsCard({ trips, inProgressCount }: ActiveTripsCardProps
           ))}
         </ul>
       )}
-    </DashboardCard>
+    </SectionCard>
   )
 }
