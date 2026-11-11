@@ -1,0 +1,82 @@
+/* Layout from Figma node 118:3551 — wider (480px) and tighter (16px gap) than the login form. */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 480px;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 36px;
+  letter-spacing: -0.28px;
+  color: var(--color-text-default);
+}
+
+.subtitle {
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--color-text-muted);
+}
+
+/* Small caps-style group heading ("COMPANY", "CONTACT PERSON"). */
+.sectionLabel {
+  padding-top: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.66px;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+/* Two fields side by side with equal widths. */
+.row {
+  display: flex;
+  gap: 12px;
+}
+
+.row > * {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The design's terms checkbox is 18px (login's is 16px) with a 10px gap. */
+.terms {
+  gap: 10px;
+}
+
+.terms input {
+  width: 18px;
+  height: 18px;
+}
+
+.link {
+  font-weight: 600;
+  color: var(--color-accent-default);
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.footer {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+/* On narrow screens, stack the paired fields instead of squeezing them. */
+@media (max-width: 520px) {
+  .row {
+    flex-direction: column;
+    gap: 16px;
+  }
+}

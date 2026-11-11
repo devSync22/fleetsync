@@ -16,6 +16,8 @@
   --color-danger-soft: #fee2e2;
 
   --font-sans: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
+  /* Used for codes and numbers users type digit by digit (registration no., phone). */
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
 
   --radius-sm: 4px;
   --radius-md: 8px;

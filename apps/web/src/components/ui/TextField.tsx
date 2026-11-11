@@ -11,6 +11,8 @@ type TextFieldProps = InputHTMLAttributes<HTMLInputElement> & {
    * When the field is invalid it is prefixed with the danger icon.
    */
   helperText?: string
+  /** Renders the typed value in the monospace font (for codes and phone numbers). */
+  monospace?: boolean
 }
 
 export function TextField({
@@ -19,6 +21,7 @@ export function TextField({
   className,
   invalid = false,
   helperText,
+  monospace = false,
   ...inputProps
 }: TextFieldProps) {
   const generatedId = useId()
@@ -33,7 +36,9 @@ export function TextField({
       </label>
       <input
         id={inputId}
-        className={[styles.input, invalid && styles.invalid].filter(Boolean).join(' ')}
+        className={[styles.input, invalid && styles.invalid, monospace && styles.monospace]
+          .filter(Boolean)
+          .join(' ')}
         aria-invalid={invalid || undefined}
         aria-describedby={helperText ? helperId : undefined}
         {...inputProps}

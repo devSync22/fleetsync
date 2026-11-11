@@ -17,10 +17,11 @@
   cursor: pointer;
 }
 
+/* Checked state from the Figma registration screen: accent fill + white check icon. */
 .box:checked {
-  border-color: var(--color-text-default);
-  background-color: var(--color-text-default);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M2.5 6.25 5 8.5l4.5-5' stroke='white' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  border-color: var(--color-accent-default);
+  background-color: var(--color-accent-default);
+  background-image: url('../../assets/icons/check.svg');
 }
 
 .box:focus-visible {
