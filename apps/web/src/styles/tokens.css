@@ -23,6 +23,13 @@
   --color-success-text: #15803d;
   --color-success-soft: #dcfce7;
 
+  /* Figma `status/pending` and `badge/pending`: "Pending review" style badges. */
+  --color-pending-text: #b45309;
+  --color-pending-soft: #fef3c7;
+
+  /* Figma `neutral/grey-soft`: background of small grey notes. */
+  --color-neutral-grey-soft: #f3f4f6;
+
   /* Figma `accent/soft`: light accent fill behind icons (e.g. auth icon badge). */
   --color-accent-soft: #e0e7ff;
 

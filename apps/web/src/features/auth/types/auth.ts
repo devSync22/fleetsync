@@ -54,6 +54,22 @@ export type StaffApplicationRequest = {
 }
 
 /**
+ * What the "Registration submitted" screen shows after a customer registration
+ * or staff application is sent (Figma "Auth — Registration submitted").
+ */
+export type RegistrationSubmission = {
+  /** Reference number issued by the server, e.g. "REG-2026-0142". Unknown until the API exists. */
+  reference?: string
+  /** Used in "Thanks, <first name>." */
+  firstName: string
+  /** Sign-in email the verification link was sent to. */
+  email: string
+  /** Summary line, e.g. "Customer · Hayleys Freight (Pvt) Ltd" or "Staff · Driver". */
+  accountType: string
+  submittedAt: Date
+}
+
+/**
  * A failed sign-in, as shown on the form (Figma frame "Login — error").
  * `title`/`message` fill the danger banner; `attemptsLeft`, when known,
  * is shown under the password field.

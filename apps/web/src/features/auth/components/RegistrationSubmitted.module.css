@@ -1,0 +1,223 @@
+/* Figma node 371:7376 — 480px column, 24px between blocks. */
+.confirmation {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  max-width: 480px;
+}
+
+/* 56px green circle with a large check. */
+.successIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--color-success-soft);
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Slightly larger than the form titles (30px vs 28px), per the design. */
+.title {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--color-text-default);
+}
+
+.subtitle {
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}
+
+/* ---- Summary card ---- */
+.summary {
+  margin: 0;
+  border: 1px solid var(--color-neutral-border);
+  border-radius: 12px;
+  background: var(--color-neutral-surface);
+}
+
+.summaryRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  font-size: 13px;
+}
+
+/* Divider between rows (not above the first). */
+.summaryRow + .summaryRow {
+  border-top: 1px solid var(--color-neutral-border);
+}
+
+/* Labels stay on one line; long values wrap instead (matters on phones). */
+.summaryRow dt {
+  flex-shrink: 0;
+  white-space: nowrap;
+  color: var(--color-text-muted);
+}
+
+.summaryRow dd {
+  margin: 0;
+  min-width: 0;
+  font-weight: 500;
+  text-align: right;
+  overflow-wrap: anywhere;
+  color: var(--color-text-default);
+}
+
+.reference {
+  font-family: var(--font-mono);
+}
+
+/* ---- "What happens next" timeline ---- */
+.nextStepsTitle {
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-default);
+}
+
+.steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: flex;
+  gap: 12px;
+}
+
+/* Left column: marker on top, line stretching down to the next step. */
+.track {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 22px circle holding a check (done) or the step number. */
+.marker {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1.5px solid var(--color-neutral-line);
+  border-radius: 50%;
+  background: var(--color-neutral-surface);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-faint);
+}
+
+.line {
+  flex: 1;
+  width: 2px;
+  background: var(--color-neutral-border);
+}
+
+.stepText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 1px 0 18px;
+}
+
+/* The last step has no line below it, so it needs no bottom spacing. */
+.step:last-child .stepText {
+  padding-bottom: 0;
+}
+
+.stepTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.stepDescription {
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--color-text-muted);
+}
+
+/* Done: solid green marker and a green line to the next step. */
+.done .marker {
+  border-color: var(--color-success-text);
+  background: var(--color-success-text);
+}
+
+.done .line {
+  background: var(--color-success-text);
+}
+
+/* Current: accent ring with the number in accent. */
+.current .marker {
+  border-color: var(--color-accent-default);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-default);
+}
+
+/* Done and current steps have dark, semibold titles; upcoming ones stay muted. */
+.done .stepTitle,
+.current .stepTitle {
+  font-weight: 600;
+  color: var(--color-text-default);
+}
+
+/* ---- Actions ---- */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.resend {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+/* Link-style button for "Resend verification link". */
+.resendButton {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-accent-default);
+  cursor: pointer;
+}
+
+.resendButton:hover {
+  text-decoration: underline;
+}
+
+/* Grey note at the bottom — Figma node 371:7489. */
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--color-neutral-grey-soft);
+  font-size: 12px;
+  line-height: 17px;
+  color: var(--color-text-muted);
+}
+
+.note img {
+  flex-shrink: 0;
+}

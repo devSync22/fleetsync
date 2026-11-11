@@ -10,6 +10,7 @@ import type {
   StaffApplicationRequest,
   StaffRole,
 } from '../types/auth'
+import { staffRoleLabels } from '../utils/staffRoles'
 import styles from './AuthForm.module.css'
 
 type StaffApplicationFormProps = {
@@ -21,12 +22,11 @@ type StaffApplicationFormProps = {
   applicationForm?: StaffApplicationFormInfo
 }
 
-/** Roles shown in the "Role you're applying for" dropdown. */
-const roleOptions: { value: StaffRole; label: string }[] = [
-  { value: 'driver', label: 'Driver' },
-  { value: 'mechanic', label: 'Mechanic' },
-  { value: 'coordinator', label: 'Coordinator' },
-]
+/** Roles shown in the "Role you're applying for" dropdown, in the order listed in staffRoleLabels. */
+const roleOptions = (Object.keys(staffRoleLabels) as StaffRole[]).map((value) => ({
+  value,
+  label: staffRoleLabels[value],
+}))
 
 /** Document rules from the design: PDF or JPG, up to 5 MB each. */
 const DOCUMENT_TYPES = ['.pdf', '.jpg', '.jpeg']
