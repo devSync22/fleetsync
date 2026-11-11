@@ -1,4 +1,4 @@
-/* Status banner — matches Figma nodes 31:418 (danger) and 31:436 (info). */
+/* Status banner — matches Figma nodes 31:418 (danger), 31:436 (info) and 31:445 (success). */
 .banner {
   display: flex;
   align-items: flex-start;
@@ -22,6 +22,14 @@
 
 .info .title {
   color: var(--color-info-text);
+}
+
+.success {
+  background: var(--color-success-soft);
+}
+
+.success .title {
+  color: var(--color-success-text);
 }
 
 /* Nudges the icon down 1px so it lines up with the title's first line. */

@@ -1,16 +1,17 @@
+import checkCircleSuccessIcon from '@/assets/icons/check-circle-success.svg'
 import infoCircleIcon from '@/assets/icons/info-circle.svg'
 import xCircleIcon from '@/assets/icons/x-circle.svg'
 import styles from './Banner.module.css'
 
 /** Visual tones available in the Figma "Banner" component. */
-type BannerTone = 'danger' | 'info'
+type BannerTone = 'danger' | 'info' | 'success'
 
 type BannerProps = {
   /** Short bold headline, e.g. "Incorrect email or password". */
   title: string
   /** Supporting sentence explaining what happened or what to do next. */
   message: string
-  /** `danger` for errors (default), `info` for neutral information. */
+  /** `danger` for errors (default), `info` for neutral information, `success` for confirmations. */
   tone?: BannerTone
   className?: string
 }
@@ -19,6 +20,7 @@ type BannerProps = {
 const toneIcons: Record<BannerTone, string> = {
   danger: xCircleIcon,
   info: infoCircleIcon,
+  success: checkCircleSuccessIcon,
 }
 
 /** Inline status banner (Figma component "Banner"). */

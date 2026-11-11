@@ -19,6 +19,13 @@
   --color-info-text: #1d4ed8;
   --color-info-soft: #dbeafe;
 
+  /* Figma `status/success` and `status/success-soft`: confirmations, strong password. */
+  --color-success-text: #15803d;
+  --color-success-soft: #dcfce7;
+
+  /* Figma `accent/soft`: light accent fill behind icons (e.g. auth icon badge). */
+  --color-accent-soft: #e0e7ff;
+
   /* Figma `neutral/background`: subtle grey fill (e.g. upload drop zone). */
   --color-neutral-background: #f4f5f7;
 

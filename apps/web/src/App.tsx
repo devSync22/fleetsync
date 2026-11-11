@@ -1,5 +1,7 @@
 import { CustomerRegistrationPage } from '@/features/auth/pages/CustomerRegistrationPage'
+import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage'
 import { LoginPage } from '@/features/auth/pages/LoginPage'
+import { SetNewPasswordPage } from '@/features/auth/pages/SetNewPasswordPage'
 import { StaffApplicationPage } from '@/features/auth/pages/StaffApplicationPage'
 
 /**
@@ -13,6 +15,10 @@ const routes: Record<string, () => React.JSX.Element> = {
   '/register': CustomerRegistrationPage,
   // Linked from the login page's "Request staff account" button.
   '/request-staff-account': StaffApplicationPage,
+  // Linked from the login page's "Forgot password?".
+  '/forgot-password': ForgotPasswordPage,
+  // Opened from the reset email link: /reset-password?token=...
+  '/reset-password': SetNewPasswordPage,
 }
 
 function App() {

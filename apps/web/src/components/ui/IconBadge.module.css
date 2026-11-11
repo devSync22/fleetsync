@@ -1,0 +1,11 @@
+/* 44px accent-soft circle with a centred icon — Figma nodes 113:4303 / 113:4397. */
+.badge {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--color-accent-soft);
+}

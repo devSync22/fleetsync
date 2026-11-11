@@ -87,7 +87,7 @@ export function LoginForm({ onSubmit, isSubmitting = false, error }: LoginFormPr
           checked={rememberMe}
           onChange={(event) => setRememberMe(event.target.checked)}
         />
-        {/* TODO: the /forgot-password screen is not built yet. */}
+        {/* Opens ForgotPasswordPage, which emails a reset link. */}
         <a href="/forgot-password" className={styles.link}>
           Forgot password?
         </a>
@@ -103,7 +103,7 @@ export function LoginForm({ onSubmit, isSubmitting = false, error }: LoginFormPr
 
       {/*
         Two sign-up paths: customers self-register, staff request an account
-        for approval. TODO: neither /register nor /request-staff-account exists yet.
+        for approval (CustomerRegistrationPage / StaffApplicationPage).
       */}
       <div className={styles.registerActions}>
         <Button variant="secondary" href="/register" className={styles.registerButton}>

@@ -7,6 +7,40 @@
   max-width: 480px;
 }
 
+/*
+ * Narrow single-column variant (forgot password, set new password):
+ * same 400px width and 20px gap as the login form. Use together with `.form`.
+ */
+.compact {
+  gap: 20px;
+  max-width: 400px;
+}
+
+/* "‹ Back to sign in" link above the icon badge. */
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-accent-default);
+  text-decoration: none;
+}
+
+.backLink:hover {
+  text-decoration: underline;
+}
+
+/* Small grey note with a leading icon at the bottom of a form. */
+.note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--color-text-faint);
+}
+
 .header {
   display: flex;
   flex-direction: column;
