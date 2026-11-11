@@ -1,5 +1,6 @@
 import { CustomerRegistrationPage } from '@/features/auth/pages/CustomerRegistrationPage'
 import { LoginPage } from '@/features/auth/pages/LoginPage'
+import { StaffApplicationPage } from '@/features/auth/pages/StaffApplicationPage'
 
 /**
  * Minimal path-based routing until a real router (e.g. React Router in
@@ -10,6 +11,8 @@ const routes: Record<string, () => React.JSX.Element> = {
   '/': LoginPage,
   '/login': LoginPage,
   '/register': CustomerRegistrationPage,
+  // Linked from the login page's "Request staff account" button.
+  '/request-staff-account': StaffApplicationPage,
 }
 
 function App() {

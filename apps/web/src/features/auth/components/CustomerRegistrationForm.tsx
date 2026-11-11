@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/Button'
 import { Checkbox } from '@/components/ui/Checkbox'
 import { TextField } from '@/components/ui/TextField'
 import type { CustomerRegistrationRequest } from '../types/auth'
-import styles from './CustomerRegistrationForm.module.css'
+import styles from './AuthForm.module.css'
 
 type CustomerRegistrationFormProps = {
   /** Called with the validated details; the parent page performs the actual registration. */

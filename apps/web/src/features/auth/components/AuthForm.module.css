@@ -1,4 +1,4 @@
-/* Layout from Figma node 118:3551 — wider (480px) and tighter (16px gap) than the login form. */
+/* Shared layout for the larger auth forms (customer registration, staff application) — Figma nodes 118:3551 / 118:3688: 480px wide, 16px gap. */
 .form {
   display: flex;
   flex-direction: column;

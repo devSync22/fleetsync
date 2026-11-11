@@ -1,11 +1,27 @@
-/* Danger banner — matches Figma node 31:418. */
+/* Status banner — matches Figma nodes 31:418 (danger) and 31:436 (info). */
 .banner {
   display: flex;
   align-items: flex-start;
   gap: 12px;
   padding: 14px 16px;
   border-radius: 10px;
+}
+
+/* Tone colours: background + title colour. */
+.danger {
   background: var(--color-danger-soft);
+}
+
+.danger .title {
+  color: var(--color-danger-text);
+}
+
+.info {
+  background: var(--color-info-soft);
+}
+
+.info .title {
+  color: var(--color-info-text);
 }
 
 /* Nudges the icon down 1px so it lines up with the title's first line. */
@@ -26,7 +42,6 @@
 .title {
   font-size: 14px;
   font-weight: 600;
-  color: var(--color-danger-text);
 }
 
 .message {
