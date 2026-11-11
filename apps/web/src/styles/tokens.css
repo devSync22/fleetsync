@@ -12,8 +12,8 @@
   --color-brand-green: #66cc77;
 
   --color-danger-text: #b91c1c;
-  --color-danger-surface: #fef2f2;
-  --color-danger-border: #fecaca;
+  /* Figma `status/danger-soft`: background of danger banners. */
+  --color-danger-soft: #fee2e2;
 
   --font-sans: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
 

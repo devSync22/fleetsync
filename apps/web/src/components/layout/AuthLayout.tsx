@@ -13,6 +13,10 @@ type AuthLayoutProps = {
   children: ReactNode
 }
 
+/**
+ * Two-column shell for all auth screens (login, register, forgot password…):
+ * the FleetSync brand panel on the left, the screen's form on the right.
+ */
 export function AuthLayout({ children }: AuthLayoutProps) {
   return (
     <div className={styles.page}>
