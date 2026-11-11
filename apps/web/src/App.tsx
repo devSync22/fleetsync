@@ -1,8 +1,8 @@
-import { CustomerRegistrationPage } from '@/features/auth/pages/CustomerRegistrationPage'
-import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage'
-import { LoginPage } from '@/features/auth/pages/LoginPage'
-import { SetNewPasswordPage } from '@/features/auth/pages/SetNewPasswordPage'
-import { StaffApplicationPage } from '@/features/auth/pages/StaffApplicationPage'
+import { CustomerRegistrationPage } from '@/features/auth/registration/pages/CustomerRegistrationPage'
+import { ForgotPasswordPage } from '@/features/auth/password-reset/pages/ForgotPasswordPage'
+import { LoginPage } from '@/features/auth/login/pages/LoginPage'
+import { SetNewPasswordPage } from '@/features/auth/password-reset/pages/SetNewPasswordPage'
+import { StaffApplicationPage } from '@/features/auth/registration/pages/StaffApplicationPage'
 
 /**
  * Minimal path-based routing until a real router (e.g. React Router in
