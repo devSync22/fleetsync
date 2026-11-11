@@ -1,65 +1,52 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://unistyl.es/), etc.
+ * FleetSync design tokens, mirrored from the Figma variables (same values as
+ * the web app's src/styles/tokens.css). The app is light-mode only for now,
+ * because the mobile designs only have a light theme.
  */
-
-import '@/global.css';
-
-import { Platform } from 'react-native';
-
 export const Colors = {
-  light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
-  },
-  dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
-  },
-} as const;
+  textDefault: '#111827',
+  textMuted: '#6b7280',
+  textFaint: '#9ca3af',
 
-export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
+  surface: '#ffffff',
+  /** Subtle grey fill (cards, document rows). */
+  background: '#f4f5f7',
+  border: '#e3e6eb',
+  line: '#d1d5db',
 
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
-  },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
-  },
-  web: {
-    sans: 'var(--font-display)',
-    serif: 'var(--font-serif)',
-    rounded: 'var(--font-rounded)',
-    mono: 'var(--font-mono)',
-  },
-});
+  accent: '#4f46e5',
+  accentSoft: '#e0e7ff',
+  /** Dark green used for "Sync" in the wordmark on light backgrounds. */
+  brandGreenDark: '#217a3e',
 
-export const Spacing = {
-  half: 2,
-  one: 4,
-  two: 8,
-  three: 16,
-  four: 24,
-  five: 32,
-  six: 64,
-} as const;
+  danger: '#b91c1c',
+  dangerSoft: '#fee2e2',
+  info: '#1d4ed8',
+  infoSoft: '#dbeafe',
+  success: '#15803d',
+  successSoft: '#dcfce7',
+} as const
 
-export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
-export const MaxContentWidth = 800;
+/**
+ * Font family names registered in src/app/_layout.tsx. React Native picks a
+ * weight by family name (not `fontWeight`), so each weight is its own family.
+ */
+export const Fonts = {
+  regular: 'Inter_400Regular',
+  medium: 'Inter_500Medium',
+  semibold: 'Inter_600SemiBold',
+  bold: 'Inter_700Bold',
+  /** For IDs and codes such as "APP-2026-0118" or "DRV-036". */
+  mono: 'JetBrainsMono_500Medium',
+} as const
+
+export const Radius = {
+  sm: 4,
+  md: 8,
+  lg: 10,
+  xl: 12,
+  xxl: 14,
+} as const
+
+/** Horizontal padding of every screen body in the designs. */
+export const ScreenPadding = 24
