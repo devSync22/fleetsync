@@ -47,3 +47,14 @@ export function tabIcon(Icon: LucideIcon): BottomTabNavigationOptions['tabBarIco
     return <Icon size={sizes.iconLg} color={color} />;
   };
 }
+
+/** Chat tab with the unread-messages badge (hidden at 0). */
+export function chatTabOptions(Icon: LucideIcon, unreadCount: number): BottomTabNavigationOptions {
+  return {
+    title: 'Chat',
+    tabBarIcon: tabIcon(Icon),
+    tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
+    tabBarBadgeStyle: { backgroundColor: colors.accent, color: colors.surface, fontFamily: fonts.semiBold },
+    tabBarAccessibilityLabel: unreadCount > 0 ? `Chat, ${unreadCount} unread` : 'Chat',
+  };
+}

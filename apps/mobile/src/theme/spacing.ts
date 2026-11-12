@@ -27,6 +27,8 @@ export const radii = {
   card: 14,
   /** Chips, count pills, avatars. */
   pill: 999,
+  /** Chat bubble corner on the sender's side (Driver — Chat). */
+  bubbleTail: 4,
 } as const;
 
 /** Fixed component sizes from Figma. */
@@ -69,4 +71,12 @@ export const sizes = {
   progressLine: 2,
   /** Text cursor next to the big odometer value. */
   odometerCursor: 30,
+  /** Initials circle inside a chat participant chip. */
+  chipAvatar: 26,
+  /** Round Send button next to the chat composer. */
+  sendButton: 40,
+  /** Unread count pill on a chat room card. */
+  countPill: 18,
+  /** Tallest the chat composer grows before it scrolls. */
+  composerMaxHeight: 100,
 } as const;

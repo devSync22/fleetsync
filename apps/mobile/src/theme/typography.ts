@@ -223,6 +223,26 @@ export const typography = {
     fontSize: fontSizes.sm,
     color: colors.accent,
   },
+  /** Initials in a chat participant chip — "NP". */
+  avatarTiny: {
+    fontFamily: fonts.semiBold,
+    fontSize: fontSizes.xxs,
+    color: colors.muted,
+  },
+  /** Chat message text (Driver — Chat). */
+  message: {
+    fontFamily: fonts.regular,
+    fontSize: fontSizes.base,
+    lineHeight: 20,
+    color: colors.text,
+  },
+  /** Chat system notice — "Issue reported 10:15 · Tyres". */
+  notice: {
+    fontFamily: fonts.medium,
+    fontSize: fontSizes.sm,
+    lineHeight: 17,
+    color: colors.pending,
+  },
   /** Data / mono — "WP LB-7702", "09:30". */
   mono: {
     fontFamily: fonts.monoMedium,

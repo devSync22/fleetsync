@@ -4,6 +4,7 @@ import { useRef, type ComponentRef } from 'react';
 import { StyleSheet, View, type TextInput } from 'react-native';
 
 import { ActionBar, InfoBanner, KeyboardAwareScroll, ScreenHeader, StatusBadge } from '@/components/ui';
+import { chatRoomHref } from '@/features/chat';
 import { formatDistance, formatTime } from '@/lib/format';
 import { colors, spacing } from '@/theme';
 
@@ -89,8 +90,12 @@ function ActiveTripView({ trip, reload }: { trip: Trip; reload: () => void }) {
               tone="danger"
               onPress={() => router.push(reportIssueHref(trip.id))}
             />
-            {/* The order's chat room is built in the chat branch; open the Chat tab for now. */}
-            <ActionTile label="Chat" icon={MessageSquare} tone="info" onPress={() => router.navigate('/driver/chat')} />
+            <ActionTile
+              label="Chat"
+              icon={MessageSquare}
+              tone="info"
+              onPress={() => router.navigate(chatRoomHref('driver', trip.orderId))}
+            />
           </View>
         )}
 

@@ -3,12 +3,13 @@ import { MessageSquare } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Avatar, IconButton } from '@/components/ui';
+import { canMessage, chatRoomHref, type ChatRole } from '@/features/chat';
 import { sizes, spacing, typography } from '@/theme';
 
 import type { TripPerson } from '../types';
 
-/** A person in the order's chat room, with a button to message them. */
-export function PersonRow({ person }: { person: TripPerson }) {
+/** A person on the trip, with a button to message them when the chat permissions allow it (never the customer). */
+export function PersonRow({ person, orderId }: { person: TripPerson; orderId: string }) {
   const subtitle = person.detail ? `${person.role} · ${person.detail}` : person.role;
 
   return (
@@ -22,12 +23,13 @@ export function PersonRow({ person }: { person: TripPerson }) {
           {subtitle}
         </Text>
       </View>
-      <IconButton
-        icon={MessageSquare}
-        accessibilityLabel={`Message ${person.name}`}
-        // The per-person chat thread is built in the chat branch (feature 8); open the Chat tab for now.
-        onPress={() => router.navigate('/driver/chat')}
-      />
+      {canMessage('driver', person.role.toLowerCase() as ChatRole) ? (
+        <IconButton
+          icon={MessageSquare}
+          accessibilityLabel={`Message ${person.name}`}
+          onPress={() => router.navigate(chatRoomHref('driver', orderId, person.id))}
+        />
+      ) : null}
     </View>
   );
 }
