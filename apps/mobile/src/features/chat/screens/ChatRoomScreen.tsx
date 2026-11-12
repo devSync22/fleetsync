@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { CircleX, SearchX } from 'lucide-react-native';
 import { useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { EmptyState } from '@/components/ui';
@@ -103,7 +103,8 @@ export function ChatRoomScreen() {
   }
 
   return (
-    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    // `padding` on both platforms: Android apps are edge-to-edge, so the window no longer resizes for the keyboard.
+    <KeyboardAvoidingView style={styles.screen} behavior="padding">
       {/* White strip behind the status bar, as in the frame. */}
       <View style={[styles.statusBar, { height: insets.top }]} />
       {renderBody()}

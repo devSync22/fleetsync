@@ -62,7 +62,15 @@ function later(ms: number, run: () => void) {
 
 function roomsFor(user: ChatUser): MockRoom[] {
   if (CHAT_MOCK_SCENARIO === 'empty') return [];
-  return mockRooms.filter((room) => room.members.some((member) => member.id === user.id));
+  return mockRooms
+    .map((room) =>
+      // Mock only: the trips mock assigns every trip to whichever driver is signed in, so the room's
+      // driver is the signed-in driver too (e.g. a newly approved account), not always Kasun.
+      user.role === 'driver'
+        ? { ...room, members: room.members.map((member) => (member.role === 'driver' ? { ...member, id: user.id } : member)) }
+        : room,
+    )
+    .filter((room) => room.members.some((member) => member.id === user.id));
 }
 
 function findRoom(user: ChatUser, roomId: string): MockRoom {
