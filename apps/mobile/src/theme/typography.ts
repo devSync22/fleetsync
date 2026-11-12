@@ -278,6 +278,30 @@ export const typography = {
     fontSize: fontSizes.sm,
     color: colors.accent,
   },
+  /** Stop name on the active trip card — "City Hospital store, Negombo". */
+  stopTitle: {
+    fontFamily: fonts.semiBold,
+    fontSize: fontSizes.option,
+    color: colors.text,
+  },
+  /** Trip progress step label — "Cargo picked up" (colour set by the step state). */
+  stepLabel: {
+    fontFamily: fonts.semiBold,
+    fontSize: fontSizes.sm,
+    color: colors.text,
+  },
+  /** Time next to a trip note — "09:42". */
+  monoCaption: {
+    fontFamily: fonts.mono,
+    fontSize: fontSizes.sm,
+    color: colors.muted,
+  },
+  /** Time under a progress step — "09:41". */
+  monoMicro: {
+    fontFamily: fonts.mono,
+    fontSize: fontSizes.xs,
+    color: colors.muted,
+  },
   /** Mono value typed into a text field. */
   monoInput: {
     fontFamily: fonts.mono,

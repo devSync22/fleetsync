@@ -1,11 +1,12 @@
 import { router } from 'expo-router';
 import { CalendarCheck, CircleX } from 'lucide-react-native';
+import { useEffect } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { EmptyState, InfoBanner } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
-import { canStartTrip, isLateToStart, tripHref, tripStartHref } from '@/features/trips';
+import { canStartTrip, isActiveTrip, isLateToStart, tripHref, tripStartHref, tripStepHref, type Trip } from '@/features/trips';
 import { colors, spacing, typography } from '@/theme';
 
 import { DriverHomeSkeleton } from '../components/DriverHomeSkeleton';
@@ -16,11 +17,28 @@ import { UpcomingTripCard } from '../components/UpcomingTripCard';
 import { WeeklyStatsRow } from '../components/WeeklyStatsRow';
 import { useDriverHome } from '../hooks/useDriverHome';
 
+/** Whether Home has already checked for a trip to resume in this app session. */
+let resumeChecked = false;
+
+function primaryActionFor(trip: Trip, now: Date) {
+  if (canStartTrip(trip, now)) return { label: 'Start trip', onPress: () => router.push(tripStartHref(trip.id)) };
+  if (isActiveTrip(trip)) return { label: 'Continue trip', onPress: () => router.push(tripStepHref(trip)) };
+  return undefined;
+}
+
 /** Driver — Home (Figma 167:6477): today's trip, upcoming trips and this week's numbers. */
 export function DriverHomeScreen() {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const { data, isLoading, loadError, refreshError, isRefreshing, retry, refresh } = useDriverHome();
+
+  // Resuming the app mid-trip: on the first load of the session, open the step the trip is at.
+  const todayTrip = data?.todayTrip;
+  useEffect(() => {
+    if (resumeChecked || data === null) return;
+    resumeChecked = true;
+    if (todayTrip && isActiveTrip(todayTrip)) router.push(tripStepHref(todayTrip));
+  }, [data, todayTrip]);
 
   function renderBody() {
     if (isLoading) {
@@ -56,8 +74,7 @@ export function DriverHomeScreen() {
         {todayTrip ? (
           <TodayTripCard
             trip={todayTrip}
-            canStart={canStartTrip(todayTrip, checkedAt)}
-            onStart={() => router.push(tripStartHref(todayTrip.id))}
+            primaryAction={primaryActionFor(todayTrip, checkedAt)}
             onViewDetails={() => router.push(tripHref(todayTrip.id))}
           />
         ) : (

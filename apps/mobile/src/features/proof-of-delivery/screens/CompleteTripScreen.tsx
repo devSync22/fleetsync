@@ -1,17 +1,22 @@
 import { useLocalSearchParams } from 'expo-router';
 
-import { canCompleteTrip, useTrip } from '@/features/trips';
+import { TripGate, useTrip } from '@/features/trips';
 
 import { CompleteTripForm } from '../components/CompleteTripForm';
-import { PodTripGate } from '../components/PodTripGate';
 
-/** Driver — Complete trip (Figma 173:6655). Opened with "Continue" on Proof of delivery. */
+/** Driver — Complete trip (Figma 173:6655). Opened after the proof of delivery is sent (trip Delivered). */
 export function CompleteTripScreen() {
   const { tripId } = useLocalSearchParams<{ tripId: string }>();
-  const { state, retry } = useTrip(tripId);
+  const { state, retry, reload } = useTrip(tripId);
 
-  if (state.kind !== 'loaded' || !canCompleteTrip(state.trip)) {
-    return <PodTripGate title="Complete trip" tripId={tripId} state={state} retry={retry} />;
-  }
-  return <CompleteTripForm trip={state.trip} />;
+  return (
+    <TripGate
+      title="Complete trip"
+      tripId={tripId}
+      state={state}
+      retry={retry}
+      allows={(trip) => trip.status === 'Delivered'}>
+      {(trip) => <CompleteTripForm trip={trip} onCancelled={reload} />}
+    </TripGate>
+  );
 }

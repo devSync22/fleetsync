@@ -1,4 +1,4 @@
-import { recordTripCompleted } from '@/features/trips';
+import { recordTripDelivered } from '@/features/trips';
 import { ApiError } from '@/services/apiClient';
 
 import { MOCK_POD_SCENARIO, mockPodSubmissions } from '../mocks/podMocks';
@@ -27,17 +27,15 @@ export async function submitProofOfDelivery(submission: PodSubmission): Promise<
   if (nameError) {
     throw new ApiError(nameError, 400);
   }
-  // Mock only: the backend marks the trip Completed itself when it accepts the proof of delivery.
-  const trip = await recordTripCompleted(submission.tripId, {
-    completedAt: submission.submittedAt,
-    endOdometerKm: submission.endOdometerKm,
-  });
+  // Mock only: the backend marks the trip Delivered itself when it accepts the proof of delivery.
+  // Throws TripCancelledError (409) if the coordinator cancelled the trip.
+  const tripStatus = await recordTripDelivered(submission.tripId, submission.submittedAt);
 
   mockPodSubmissions.push(submission);
   return {
     podId: `POD-${submission.tripId.replace('TRP-', '')}-${mockPodSubmissions.length}`,
     tripId: submission.tripId,
     submittedAt: submission.submittedAt,
-    tripStatus: trip.status,
+    tripStatus,
   };
 }

@@ -61,6 +61,12 @@ export const sizes = {
   signatureStroke: 2.5,
   /** Minimum height of a multi-line text field (notes). */
   textArea: 88,
+  /** Step circle on the trip progress card (Driver — Active trip). */
+  progressDot: 20,
+  /** Filled centre of the current step's circle. */
+  progressDotCore: 8,
+  /** Connector line between progress steps. */
+  progressLine: 2,
   /** Text cursor next to the big odometer value. */
   odometerCursor: 30,
 } as const;

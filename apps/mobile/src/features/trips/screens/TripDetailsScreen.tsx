@@ -11,8 +11,8 @@ import { PeopleCard } from '../components/PeopleCard';
 import { RouteCard } from '../components/RouteCard';
 import { TripDetailsSkeleton } from '../components/TripDetailsSkeleton';
 import { useTrip } from '../hooks/useTrip';
-import { proofOfDeliveryHref, tripStartHref } from '../routes';
-import { canCompleteTrip, canStartTrip, isSameDay } from '../tripTime';
+import { tripStartHref, tripStepHref } from '../routes';
+import { canStartTrip, isActiveTrip, isSameDay, tripBadgeLabel } from '../tripStatus';
 import type { Trip } from '../types';
 
 /** "Today · 09:30 – 12:00 · 38 km", or "Wed 22 Oct · 07:00 – 10:30 · 94 km" for a later day. */
@@ -61,10 +61,9 @@ export function TripDetailsScreen() {
   }
 
   const { trip, checkedAt } = state;
+  // Start trip (Assigned, today) / Continue trip (mid-trip) / nothing (view only: completed, cancelled, later day).
   const showStart = canStartTrip(trip, checkedAt);
-  // Temporary entry point (KAN-316): Complete trip lives on "Driver — Active trip" in Figma, which is
-  // built in the trip-flow branch. Until then, an In-progress trip offers it here.
-  const showComplete = canCompleteTrip(trip);
+  const showContinue = isActiveTrip(trip);
 
   return (
     <View style={styles.screen}>
@@ -72,7 +71,7 @@ export function TripDetailsScreen() {
         title={trip.id}
         monoTitle
         subtitle={tripSubtitle(trip, checkedAt)}
-        right={<StatusBadge label={trip.status} />}
+        right={<StatusBadge label={tripBadgeLabel(trip.status)} />}
       />
       <ScrollView contentContainerStyle={styles.body}>
         {trip.status === 'Completed' && trip.completedAt ? (
@@ -80,6 +79,13 @@ export function TripDetailsScreen() {
             tone="success"
             title="Trip completed"
             message={completedMessage(trip.completedAt, trip.endOdometerKm)}
+          />
+        ) : null}
+        {trip.status === 'Cancelled' ? (
+          <InfoBanner
+            tone="danger"
+            title="Trip cancelled"
+            message="The coordinator cancelled this trip. There is nothing more to do on it."
           />
         ) : null}
         <RouteCard trip={trip} />
@@ -93,11 +99,11 @@ export function TripDetailsScreen() {
           onPress={() => router.push(tripStartHref(trip.id))}
         />
       ) : null}
-      {showComplete ? (
+      {showContinue ? (
         <ActionBar
-          label="Complete trip"
-          hint="Tap when the cargo is delivered. You will add proof of delivery and the ending odometer."
-          onPress={() => router.push(proofOfDeliveryHref(trip.id))}
+          label="Continue trip"
+          hint="Pick up where you left off."
+          onPress={() => router.push(tripStepHref(trip))}
         />
       ) : null}
     </View>

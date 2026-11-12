@@ -26,6 +26,9 @@ export const statusTones = {
   // Info — in progress / on trip
   Accepted: 'info',
   'In progress': 'info',
+  Started: 'info',
+  'Picked up': 'info',
+  Delivered: 'info',
   Processing: 'info',
   'On trip': 'info',
   'In service': 'info',

@@ -3,21 +3,32 @@ import { StyleSheet, Text, View } from 'react-native';
 import { formatNumber } from '@/lib/format';
 import { colors, radii, sizes, spacing, typography } from '@/theme';
 
+/** Odometers show up to 7 digits (9,999,999 km). */
+export const ODOMETER_MAX_DIGITS = 7;
+
+/** Digits after pressing `digit` on the keypad: no leading zero, at most 7 digits. */
+export function appendOdometerDigit(digits: string, digit: string): string {
+  if (digits.length >= ODOMETER_MAX_DIGITS || (digits === '' && digit === '0')) return digits;
+  return digits + digit;
+}
+
 type OdometerDisplayProps = {
   /** Digits typed on the keypad. */
   digits: string;
   invalid: boolean;
+  /** Read by screen readers — "Starting odometer reading". */
+  label: string;
 };
 
-/** Big focused field showing the ending odometer as it's typed on the keypad — "84,274 | km". */
-export function OdometerDisplay({ digits, invalid }: OdometerDisplayProps) {
+/** Big focused field showing the odometer as it's typed on the keypad — "84,274 | km". */
+export function OdometerDisplay({ digits, invalid, label }: OdometerDisplayProps) {
   const value = digits ? formatNumber(Number(digits)) : '0';
 
   return (
     <View
       style={[styles.box, invalid && styles.invalid]}
       accessible
-      accessibilityLabel={`Ending odometer reading: ${digits ? `${value} km` : 'not entered'}`}
+      accessibilityLabel={`${label}: ${digits ? `${value} km` : 'not entered'}`}
       accessibilityLiveRegion="polite">
       <Text style={[typography.odometer, !digits && styles.placeholder]} numberOfLines={1}>
         {value}

@@ -1,24 +1,13 @@
 import type { TripStatus } from '@/features/trips';
+import type { PhotoSource, PickedPhoto } from '@/hooks/usePhotoPicker';
 
 /** "Cargo received" answer on Driver — Proof of delivery. */
 export type CargoCondition = 'All received' | 'Some missing' | 'Damaged';
 
-export type PodPhotoSource = 'camera' | 'library';
+export type PodPhotoSource = PhotoSource;
 
 /** A delivery photo (cargo at the store, signed delivery note…). */
-export type PodPhoto = {
-  id: string;
-  /** Local file URI on the phone; the real API uploads this file. */
-  uri: string;
-  width: number;
-  height: number;
-  mimeType: string;
-  /** Null when the picker doesn't report the size. */
-  fileSizeBytes: number | null;
-  /** ISO date-time the photo was added. */
-  capturedAt: string;
-  source: PodPhotoSource;
-};
+export type PodPhoto = PickedPhoto;
 
 /** Receiver signature drawn on the pad, kept as vector strokes. */
 export type PodSignature = {
@@ -31,7 +20,7 @@ export type PodSignature = {
   signedAt: string;
 };
 
-/** What the driver has entered so far. Lives across Proof of delivery → Complete trip until submitted. */
+/** What the driver has entered on Proof of delivery. Kept until it is sent, so going back loses nothing. */
 export type PodDraft = {
   /** "Pradeep Kumara · Store keeper". */
   recipientName: string;
@@ -39,18 +28,15 @@ export type PodDraft = {
   photos: PodPhoto[];
   signature: PodSignature | null;
   notes: string;
-  /** Ending odometer as typed on the keypad (digits only, may be empty). */
-  endOdometerDigits: string;
 };
 
-/** Sent when the driver taps "Confirm and complete trip". */
+/** Sent when the driver taps "Continue" on Proof of delivery; the trip becomes Delivered. */
 export type PodSubmission = {
   tripId: string;
   recipientName: string;
   cargoCondition: CargoCondition;
   photos: PodPhoto[];
   signature: PodSignature | null;
-  endOdometerKm: number;
   notes?: string;
   /** ISO date-time. */
   submittedAt: string;
@@ -61,6 +47,6 @@ export type PodSubmissionResult = {
   podId: string;
   tripId: string;
   submittedAt: string;
-  /** The trip's status after the submission — "Completed". */
+  /** The trip's status after the submission — "Delivered". */
   tripStatus: TripStatus;
 };

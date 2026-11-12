@@ -9,13 +9,15 @@ type IconButtonProps = {
   accessibilityLabel: string;
   onPress: () => void;
   disabled?: boolean;
+  /** Circle size; 36 inside cards, 40 on the active trip stop card. */
+  size?: number;
 };
 
-/** Extra hit area so the 36 px circle still meets the 44 px touch target. */
-const HIT_SLOP = (sizes.touchTarget - sizes.iconButton) / 2;
 
 /** Round accent-soft icon button inside cards — call a stop contact, open a chat (Driver — Trip details). */
-export function IconButton({ icon: Icon, accessibilityLabel, onPress, disabled = false }: IconButtonProps) {
+export function IconButton({ icon: Icon, accessibilityLabel, onPress, disabled = false, size = sizes.iconButton }: IconButtonProps) {
+  // Extra hit area so the circle still meets the 44 px touch target.
+  const hitSlop = Math.max(0, (sizes.touchTarget - size) / 2);
   return (
     <Pressable
       accessibilityRole="button"
@@ -23,8 +25,13 @@ export function IconButton({ icon: Icon, accessibilityLabel, onPress, disabled =
       accessibilityState={{ disabled }}
       onPress={onPress}
       disabled={disabled}
-      hitSlop={HIT_SLOP}
-      style={({ pressed }) => [styles.button, disabled && styles.disabled, pressed && styles.pressed]}>
+      hitSlop={hitSlop}
+      style={({ pressed }) => [
+        styles.button,
+        { width: size, height: size },
+        disabled && styles.disabled,
+        pressed && styles.pressed,
+      ]}>
       <Icon size={sizes.iconSm} color={disabled ? colors.faint : colors.accent} />
     </Pressable>
   );
@@ -32,8 +39,6 @@ export function IconButton({ icon: Icon, accessibilityLabel, onPress, disabled =
 
 const styles = StyleSheet.create({
   button: {
-    width: sizes.iconButton,
-    height: sizes.iconButton,
     borderRadius: radii.pill,
     backgroundColor: colors.accentSoft,
     alignItems: 'center',

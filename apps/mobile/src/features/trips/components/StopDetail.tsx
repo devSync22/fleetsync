@@ -1,9 +1,10 @@
 import { MapPin, Phone } from 'lucide-react-native';
-import { Linking, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { IconButton } from '@/components/ui';
 import { colors, sizes, spacing, typography } from '@/theme';
 
+import { callContact } from '../callContact';
 import type { TripStop } from '../types';
 
 type StopDetailProps = {
@@ -11,11 +12,6 @@ type StopDetailProps = {
   label: string;
   stop: TripStop;
 };
-
-function callContact(phone: string) {
-  // Opens the phone dialer; ignored if the device can't place calls (e.g. a simulator).
-  Linking.openURL(`tel:${phone}`).catch(() => undefined);
-}
 
 /** One stop on Trip details: label + time, place, address, contact, and a call button. */
 export function StopDetail({ label, stop }: StopDetailProps) {

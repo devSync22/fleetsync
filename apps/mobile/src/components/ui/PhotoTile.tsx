@@ -1,30 +1,25 @@
 import { Image } from 'expo-image';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { formatTime } from '@/lib/format';
 import { colors, radii, sizes, spacing, typography } from '@/theme';
 
-import type { PodPhoto } from '../types';
-
 type PhotoTileProps = {
-  photo: PodPhoto;
-  /** 1-based, for the label — "Photo 1 · 11:14". */
-  position: number;
+  uri: string;
+  /** Label in the bottom-left corner — "Photo 1 · 11:14". */
+  label: string;
   size: number;
   onPress: () => void;
 };
 
-/** A delivery photo with its label in the bottom-left corner. Tapping it offers to remove it. */
-export function PhotoTile({ photo, position, size, onPress }: PhotoTileProps) {
-  const label = `Photo ${position} · ${formatTime(photo.capturedAt)}`;
-
+/** A photo with its label in the bottom-left corner. Tapping it offers to remove it. */
+export function PhotoTile({ uri, label, size, onPress }: PhotoTileProps) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`${label}. Double tap to remove.`}
       onPress={onPress}
       style={({ pressed }) => [styles.tile, { width: size, height: size }, pressed && styles.pressed]}>
-      <Image source={{ uri: photo.uri }} style={StyleSheet.absoluteFill} contentFit="cover" />
+      <Image source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover" />
       <View style={styles.label}>
         <Text style={typography.photoLabel}>{label}</Text>
       </View>

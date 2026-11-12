@@ -13,9 +13,10 @@ export type TripState =
 /**
  * Loads one trip, with retry. `checkedAt` is the time used for "Today" / can-start checks.
  * When the screen comes back into focus (e.g. after completing the trip) it reloads quietly:
- * the current trip stays on screen and a failed quiet reload is ignored.
+ * the current trip stays on screen and a failed quiet reload is ignored. `reload()` does the same on demand.
+ * `pollMs` also reloads quietly on an interval while the screen is focused.
  */
-export function useTrip(tripId: string | undefined) {
+export function useTrip(tripId: string | undefined, { pollMs }: { pollMs?: number } = {}) {
   const [state, setState] = useState<TripState>({ kind: 'loading' });
   // A new object starts a load; `quiet` loads keep the current state on failure.
   const [request, setRequest] = useState({ quiet: false });
@@ -51,10 +52,23 @@ export function useTrip(tripId: string | undefined) {
     }, []),
   );
 
+  // shortcut: polling so a coordinator cancel shows on an open screen; switch to push notifications when they exist.
+  useFocusEffect(
+    useCallback(() => {
+      if (!pollMs) return undefined;
+      const timer = setInterval(() => setRequest({ quiet: true }), pollMs);
+      return () => clearInterval(timer);
+    }, [pollMs]),
+  );
+
   function retry() {
     setState({ kind: 'loading' });
     setRequest({ quiet: false });
   }
 
-  return { state, retry };
+  function reload() {
+    setRequest({ quiet: true });
+  }
+
+  return { state, retry, reload };
 }

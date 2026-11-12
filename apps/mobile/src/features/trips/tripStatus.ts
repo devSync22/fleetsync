@@ -1,4 +1,9 @@
-import type { Trip } from './types';
+import type { Trip, TripStatus } from './types';
+
+/**
+ * The one place for trip status rules. Screens ask these functions what a trip allows instead of
+ * comparing statuses themselves.
+ */
 
 type DateInput = Date | string;
 
@@ -32,7 +37,22 @@ export function canStartTrip(trip: Trip, now: Date): boolean {
   return trip.status === 'Assigned' && isScheduledToday(trip, now);
 }
 
-/** The driver can complete (proof of delivery + ending odometer) a trip that is In progress. */
-export function canCompleteTrip(trip: Trip): boolean {
-  return trip.status === 'In progress';
+const ACTIVE_STATUSES: readonly TripStatus[] = ['Started', 'Picked up', 'In progress', 'Delivered'];
+
+/** Started and not yet Completed or Cancelled — the driver continues it in the trip flow. */
+export function isActiveTrip(trip: Trip): boolean {
+  return ACTIVE_STATUSES.includes(trip.status);
+}
+
+/** Cargo is on board and the driver is heading to the destination (proof of delivery comes next). */
+export function isHeadingToDestination(trip: Trip): boolean {
+  return trip.status === 'Picked up' || trip.status === 'In progress';
+}
+
+/**
+ * Badge text. Started and Picked up show as "In progress", as on both Driver — Active trip frames;
+ * the progress card shows the exact step.
+ */
+export function tripBadgeLabel(status: TripStatus): string {
+  return status === 'Started' || status === 'Picked up' ? 'In progress' : status;
 }

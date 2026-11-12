@@ -1,11 +1,10 @@
 import { StyleSheet, View } from 'react-native';
 
-import { Chip } from '@/components/ui';
+import { Chip, FormSection } from '@/components/ui';
 import { spacing } from '@/theme';
 
 import { CARGO_CONDITIONS } from '../constants';
 import type { CargoCondition } from '../types';
-import { FormSection } from './FormSection';
 
 type CargoConditionPickerProps = {
   value: CargoCondition;
