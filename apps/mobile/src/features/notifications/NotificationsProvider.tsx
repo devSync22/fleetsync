@@ -14,7 +14,7 @@ import {
   tripCancelledNotification,
   tripUpdatedNotification,
 } from './content';
-import { onMockEvent, startMockEvents, type MockEvent } from './mocks/notificationMocks';
+import { startMockEvents, type MockEvent } from './mocks/notificationMocks';
 import { onPendingTap, takePendingTap } from './pendingTap';
 import { notificationsService } from './services/notificationsService';
 import type { AppNotification, NotificationPermission, NotificationPrefs, NotificationTap } from './types';
@@ -126,11 +126,8 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       show(chatMessageNotification(me.id, message, sender.name));
     }
 
-    function onEvent(event: MockEvent) {
-      if (event.kind === 'chat') {
-        onChatMessage(event.message);
-        return;
-      }
+    function onTripEvent(event: MockEvent) {
+      // Trip screens are driver-only.
       if (me.role !== 'driver') return;
       const build = { trip_assigned: tripAssignedNotification, trip_cancelled: tripCancelledNotification, trip_updated: tripUpdatedNotification }[event.type];
       getTrip(event.tripId)
@@ -138,12 +135,10 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         .catch(() => undefined);
     }
 
-    const stopMocks = startMockEvents(me.role);
-    const unsubscribeMocks = onMockEvent(onEvent);
+    const stopMocks = startMockEvents(me.role, onTripEvent);
     const unsubscribeChat = chatService.onMessage(onChatMessage);
     return () => {
       stopMocks();
-      unsubscribeMocks();
       unsubscribeChat();
       notificationsService.clearAll().catch(() => undefined);
     };
