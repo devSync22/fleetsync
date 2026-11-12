@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { CircleX, SearchX } from 'lucide-react-native';
 import { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, StyleSheet, View } from 'react-native';
@@ -14,6 +14,7 @@ import { ThreadView } from '../components/ThreadView';
 import { isRoomReadOnly } from '../permissions';
 import { chatListHref } from '../routes';
 import type { ChatRoom } from '../types';
+import { setVisibleThread } from '../visibleThread';
 
 function readOnlyReason(room: ChatRoom) {
   if (!isRoomReadOnly(room.tripStatus)) return null;
@@ -40,6 +41,15 @@ export function ChatRoomScreen() {
   const backToList = () => user && router.navigate(chatListHref(user.role));
   const room = rooms.kind === 'loaded' ? rooms.rooms.find((candidate) => candidate.id === roomId) : undefined;
   const selected = room?.participants.find((p) => p.id === pickedId) ?? room?.participants[0];
+  const selectedId = selected?.id;
+
+  // Tabs keep this screen mounted, so track focus rather than mount: no notification for the open thread.
+  // React Compiler memoizes this callback, so it re-runs only when the room or person changes.
+  useFocusEffect(() => {
+    if (!roomId || !selectedId) return undefined;
+    setVisibleThread({ roomId, participantId: selectedId });
+    return () => setVisibleThread(null);
+  });
 
   function renderBody() {
     if (rooms.kind === 'loading') {

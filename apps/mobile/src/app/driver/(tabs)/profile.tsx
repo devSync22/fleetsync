@@ -3,6 +3,7 @@ import { User } from 'lucide-react-native';
 import { PlaceholderScreen } from '@/components/PlaceholderScreen';
 import { StatusBadge } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
+import { DevNotificationTester, NotificationSettingsCard } from '@/features/notifications';
 
 export default function DriverProfileRoute() {
   const { user, signOut } = useAuth();
@@ -16,7 +17,10 @@ export default function DriverProfileRoute() {
       emptyTitle="Profile coming soon"
       emptyDescription="Licence, contact details and password settings will be shown here."
       // Signing out changes the route guards, which return to Sign in.
-      action={{ label: 'Sign out', variant: 'secondary', onPress: signOut }}
-    />
+      action={{ label: 'Sign out', variant: 'secondary', onPress: signOut }}>
+      <NotificationSettingsCard />
+      {/* DEV ONLY — remove before the PR. */}
+      <DevNotificationTester />
+    </PlaceholderScreen>
   );
 }
