@@ -3,7 +3,7 @@
   <!--
     FleetSync Auth module.
     A self-contained part of the modular monolith: it owns its own entities,
-    database schema ("auth"), migrations and HTTP endpoints. The host
+    database schema ("identity"), migrations and HTTP endpoints. The host
     (FleetSync.Api) only calls AddAuthModule() and MapAuthEndpoints().
   -->
 

@@ -8,14 +8,18 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence;
 
 /// <summary>
 /// The Auth module's database context. Everything lives in the PostgreSQL
-/// "auth" schema with its own migrations history table, so no other module
+/// "identity" schema with its own migrations history table, so no other module
 /// can depend on these tables directly (a modular-monolith boundary).
 /// </summary>
 internal sealed class AuthDbContext(DbContextOptions<AuthDbContext> options)
     : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>(options)
 {
-    /// <summary>PostgreSQL schema owned by this module.</summary>
-    public const string Schema = "auth";
+    /// <summary>
+    /// PostgreSQL schema owned by this module. Deliberately not "auth": hosted
+    /// PostgreSQL providers such as Supabase reserve that schema for their own
+    /// sign-in service, and the database user can't create tables in it.
+    /// </summary>
+    public const string Schema = "identity";
 
     /// <summary>Sequence behind REG-yyyy-nnnn references (customers and staff share it).</summary>
     public const string RegistrationReferenceSequence = "registration_reference_seq";

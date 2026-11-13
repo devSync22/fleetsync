@@ -17,7 +17,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasDefaultSchema("auth")
+                .HasDefaultSchema("identity")
                 .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
@@ -99,7 +99,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex");
 
-                    b.ToTable("Users", "auth");
+                    b.ToTable("Users", "identity");
                 });
 
             modelBuilder.Entity("FleetSync.Modules.Auth.Domain.CustomerProfile", b =>
@@ -142,7 +142,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("CustomerProfiles", "auth");
+                    b.ToTable("CustomerProfiles", "identity");
                 });
 
             modelBuilder.Entity("FleetSync.Modules.Auth.Domain.OneTimeToken", b =>
@@ -180,7 +180,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId", "Purpose");
 
-                    b.ToTable("OneTimeTokens", "auth");
+                    b.ToTable("OneTimeTokens", "identity");
                 });
 
             modelBuilder.Entity("FleetSync.Modules.Auth.Domain.PasswordHistoryEntry", b =>
@@ -203,7 +203,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId", "CreatedAt");
 
-                    b.ToTable("PasswordHistory", "auth");
+                    b.ToTable("PasswordHistory", "identity");
                 });
 
             modelBuilder.Entity("FleetSync.Modules.Auth.Domain.RefreshToken", b =>
@@ -253,7 +253,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RefreshTokens", "auth");
+                    b.ToTable("RefreshTokens", "identity");
                 });
 
             modelBuilder.Entity("FleetSync.Modules.Auth.Domain.StaffApplications.StaffApplication", b =>
@@ -366,7 +366,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("Status", "SubmittedAt");
 
-                    b.ToTable("StaffApplications", "auth");
+                    b.ToTable("StaffApplications", "identity");
                 });
 
             modelBuilder.Entity("FleetSync.Modules.Auth.Domain.StaffApplications.StaffApplicationDocument", b =>
@@ -403,7 +403,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("StaffApplicationId");
 
-                    b.ToTable("StaffApplicationDocuments", "auth");
+                    b.ToTable("StaffApplicationDocuments", "identity");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", b =>
@@ -430,7 +430,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("RoleNameIndex");
 
-                    b.ToTable("Roles", "auth");
+                    b.ToTable("Roles", "identity");
 
                     b.HasData(
                         new
@@ -498,7 +498,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("RoleClaims", "auth");
+                    b.ToTable("RoleClaims", "identity");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
@@ -522,7 +522,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserClaims", "auth");
+                    b.ToTable("UserClaims", "identity");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
@@ -543,7 +543,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserLogins", "auth");
+                    b.ToTable("UserLogins", "identity");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<System.Guid>", b =>
@@ -558,7 +558,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("UserRoles", "auth");
+                    b.ToTable("UserRoles", "identity");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
@@ -577,7 +577,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
 
                     b.HasKey("UserId", "LoginProvider", "Name");
 
-                    b.ToTable("UserTokens", "auth");
+                    b.ToTable("UserTokens", "identity");
                 });
 
             modelBuilder.Entity("FleetSync.Modules.Auth.Domain.CustomerProfile", b =>

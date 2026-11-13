@@ -15,15 +15,15 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.EnsureSchema(
-                name: "auth");
+                name: "identity");
 
             migrationBuilder.CreateSequence(
                 name: "registration_reference_seq",
-                schema: "auth");
+                schema: "identity");
 
             migrationBuilder.CreateTable(
                 name: "Roles",
-                schema: "auth",
+                schema: "identity",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -38,7 +38,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "Users",
-                schema: "auth",
+                schema: "identity",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -67,7 +67,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "RoleClaims",
-                schema: "auth",
+                schema: "identity",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
@@ -82,7 +82,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                     table.ForeignKey(
                         name: "FK_RoleClaims_Roles_RoleId",
                         column: x => x.RoleId,
-                        principalSchema: "auth",
+                        principalSchema: "identity",
                         principalTable: "Roles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -90,7 +90,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "CustomerProfiles",
-                schema: "auth",
+                schema: "identity",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -107,7 +107,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                     table.ForeignKey(
                         name: "FK_CustomerProfiles_Users_UserId",
                         column: x => x.UserId,
-                        principalSchema: "auth",
+                        principalSchema: "identity",
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -115,7 +115,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "OneTimeTokens",
-                schema: "auth",
+                schema: "identity",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -132,7 +132,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                     table.ForeignKey(
                         name: "FK_OneTimeTokens_Users_UserId",
                         column: x => x.UserId,
-                        principalSchema: "auth",
+                        principalSchema: "identity",
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -140,7 +140,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "PasswordHistory",
-                schema: "auth",
+                schema: "identity",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -154,7 +154,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                     table.ForeignKey(
                         name: "FK_PasswordHistory_Users_UserId",
                         column: x => x.UserId,
-                        principalSchema: "auth",
+                        principalSchema: "identity",
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -162,7 +162,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "RefreshTokens",
-                schema: "auth",
+                schema: "identity",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -182,7 +182,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                     table.ForeignKey(
                         name: "FK_RefreshTokens_Users_UserId",
                         column: x => x.UserId,
-                        principalSchema: "auth",
+                        principalSchema: "identity",
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -190,7 +190,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "StaffApplications",
-                schema: "auth",
+                schema: "identity",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -222,7 +222,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                     table.ForeignKey(
                         name: "FK_StaffApplications_Users_UserId",
                         column: x => x.UserId,
-                        principalSchema: "auth",
+                        principalSchema: "identity",
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.SetNull);
@@ -230,7 +230,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "UserClaims",
-                schema: "auth",
+                schema: "identity",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
@@ -245,7 +245,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                     table.ForeignKey(
                         name: "FK_UserClaims_Users_UserId",
                         column: x => x.UserId,
-                        principalSchema: "auth",
+                        principalSchema: "identity",
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -253,7 +253,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "UserLogins",
-                schema: "auth",
+                schema: "identity",
                 columns: table => new
                 {
                     LoginProvider = table.Column<string>(type: "text", nullable: false),
@@ -267,7 +267,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                     table.ForeignKey(
                         name: "FK_UserLogins_Users_UserId",
                         column: x => x.UserId,
-                        principalSchema: "auth",
+                        principalSchema: "identity",
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -275,7 +275,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "UserRoles",
-                schema: "auth",
+                schema: "identity",
                 columns: table => new
                 {
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
@@ -287,14 +287,14 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                     table.ForeignKey(
                         name: "FK_UserRoles_Roles_RoleId",
                         column: x => x.RoleId,
-                        principalSchema: "auth",
+                        principalSchema: "identity",
                         principalTable: "Roles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_UserRoles_Users_UserId",
                         column: x => x.UserId,
-                        principalSchema: "auth",
+                        principalSchema: "identity",
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -302,7 +302,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "UserTokens",
-                schema: "auth",
+                schema: "identity",
                 columns: table => new
                 {
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
@@ -316,7 +316,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                     table.ForeignKey(
                         name: "FK_UserTokens_Users_UserId",
                         column: x => x.UserId,
-                        principalSchema: "auth",
+                        principalSchema: "identity",
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -324,7 +324,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "StaffApplicationDocuments",
-                schema: "auth",
+                schema: "identity",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -341,14 +341,14 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                     table.ForeignKey(
                         name: "FK_StaffApplicationDocuments_StaffApplications_StaffApplicatio~",
                         column: x => x.StaffApplicationId,
-                        principalSchema: "auth",
+                        principalSchema: "identity",
                         principalTable: "StaffApplications",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.InsertData(
-                schema: "auth",
+                schema: "identity",
                 table: "Roles",
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
                 values: new object[,]
@@ -363,140 +363,140 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_CustomerProfiles_Reference",
-                schema: "auth",
+                schema: "identity",
                 table: "CustomerProfiles",
                 column: "Reference",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_CustomerProfiles_UserId",
-                schema: "auth",
+                schema: "identity",
                 table: "CustomerProfiles",
                 column: "UserId",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_OneTimeTokens_TokenHash",
-                schema: "auth",
+                schema: "identity",
                 table: "OneTimeTokens",
                 column: "TokenHash",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_OneTimeTokens_UserId_Purpose",
-                schema: "auth",
+                schema: "identity",
                 table: "OneTimeTokens",
                 columns: new[] { "UserId", "Purpose" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_PasswordHistory_UserId_CreatedAt",
-                schema: "auth",
+                schema: "identity",
                 table: "PasswordHistory",
                 columns: new[] { "UserId", "CreatedAt" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_RefreshTokens_FamilyId",
-                schema: "auth",
+                schema: "identity",
                 table: "RefreshTokens",
                 column: "FamilyId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RefreshTokens_TokenHash",
-                schema: "auth",
+                schema: "identity",
                 table: "RefreshTokens",
                 column: "TokenHash",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_RefreshTokens_UserId",
-                schema: "auth",
+                schema: "identity",
                 table: "RefreshTokens",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RoleClaims_RoleId",
-                schema: "auth",
+                schema: "identity",
                 table: "RoleClaims",
                 column: "RoleId");
 
             migrationBuilder.CreateIndex(
                 name: "RoleNameIndex",
-                schema: "auth",
+                schema: "identity",
                 table: "Roles",
                 column: "NormalizedName",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_StaffApplicationDocuments_StaffApplicationId",
-                schema: "auth",
+                schema: "identity",
                 table: "StaffApplicationDocuments",
                 column: "StaffApplicationId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_StaffApplications_ActivationTokenHash",
-                schema: "auth",
+                schema: "identity",
                 table: "StaffApplications",
                 column: "ActivationTokenHash",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_StaffApplications_Nic",
-                schema: "auth",
+                schema: "identity",
                 table: "StaffApplications",
                 column: "Nic");
 
             migrationBuilder.CreateIndex(
                 name: "IX_StaffApplications_NormalizedEmail",
-                schema: "auth",
+                schema: "identity",
                 table: "StaffApplications",
                 column: "NormalizedEmail");
 
             migrationBuilder.CreateIndex(
                 name: "IX_StaffApplications_Reference",
-                schema: "auth",
+                schema: "identity",
                 table: "StaffApplications",
                 column: "Reference",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_StaffApplications_Status_SubmittedAt",
-                schema: "auth",
+                schema: "identity",
                 table: "StaffApplications",
                 columns: new[] { "Status", "SubmittedAt" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_StaffApplications_UserId",
-                schema: "auth",
+                schema: "identity",
                 table: "StaffApplications",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserClaims_UserId",
-                schema: "auth",
+                schema: "identity",
                 table: "UserClaims",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserLogins_UserId",
-                schema: "auth",
+                schema: "identity",
                 table: "UserLogins",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserRoles_RoleId",
-                schema: "auth",
+                schema: "identity",
                 table: "UserRoles",
                 column: "RoleId");
 
             migrationBuilder.CreateIndex(
                 name: "EmailIndex",
-                schema: "auth",
+                schema: "identity",
                 table: "Users",
                 column: "NormalizedEmail");
 
             migrationBuilder.CreateIndex(
                 name: "UserNameIndex",
-                schema: "auth",
+                schema: "identity",
                 table: "Users",
                 column: "NormalizedUserName",
                 unique: true);
@@ -507,59 +507,59 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
         {
             migrationBuilder.DropTable(
                 name: "CustomerProfiles",
-                schema: "auth");
+                schema: "identity");
 
             migrationBuilder.DropTable(
                 name: "OneTimeTokens",
-                schema: "auth");
+                schema: "identity");
 
             migrationBuilder.DropTable(
                 name: "PasswordHistory",
-                schema: "auth");
+                schema: "identity");
 
             migrationBuilder.DropTable(
                 name: "RefreshTokens",
-                schema: "auth");
+                schema: "identity");
 
             migrationBuilder.DropTable(
                 name: "RoleClaims",
-                schema: "auth");
+                schema: "identity");
 
             migrationBuilder.DropTable(
                 name: "StaffApplicationDocuments",
-                schema: "auth");
+                schema: "identity");
 
             migrationBuilder.DropTable(
                 name: "UserClaims",
-                schema: "auth");
+                schema: "identity");
 
             migrationBuilder.DropTable(
                 name: "UserLogins",
-                schema: "auth");
+                schema: "identity");
 
             migrationBuilder.DropTable(
                 name: "UserRoles",
-                schema: "auth");
+                schema: "identity");
 
             migrationBuilder.DropTable(
                 name: "UserTokens",
-                schema: "auth");
+                schema: "identity");
 
             migrationBuilder.DropTable(
                 name: "StaffApplications",
-                schema: "auth");
+                schema: "identity");
 
             migrationBuilder.DropTable(
                 name: "Roles",
-                schema: "auth");
+                schema: "identity");
 
             migrationBuilder.DropTable(
                 name: "Users",
-                schema: "auth");
+                schema: "identity");
 
             migrationBuilder.DropSequence(
                 name: "registration_reference_seq",
-                schema: "auth");
+                schema: "identity");
         }
     }
 }

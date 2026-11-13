@@ -19,7 +19,7 @@ It is a self-contained module of the modular monolith. See
 | ----------------- | --------------------------------------------------------------------- |
 | `Domain/`         | Entities and rules (`ApplicationUser`, `StaffApplication`, tokens)    |
 | `Application/`    | One folder per flow: request/response contracts, validators, service  |
-| `Infrastructure/` | `AuthDbContext` (schema `auth`), JWT, email, document storage, seeding |
+| `Infrastructure/` | `AuthDbContext` (schema `identity`), JWT, email, document storage, seeding |
 | `Endpoints/`      | Minimal API routes under `/api/auth`                                  |
 | `AuthModule.cs`   | The only public entry points: `AddAuthModule()` and `MapAuthEndpoints()` |
 
@@ -28,8 +28,9 @@ on Auth internals.
 
 ## Local setup
 
-1. Start PostgreSQL and set `ConnectionStrings:FleetSyncDatabase` as described
-   in [local-database.md](local-database.md).
+1. Set up a database and `ConnectionStrings:FleetSyncDatabase`:
+   - local PostgreSQL: [local-database.md](local-database.md)
+   - Supabase: [supabase-database.md](supabase-database.md)
 
 2. Set the JWT signing key in User Secrets. It must be at least 32 characters,
    and the API refuses to start without it.

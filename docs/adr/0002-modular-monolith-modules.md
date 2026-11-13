@@ -15,8 +15,12 @@ and owns:
 
 - its domain, application services and Minimal API endpoints, organised
   as folders inside the module project
-- its own `DbContext`, PostgreSQL schema (for example `auth`) and
-  migrations history table
+- its own `DbContext`, PostgreSQL schema (for example `identity` for the
+  Auth module) and migrations history table
+
+Schema names must not clash with schemas that Supabase reserves for itself
+(`auth`, `storage`, `realtime`, `extensions`, `graphql`, `vault` and others),
+because a Supabase project is used as a hosted database.
 - a single public entry point: `Add<Name>Module()` and `Map<Name>Endpoints()`
 
 Everything else in a module is `internal`. When another module needs data
