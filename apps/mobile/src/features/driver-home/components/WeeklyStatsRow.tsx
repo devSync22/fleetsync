@@ -1,12 +1,12 @@
 import { StyleSheet, View } from 'react-native';
 
 import { InfoTile } from '@/components/ui';
-import type { WeeklyStats } from '@/features/trips';
+import type { HomeStats } from '../hooks/useDriverHome';
 import { formatDistance } from '@/lib/format';
 import { spacing } from '@/theme';
 
 /** This week / Distance / Issues reported tiles at the bottom of Driver — Home. */
-export function WeeklyStatsRow({ stats }: { stats: WeeklyStats }) {
+export function WeeklyStatsRow({ stats }: { stats: HomeStats }) {
   return (
     <View style={styles.row}>
       <InfoTile

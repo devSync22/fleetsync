@@ -16,7 +16,7 @@ import { validateHandedOverBy, validateSealNumber, validateStartOdometer, valida
 /**
  * Trips service for the signed-in driver. Every function returns mock data behind the async
  * signature the real API will use, so switching to the backend only changes this file:
- * - GET  /driver/trips/today, /driver/trips/upcoming, /driver/stats/week, /trips/{id}
+ * - GET  /driver/trips/today, /driver/trips/upcoming, /driver/trips/history, /driver/stats/week, /trips/{id}
  * - POST /trips/{id}/start        { startOdometerKm, startedAt }               → Started
  * - POST /trips/{id}/pickup       multipart: fields + loading photos           → Picked up
  * - POST /trips/{id}/notes        { text }
@@ -105,6 +105,14 @@ export async function getUpcomingTrips(): Promise<Trip[]> {
     .sort(byStart);
 }
 
+/** Trip history: Completed and Cancelled trips, newest first (trips finished in the trip flow included). */
+export async function getTripHistory(): Promise<Trip[]> {
+  await mockRequest();
+  return driverTrips(new Date())
+    .filter((trip) => trip.status === 'Completed' || trip.status === 'Cancelled')
+    .sort((a, b) => byStart(b, a));
+}
+
 export async function getWeeklyStats(): Promise<WeeklyStats> {
   await mockRequest();
   return mockWeeklyStats;
@@ -163,6 +171,16 @@ export async function recordTripDelivered(tripId: string, deliveredAt: string): 
   const trip = findTrip(tripId);
   requireStatus(trip, isHeadingToDestination, 'Proof of delivery can only be sent after the cargo is picked up.');
   return saveAndReturn(trip, { status: 'Delivered', deliveredAt }).status;
+}
+
+/**
+ * Mock only: counts a vehicle issue on the trip when the vehicle-issues service accepts a report
+ * ("Issues" on Complete trip and Trip history). With the real API the backend counts it; remove this then.
+ */
+export async function recordTripIssue(tripId: string): Promise<Trip> {
+  const trip = findTrip(tripId);
+  requireStatus(trip, isActiveTrip, 'Issues can only be reported during the trip.');
+  return saveAndReturn(trip, { issueCount: trip.issueCount + 1 });
 }
 
 /** Complete trip: Delivered → Completed, with an ending odometer above the starting one. */

@@ -1,4 +1,4 @@
-import type { Trip, WeeklyStats } from '../types';
+import type { Trip, TripVehicle, WeeklyStats } from '../types';
 
 /**
  * Mock data copied from the Figma frames "Driver — Home", "Trip details", "Start trip", "Active trip",
@@ -130,7 +130,7 @@ export function createMockTrips(now: Date): Trip[] {
         mechanic,
         coordinator,
       ],
-      issueCount: 1,
+      issueCount: 0,
     },
     {
       id: 'TRP-2207',
@@ -174,12 +174,108 @@ export function createMockTrips(now: Date): Trip[] {
       notes: [],
       issueCount: 0,
     },
+    ...createMockPastTrips(now),
   ];
 }
 
-/** "This week: 3 trips · 412 km · 0 issues reported". */
+type PastTripInput = {
+  id: string;
+  orderId: string;
+  customerName: string;
+  from: string;
+  to: string;
+  daysAgo: number;
+  /** Started and completed times as [hours, minutes]. */
+  start: [number, number];
+  end: [number, number];
+  distanceKm: number;
+  vehicle: TripVehicle;
+  cancelled?: boolean;
+  issueCount?: number;
+};
+
+/** A finished trip for Trip history. Only what the history list and read-only Trip details show. */
+function pastTrip(now: Date, input: PastTripInput): Trip {
+  const startedAt = atDay(now, -input.daysAgo, ...input.start);
+  const endedAt = atDay(now, -input.daysAgo, ...input.end);
+  const startOdometerKm = input.vehicle.lastOdometerKm - 400 - input.daysAgo * 150;
+  const stop = (area: string, contactRole: 'Contact' | 'Receiver') => ({
+    name: `${input.customerName}, ${area}`,
+    shortName: input.customerName,
+    area,
+    address: area,
+    contactRole,
+    contactName: contactRole === 'Contact' ? 'Ruwini Fonseka' : 'Pradeep Kumara',
+    contactPhone: contactRole === 'Contact' ? '+94771234567' : '+94712345678',
+  });
+  return {
+    id: input.id,
+    orderId: input.orderId,
+    customerName: input.customerName,
+    status: input.cancelled ? 'Cancelled' : 'Completed',
+    scheduledStart: startedAt,
+    deliverBy: endedAt,
+    distanceKm: input.distanceKm,
+    pickup: stop(input.from, 'Contact'),
+    destination: stop(input.to, 'Receiver'),
+    vehicle: input.vehicle,
+    cargo: {
+      description: 'Packaged goods in 30 cartons',
+      weightTonnes: 2.4,
+      packageCount: 30,
+      packageLabel: 'cartons',
+      handling: ['Keep dry'],
+    },
+    people: [mechanic, coordinator],
+    notes: [],
+    issueCount: input.issueCount ?? 0,
+    ...(input.cancelled
+      ? { cancelledAt: atDay(now, -input.daysAgo, input.start[0] - 1, 0) }
+      : { startedAt, startOdometerKm, completedAt: endedAt, endOdometerKm: startOdometerKm + input.distanceKm }),
+  };
+}
+
+const elf7702: TripVehicle = { id: 'veh-7702', plate: 'WP LB-7702', model: 'Isuzu Elf', capacityTonnes: 3.5, lastOdometerKm: 84_210 };
+const forward4521: TripVehicle = {
+  id: 'veh-4521',
+  plate: 'WP LB-4521',
+  model: 'Isuzu Forward',
+  capacityTonnes: 7,
+  lastOdometerKm: 126_540,
+};
+
+/** Completed and cancelled trips from "Driver — Trip history" (TRP-2199 … TRP-2186), plus two older ones. */
+function createMockPastTrips(now: Date): Trip[] {
+  return [
+    pastTrip(now, {
+      id: 'TRP-2199', orderId: 'ORD-1047', customerName: 'Cargills', from: 'Colombo 15', to: 'Kandy',
+      daysAgo: 2, start: [7, 10], end: [10, 45], distanceKm: 118, vehicle: elf7702,
+    }),
+    pastTrip(now, {
+      id: 'TRP-2194', orderId: 'ORD-1044', customerName: 'Hayleys Freight', from: 'Kurunegala', to: 'Colombo',
+      daysAgo: 3, start: [8, 0], end: [10, 40], distanceKm: 96, vehicle: forward4521,
+    }),
+    pastTrip(now, {
+      id: 'TRP-2190', orderId: 'ORD-1041', customerName: 'Elephant House', from: 'Colombo', to: 'Galle',
+      daysAgo: 4, start: [9, 0], end: [12, 0], distanceKm: 126, vehicle: elf7702, cancelled: true,
+    }),
+    pastTrip(now, {
+      id: 'TRP-2186', orderId: 'ORD-1038', customerName: 'Colombo Pharma', from: 'Negombo', to: 'Kurunegala',
+      daysAgo: 5, start: [8, 30], end: [10, 35], distanceKm: 74, vehicle: elf7702,
+    }),
+    pastTrip(now, {
+      id: 'TRP-2181', orderId: 'ORD-1033', customerName: 'Cargills', from: 'Colombo 10', to: 'Ratnapura',
+      daysAgo: 9, start: [7, 30], end: [10, 50], distanceKm: 101, vehicle: forward4521, issueCount: 1,
+    }),
+    pastTrip(now, {
+      id: 'TRP-2175', orderId: 'ORD-1029', customerName: 'Hayleys Freight', from: 'Negombo', to: 'Colombo 15',
+      daysAgo: 12, start: [9, 15], end: [10, 20], distanceKm: 36, vehicle: elf7702,
+    }),
+  ];
+}
+
+/** "This week: 3 trips · 412 km". Issues reported comes from the vehicle-issues service. */
 export const mockWeeklyStats: WeeklyStats = {
   tripCount: 3,
   distanceKm: 412,
-  issuesReported: 0,
 };
