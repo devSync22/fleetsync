@@ -75,6 +75,18 @@ export function formatDayMonth(value: DateInput): string {
   return `${date.getDate()} ${MONTHS[date.getMonth()]}`;
 }
 
+/** Day, month and year: "14 Aug 2028". */
+export function formatFullDate(value: DateInput): string {
+  const date = toDate(value);
+  return `${formatDayMonth(date)} ${date.getFullYear()}`;
+}
+
+/** Short month and year: "Mar 2023". */
+export function formatMonthYear(value: DateInput): string {
+  const date = toDate(value);
+  return `${MONTHS[date.getMonth()]} ${date.getFullYear()}`;
+}
+
 /** Date and time: "17 Oct 2026, 10:12", or "17 Oct, 10:12" without the year. */
 export function formatDateTime(value: DateInput, { withYear = true }: { withYear?: boolean } = {}): string {
   const date = toDate(value);

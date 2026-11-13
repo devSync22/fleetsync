@@ -1,6 +1,6 @@
-import { CircleCheck, CircleX } from 'lucide-react-native';
+import { CircleCheck, CircleX, Eye, EyeOff } from 'lucide-react-native';
 import { useState } from 'react';
-import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
 
 import { colors, radii, sizes, spacing, typography } from '@/theme';
 
@@ -21,7 +21,10 @@ type TextFieldProps = Omit<TextInputProps, 'style' | 'placeholderTextColor'> & {
   hideLabel?: boolean;
 };
 
-/** Label above, field, then helper or validation message below (Style Guide → Form fields). */
+/**
+ * Label above, field, then helper or validation message below (Style Guide → Form fields).
+ * Password fields (`secureTextEntry`) get a show/hide eye button.
+ */
 export function TextField({
   label,
   helper,
@@ -31,9 +34,12 @@ export function TextField({
   hideLabel = false,
   onFocus,
   onBlur,
+  secureTextEntry,
   ...inputProps
 }: TextFieldProps) {
   const [focused, setFocused] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const EyeIcon = passwordVisible ? EyeOff : Eye;
 
   const message = error ?? success ?? helper;
   const MessageIcon = error ? CircleX : success ? CircleCheck : null;
@@ -48,9 +54,11 @@ export function TextField({
           focused && styles.focused,
           !focused && error ? styles.error : null,
           !focused && !error && success ? styles.success : null,
+          secureTextEntry ? styles.withToggle : null,
         ]}>
         <TextInput
           {...inputProps}
+          secureTextEntry={secureTextEntry && !passwordVisible}
           accessibilityLabel={inputProps.accessibilityLabel ?? label}
           placeholderTextColor={colors.muted}
           onFocus={(event) => {
@@ -63,10 +71,20 @@ export function TextField({
           }}
           style={[
             styles.input,
+            secureTextEntry ? styles.flex : null,
             mono ? typography.monoInput : typography.body,
             inputProps.multiline ? styles.multiline : null,
           ]}
         />
+        {secureTextEntry ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={passwordVisible ? 'Hide password' : 'Show password'}
+            onPress={() => setPasswordVisible((visible) => !visible)}
+            style={styles.toggle}>
+            <EyeIcon size={sizes.iconMd} color={colors.muted} />
+          </Pressable>
+        ) : null}
       </View>
       {message ? (
         <View style={styles.message}>
@@ -103,6 +121,20 @@ const styles = StyleSheet.create({
   },
   success: {
     borderColor: colors.success,
+  },
+  withToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingRight: 0,
+  },
+  flex: {
+    flex: 1,
+  },
+  toggle: {
+    width: sizes.touchTarget,
+    height: sizes.touchTarget,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   input: {
     paddingVertical: spacing.ml,

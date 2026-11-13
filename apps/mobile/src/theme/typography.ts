@@ -26,6 +26,8 @@ export const fontSizes = {
   base: 14,
   /** Option card titles ("Driver", "Mechanic"). */
   option: 15,
+  /** Name on the profile header ("Kasun Jayasinghe"). */
+  name: 17,
   lg: 16,
   xl: 18,
   xxl: 20,
@@ -216,6 +218,18 @@ export const typography = {
     fontFamily: fonts.semiBold,
     fontSize: fontSizes.base,
     color: colors.accent,
+  },
+  /** Initials in the large (60 px) profile avatar — "KJ". */
+  avatarLarge: {
+    fontFamily: fonts.semiBold,
+    fontSize: fontSizes.xxl,
+    color: colors.accent,
+  },
+  /** Name on the profile header — "Kasun Jayasinghe". */
+  profileName: {
+    fontFamily: fonts.bold,
+    fontSize: fontSizes.name,
+    color: colors.text,
   },
   /** Initials in a small (36 px) avatar — "People on this trip". */
   avatarSmall: {
