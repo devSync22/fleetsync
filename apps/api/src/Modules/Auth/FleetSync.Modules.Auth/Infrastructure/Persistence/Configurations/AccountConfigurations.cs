@@ -1,0 +1,77 @@
+using FleetSync.Modules.Auth.Domain;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Configurations;
+
+internal sealed class CustomerProfileConfiguration : IEntityTypeConfiguration<CustomerProfile>
+{
+    public void Configure(EntityTypeBuilder<CustomerProfile> builder)
+    {
+        builder.ToTable("CustomerProfiles");
+        builder.HasKey(p => p.Id);
+
+        builder.Property(p => p.Reference).HasMaxLength(20).IsRequired();
+        builder.Property(p => p.CompanyName).HasMaxLength(200).IsRequired();
+        builder.Property(p => p.BusinessRegistrationNo).HasMaxLength(50).IsRequired();
+        builder.Property(p => p.BillingAddress).HasMaxLength(500).IsRequired();
+
+        builder.HasIndex(p => p.Reference).IsUnique();
+        builder.HasIndex(p => p.UserId).IsUnique();
+
+        // Deleting an account removes its profile.
+        builder.HasOne<ApplicationUser>().WithMany().HasForeignKey(p => p.UserId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+internal sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
+{
+    public void Configure(EntityTypeBuilder<RefreshToken> builder)
+    {
+        builder.ToTable("RefreshTokens");
+        builder.HasKey(t => t.Id);
+
+        // SHA-256 as hex = 64 characters; looked up on every refresh.
+        builder.Property(t => t.TokenHash).HasMaxLength(64).IsRequired();
+        builder.HasIndex(t => t.TokenHash).IsUnique();
+        builder.HasIndex(t => t.FamilyId);
+        builder.HasIndex(t => t.UserId);
+
+        // PostgreSQL xmin as an optimistic concurrency token: two simultaneous refreshes
+        // of the same token can't both rotate it.
+        builder.Property<uint>("Version").IsRowVersion();
+
+        builder.HasOne<ApplicationUser>().WithMany().HasForeignKey(t => t.UserId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+internal sealed class OneTimeTokenConfiguration : IEntityTypeConfiguration<OneTimeToken>
+{
+    public void Configure(EntityTypeBuilder<OneTimeToken> builder)
+    {
+        builder.ToTable("OneTimeTokens");
+        builder.HasKey(t => t.Id);
+
+        builder.Property(t => t.TokenHash).HasMaxLength(64).IsRequired();
+        builder.Property(t => t.Purpose).HasConversion<string>().HasMaxLength(30);
+
+        builder.HasIndex(t => t.TokenHash).IsUnique();
+        builder.HasIndex(t => new { t.UserId, t.Purpose });
+
+        builder.HasOne<ApplicationUser>().WithMany().HasForeignKey(t => t.UserId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+internal sealed class PasswordHistoryConfiguration : IEntityTypeConfiguration<PasswordHistoryEntry>
+{
+    public void Configure(EntityTypeBuilder<PasswordHistoryEntry> builder)
+    {
+        builder.ToTable("PasswordHistory");
+        builder.HasKey(p => p.Id);
+
+        builder.Property(p => p.PasswordHash).IsRequired();
+        builder.HasIndex(p => new { p.UserId, p.CreatedAt });
+
+        builder.HasOne<ApplicationUser>().WithMany().HasForeignKey(p => p.UserId).OnDelete(DeleteBehavior.Cascade);
+    }
+}

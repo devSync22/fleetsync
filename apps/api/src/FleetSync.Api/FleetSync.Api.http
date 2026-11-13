@@ -1,6 +1,66 @@
-@FleetSync.Api_HostAddress = http://localhost:5215
+# FleetSync API requests for the VS Code REST Client / Rider / Visual Studio.
+# Emailed links (verify, reset, activate) are printed in the API console in Development.
 
-GET {{FleetSync.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+@host = http://localhost:5215
+@email = sachini@example.com
+@password = Fleet2026Pass
 
-###
+### Liveness
+GET {{host}}/health/live
+
+### Readiness (PostgreSQL)
+GET {{host}}/health/ready
+
+### Register a customer
+POST {{host}}/api/auth/register/customer
+Content-Type: application/json
+
+{
+  "companyName": "Hayleys Freight (Pvt) Ltd",
+  "businessRegistrationNo": "PV 12345",
+  "billingAddress": "No. 25, Galle Road, Colombo 03",
+  "fullName": "Sachini Fernando",
+  "mobile": "077 123 4567",
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### Verify email (token from the console log)
+POST {{host}}/api/auth/verify-email
+Content-Type: application/json
+
+{ "token": "paste-token-here" }
+
+### Sign in as a web client (refresh token is set as an HttpOnly cookie)
+# @name login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "email": "{{email}}", "password": "{{password}}", "rememberMe": true }
+
+### Sign in as the mobile app (refresh token in the response body)
+POST {{host}}/api/auth/login
+Content-Type: application/json
+X-Client-Type: mobile
+
+{ "email": "{{email}}", "password": "{{password}}", "rememberMe": false }
+
+### Current user
+GET {{host}}/api/auth/me
+Authorization: Bearer {{login.response.body.accessToken}}
+
+### Refresh (web: cookie; mobile: send { "refreshToken": "..." })
+POST {{host}}/api/auth/refresh
+
+### Forgot password
+POST {{host}}/api/auth/forgot-password
+Content-Type: application/json
+
+{ "email": "{{email}}" }
+
+### Staff applications awaiting review (Fleet Administrator token)
+GET {{host}}/api/auth/staff-applications?status=pending
+Authorization: Bearer {{login.response.body.accessToken}}
+
+### Sign out
+POST {{host}}/api/auth/logout

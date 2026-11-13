@@ -9,6 +9,8 @@
 **/bin/
 **/obj/
 **/TestResults/
+# Uploaded files stored locally by the API (staff application documents)
+**/App_Data/
 .vs/
 *.user
 *.suo
