@@ -86,6 +86,16 @@ const failedAttempts = new Map<string, number>();
 const lockedUntil = new Map<string, number>();
 const submittedRequests = new Map<string, AccountRequest>();
 let nextRequestNumber = FIRST_REQUEST_NUMBER;
+const initialAccounts = mockAccounts.map((account) => ({ ...account }));
+
+/** Tests only: puts the in-memory mock state back to how the app starts. */
+export function resetAuthMocks() {
+  failedAttempts.clear();
+  lockedUntil.clear();
+  submittedRequests.clear();
+  nextRequestNumber = FIRST_REQUEST_NUMBER;
+  mockAccounts.splice(0, mockAccounts.length, ...initialAccounts.map((account) => ({ ...account })));
+}
 
 export async function signIn(credentials: SignInCredentials): Promise<Session> {
   await delay();
