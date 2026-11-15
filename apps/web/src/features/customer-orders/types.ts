@@ -107,8 +107,8 @@ export interface OrderStop {
   address: string
   /** "Today, 08:00" or "Before 13:00". */
   when: string
-  /** Contact person at the stop. */
-  contact: string
+  /** Contact person at the stop; left out where the screen shows only the time (Fare quotation). */
+  contact?: string
 }
 
 export interface OrderCargo {
@@ -219,4 +219,53 @@ export type NewOrderStep = 1 | 2 | 3
 
 export interface CreatedOrder {
   orderId: string
+}
+
+/* ───────────── Fare quotation (/customer/quotations/:orderId) ───────────── */
+
+/** "expired" is also what the page shows for an "awaiting" quotation whose validUntil has passed. */
+export type QuotationStatus = 'awaiting' | 'accepted' | 'declined' | 'expired'
+
+export interface QuotationLine {
+  /** "Distance charge" */
+  label: string
+  /** "96 km × LKR 210" */
+  detail: string
+  /** LKR */
+  amount: number
+}
+
+/** A coordinator's fare quotation for one order, as the customer sees it. */
+export interface CustomerQuotation {
+  orderId: string
+  status: QuotationStatus
+  sentBy: string
+  /** "Operational Coordinator" */
+  sentByRole: string
+  /** "today at 11:20" */
+  sentAtLabel: string
+  /** ISO date-time the quotation stops being valid. */
+  validUntil: string
+  /** "Mon, 20 Oct 2026 at 18:00" */
+  validUntilLabel: string
+  /** "Heavy truck · up to 9 t" */
+  vehicleLabel: string
+  lines: QuotationLine[]
+  /** LKR; the sum of `lines`. */
+  total: number
+  coordinatorMessage: string
+  /** "Nimal Perera · today, 11:20" */
+  messageMeta: string
+  /** What was quoted for (the Your order card). */
+  order: {
+    pickup: OrderStop
+    destination: OrderStop
+    cargo: OrderCargo
+  }
+  /** When the customer accepted or declined, e.g. "Today, 12:05". */
+  decidedAtLabel?: string
+  /** The customer's reason, when they declined and gave one. */
+  declineReason?: string
+  /** True while an accepted quotation still has to be paid (shows "Go to payment"). */
+  paymentDue: boolean
 }
