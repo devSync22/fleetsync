@@ -1,8 +1,9 @@
+import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
-import { statusTone, type StatusTone } from './statusTone'
+import { statusMeta, type DomainStatus, type StatusTone } from './statusTones'
 
 const toneClasses: Record<StatusTone, string> = {
-  neutral: 'bg-secondary text-muted-foreground',
+  neutral: 'bg-secondary text-foreground',
   pending: 'bg-pending-soft text-pending',
   accent: 'bg-brand-soft text-brand',
   info: 'bg-info-soft text-info',
@@ -10,28 +11,23 @@ const toneClasses: Record<StatusTone, string> = {
   danger: 'bg-danger-soft text-danger',
 }
 
-type StatusBadgeProps = {
-  /** Text inside the badge, e.g. "Pending review". */
-  label: string
-  /** Either an explicit tone, or a domain status that is mapped with `statusTone`. */
-  tone?: StatusTone
-  status?: string
-  className?: string
-}
+type StatusBadgeProps = { className?: string } & (
+  | { status: DomainStatus; tone?: never; children?: never }
+  | { status?: never; tone: StatusTone; children: ReactNode }
+)
 
-/** Small pill showing a record's status (Figma "Status Badge", node 16:47): soft background, strong label, no dot. */
-export function StatusBadge({ label, tone, status, className }: StatusBadgeProps) {
-  const resolved = tone ?? (status ? statusTone(status) : 'neutral')
-
+/** Soft tinted badge (Style Guide → Status Badge). Pass a domain `status`, or a `tone` with custom text. */
+export function StatusBadge({ status, tone, children, className }: StatusBadgeProps) {
+  const resolvedTone = status ? statusMeta[status].tone : tone
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-md px-2.5 py-0.5 text-xs leading-4 font-semibold whitespace-nowrap',
-        toneClasses[resolved],
+        'inline-flex w-fit items-center rounded-md px-2.5 py-[3px] text-xs leading-4 font-semibold whitespace-nowrap',
+        toneClasses[resolvedTone],
         className,
       )}
     >
-      {label}
+      {status ? statusMeta[status].label : children}
     </span>
   )
 }

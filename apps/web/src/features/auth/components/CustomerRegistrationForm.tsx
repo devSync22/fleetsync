@@ -85,7 +85,7 @@ export function CustomerRegistrationForm({ onSubmit, isSubmitting = false, error
       />
 
       {/* Errors that don't belong to one field (e.g. "Email already in use"). */}
-      {error && error.errorCode !== 'validation_failed' && <Banner title={error.title} message={error.detail} />}
+      {error && error.errorCode !== 'validation_failed' && <Banner tone="danger" title={error.title} message={error.detail} />}
 
       {/* Company details: the customer account belongs to a company, not a person. */}
       <AuthSectionLabel>Company</AuthSectionLabel>

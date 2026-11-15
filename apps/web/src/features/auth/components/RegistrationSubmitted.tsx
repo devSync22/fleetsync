@@ -93,7 +93,7 @@ export function RegistrationSubmitted({ submission, onResendVerification, resend
     { label: 'Account type', value: accountType },
     { label: 'Sign-in email', value: email },
     { label: 'Submitted', value: formatDateTime(submittedAt) },
-    { label: 'Status', value: <StatusBadge status="pending" label="Pending review" /> },
+    { label: 'Status', value: <StatusBadge status="pending-review" /> },
   ]
 
   return (

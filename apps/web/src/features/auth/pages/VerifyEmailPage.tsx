@@ -46,6 +46,7 @@ export function VerifyEmailPage() {
         <>
           <AuthFormHeader title="We couldn’t confirm your email" />
           <Banner
+            tone="danger"
             title="Link invalid or expired"
             message="This link has expired or was already used. If you haven’t confirmed your email yet, register again or ask us to resend the link from the confirmation screen."
           />

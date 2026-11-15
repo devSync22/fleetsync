@@ -51,7 +51,7 @@ export function LoginForm({ onSubmit, isSubmitting = false, error, notice }: Log
 
       <AuthFormHeader title="Sign in" subtitle="Welcome back. Use the email registered with your account." />
 
-      {error && <Banner title={error.title} message={error.message} />}
+      {error && <Banner tone="danger" title={error.title} message={error.message} />}
 
       <TextField
         label="Email address"

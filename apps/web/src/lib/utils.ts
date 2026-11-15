@@ -1,8 +1,17 @@
-/**
- * Small shared helpers. `cn` is shadcn's class-name helper (merges Tailwind
- * classes, later ones win), used by every component in components/ui.
- */
-export { cn } from 'cn'
+import { clsx, type ClassValue } from 'clsx'
+import { twMerge } from 'tailwind-merge'
+
+/** shadcn's class-name helper: joins classes and merges Tailwind conflicts (later ones win). */
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
+const lkrFormatter = new Intl.NumberFormat('en-LK', { maximumFractionDigits: 0 })
+
+/** 24600 → "LKR 24,600" */
+export function formatLKR(amount: number) {
+  return `LKR ${lkrFormatter.format(amount)}`
+}
 
 /** "2026-10-26" or a Date → "26 Oct 2026", the date style used across the designs. */
 export function formatDate(value: string | Date): string {
@@ -17,9 +26,4 @@ export function formatTime(value: Date): string {
 /** A Date → "23 Oct 2026, 09:05". */
 export function formatDateTime(value: Date): string {
   return `${formatDate(value)}, ${formatTime(value)}`
-}
-
-/** 125000 → "LKR 125,000.00" — the money format used across the designs. */
-export function formatLKR(amount: number): string {
-  return `LKR ${amount.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }

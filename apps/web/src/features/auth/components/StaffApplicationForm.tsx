@@ -135,7 +135,7 @@ export function StaffApplicationForm({
       )}
 
       {/* Errors that don't belong to one field (e.g. "Application already submitted"). */}
-      {error && error.errorCode !== 'validation_failed' && <Banner title={error.title} message={error.detail} />}
+      {error && error.errorCode !== 'validation_failed' && <Banner tone="danger" title={error.title} message={error.detail} />}
 
       <AuthSectionLabel>Your details</AuthSectionLabel>
 

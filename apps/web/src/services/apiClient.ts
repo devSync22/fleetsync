@@ -99,6 +99,9 @@ type ProblemDetails = {
  * A failed API call. `errorCode` is the backend's stable code (e.g.
  * "auth.invalid_credentials"); screens switch on it rather than on text.
  * Network failures have status 0 and errorCode "network_error".
+ *
+ * Services can also throw one themselves (e.g. a mock or a client-side check):
+ * `new ApiError('Add at least one recipient.', 400)`.
  */
 export class ApiError extends Error {
   readonly status: number
@@ -108,13 +111,13 @@ export class ApiError extends Error {
   readonly fieldErrors: Record<string, string[]>
   readonly extensions: Record<string, unknown>
 
-  constructor(status: number, problem: ProblemDetails) {
-    super(problem.detail ?? problem.title ?? 'Request failed')
+  constructor(message: string, status = 0, problem: ProblemDetails = {}) {
+    super(message)
     this.name = 'ApiError'
     this.status = status
     this.errorCode = problem.errorCode ?? (status === 0 ? 'network_error' : 'unknown_error')
     this.title = problem.title ?? 'Something went wrong'
-    this.detail = problem.detail ?? 'Please try again.'
+    this.detail = problem.detail ?? message
     this.fieldErrors = problem.errors ?? {}
     this.extensions = problem
   }
@@ -132,7 +135,7 @@ export function toApiError(error: unknown): ApiError {
 
   if (error instanceof AxiosError) {
     if (!error.response) {
-      return new ApiError(0, {
+      return new ApiError('Check your internet connection and try again.', 0, {
         title: 'Can’t reach FleetSync',
         detail: 'Check your internet connection and try again.',
       })
@@ -140,8 +143,8 @@ export function toApiError(error: unknown): ApiError {
 
     const data = error.response.data
     const problem: ProblemDetails = typeof data === 'object' && data !== null ? (data as ProblemDetails) : {}
-    return new ApiError(error.response.status, problem)
+    return new ApiError(problem.detail ?? problem.title ?? 'Request failed', error.response.status, problem)
   }
 
-  return new ApiError(0, { title: 'Something went wrong', detail: 'Please try again.' })
+  return new ApiError('Please try again.', 0, { title: 'Something went wrong', detail: 'Please try again.' })
 }

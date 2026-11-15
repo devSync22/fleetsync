@@ -50,7 +50,7 @@ export function SetNewPasswordForm({ onSubmit, isSubmitting = false, email, erro
 
       <AuthFormHeader title="Set a new password" subtitle={`For ${email}`} />
 
-      {error && <Banner title={error.title} message={error.detail} />}
+      {error && <Banner tone="danger" title={error.title} message={error.detail} />}
 
       {/* Hidden username field so password managers save the new password against the right account. */}
       <input type="email" name="username" autoComplete="username" value={email} readOnly hidden />

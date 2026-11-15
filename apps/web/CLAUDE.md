@@ -132,7 +132,7 @@ Fonts: **Inter** (UI) and **JetBrains Mono** (IDs, plates, numbers in data), loa
 - **Status badges**: soft tinted background with the label in the strong colour, no dot. One colour per meaning:
   neutral = inactive/draft/off duty, pending = pending/due soon, accent = assigned/quoted/scheduled,
   info = on trip/in progress, success = active/completed/paid, danger = overdue/failed/suspended/cancelled.
-  One `StatusBadge` component (`components/shared`); each domain status maps to a tone in `statusTone.ts`.
+  One `StatusBadge` component (`components/shared`); each domain status maps to a label and tone in `statusTones.ts`.
 - Never strike through or draw lines across field values. Old values show in grey with a "Current" or "Before" label.
 - Tables: small buttons in the Actions column (e.g. "View") plus a ⋯ menu for the rest.
 - Desktop frames are 1440px wide; layouts should also work down to about 1024px.

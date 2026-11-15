@@ -101,7 +101,7 @@ export function ForgotPasswordForm({ onSubmit, isSubmitting = false, sentAt, err
         {isSubmitting ? 'Sending…' : 'Send reset link'}
       </Button>
 
-      {error && <Banner title={error.title} message={error.detail} />}
+      {error && <Banner tone="danger" title={error.title} message={error.detail} />}
 
       {sentAt !== undefined && !error && (
         <>

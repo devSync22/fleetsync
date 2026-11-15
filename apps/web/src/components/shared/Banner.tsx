@@ -1,43 +1,36 @@
-import { CircleCheck, CircleX, Info } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { CircleAlert, CircleCheck, Info, TriangleAlert, type LucideIcon } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
-/** Visual tones of the Figma "Banner" component. */
-export type BannerTone = 'danger' | 'info' | 'success'
+export type BannerTone = 'danger' | 'pending' | 'info' | 'success'
+
+const toneStyles: Record<BannerTone, { box: string; title: string; icon: LucideIcon }> = {
+  danger: { box: 'bg-danger-soft', title: 'text-danger', icon: CircleAlert },
+  pending: { box: 'bg-pending-soft', title: 'text-pending', icon: TriangleAlert },
+  info: { box: 'bg-info-soft', title: 'text-info', icon: Info },
+  success: { box: 'bg-success-soft', title: 'text-success', icon: CircleCheck },
+}
 
 type BannerProps = {
-  /** Short bold headline, e.g. "Incorrect email or password". */
+  tone: BannerTone
   title: string
-  /** Supporting sentence explaining what happened or what to do next. Can contain links. */
+  /** Plain text, or inline content such as links. */
   message: ReactNode
-  /** `danger` for errors (default), `info` for neutral information, `success` for confirmations. */
-  tone?: BannerTone
+  action?: ReactNode
   className?: string
 }
 
-const toneIcons = {
-  danger: CircleX,
-  info: Info,
-  success: CircleCheck,
-} satisfies Record<BannerTone, unknown>
-
-/**
- * Inline status banner (Figma "Banner"), built on shadcn's Alert.
- * The icon and title take the tone colour; the message stays in the body colour.
- */
-export function Banner({ title, message, tone = 'danger', className }: BannerProps) {
-  const Icon = toneIcons[tone]
-
+/** Style Guide → Banner: inline error, warning, info and success messages. */
+export function Banner({ tone, title, message, action, className }: BannerProps) {
+  const { box, title: titleClass, icon: Icon } = toneStyles[tone]
   return (
-    <Alert
-      variant={tone}
-      // Errors interrupt screen readers right away (alert); info and success wait politely (status).
-      role={tone === 'danger' ? 'alert' : 'status'}
-      className={className}
-    >
-      <Icon aria-hidden="true" className="size-[18px]" />
-      <AlertTitle>{title}</AlertTitle>
-      <AlertDescription>{message}</AlertDescription>
-    </Alert>
+    <div role={tone === 'danger' ? 'alert' : 'status'} className={cn('flex items-start gap-3 rounded-[10px] px-4 py-3.5', box, className)}>
+      <Icon className={cn('mt-px size-[18px] shrink-0', titleClass)} aria-hidden />
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5 leading-5">
+        <p className={cn('text-sm font-semibold', titleClass)}>{title}</p>
+        <p className="text-[13px]">{message}</p>
+      </div>
+      {action && <div className="shrink-0 self-center">{action}</div>}
+    </div>
   )
 }

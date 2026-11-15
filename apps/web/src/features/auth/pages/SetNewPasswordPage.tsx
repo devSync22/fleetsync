@@ -43,6 +43,7 @@ export function SetNewPasswordPage() {
     return (
       <div className="flex w-full max-w-[400px] flex-col gap-5">
         <Banner
+          tone="danger"
           title="Link invalid or expired"
           message="This reset link has expired or was already used. Request a new one."
         />
