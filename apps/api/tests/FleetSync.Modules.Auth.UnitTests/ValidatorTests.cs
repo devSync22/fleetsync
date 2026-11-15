@@ -1,4 +1,4 @@
-using FleetSync.Modules.Auth.Application.StaffApplications;
+using FleetSync.Modules.Auth.Application.Applications;
 
 namespace FleetSync.Modules.Auth.UnitTests;
 
@@ -48,10 +48,37 @@ public sealed class SubmitStaffApplicationCommandValidatorTests
     }
 
     [Fact]
-    public void Unknown_role_is_rejected() =>
+    public void Owner_can_apply_without_licence_details()
+    {
+        var form = ValidForm("owner");
+        form.LicenceNumber = null;
+        form.LicenceClass = null;
+
+        Assert.True(_validator.Validate(new SubmitStaffApplicationCommand(form, [File()])).IsValid);
+    }
+
+    [Theory]
+    // Customers register with the customer form; administrators are never applied for.
+    [InlineData("customer")]
+    [InlineData("fleet-administrator")]
+    [InlineData("pilot")]
+    public void Non_staff_roles_are_rejected(string role) =>
         Assert.Contains(
-            _validator.Validate(new SubmitStaffApplicationCommand(ValidForm("owner"), [File()])).Errors,
+            _validator.Validate(new SubmitStaffApplicationCommand(ValidForm(role), [File()])).Errors,
             e => e.PropertyName == "role");
+
+    [Theory]
+    [InlineData("31-01-2030")]
+    [InlineData("2020-01-31")]
+    public void Driver_licence_expiry_must_be_a_future_iso_date(string expiry)
+    {
+        var form = ValidForm();
+        form.LicenceExpiry = expiry;
+
+        Assert.Contains(
+            _validator.Validate(new SubmitStaffApplicationCommand(form, [File()])).Errors,
+            e => e.PropertyName == "licenceExpiry");
+    }
 
     [Fact]
     public void At_least_one_document_is_required() =>

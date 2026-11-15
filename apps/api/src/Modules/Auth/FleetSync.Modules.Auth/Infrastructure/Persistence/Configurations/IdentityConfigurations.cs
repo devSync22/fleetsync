@@ -14,6 +14,15 @@ internal sealed class ApplicationUserConfiguration : IEntityTypeConfiguration<Ap
 
         builder.Property(u => u.FullName).HasMaxLength(150).IsRequired();
         builder.Property(u => u.PhoneNumber).HasMaxLength(20);
+
+        // is_active DEFAULT TRUE (the database default also covers rows inserted by SQL tools).
+        // HasSentinel(true): EF sends the value only when it differs from the
+        // default, so an explicit false is still written.
+        builder.Property(u => u.IsActive).HasDefaultValue(true).HasSentinel(true);
+
+        // EER: email is UNIQUE. Identity's own EmailIndex is not unique (it only
+        // checks in code), so the database enforces it too.
+        builder.HasIndex(u => u.NormalizedEmail).HasDatabaseName("EmailIndex").IsUnique();
     }
 }
 
@@ -47,7 +56,14 @@ internal sealed class RoleConfiguration : IEntityTypeConfiguration<IdentityRole<
 
 internal sealed class UserRoleConfiguration : IEntityTypeConfiguration<IdentityUserRole<Guid>>
 {
-    public void Configure(EntityTypeBuilder<IdentityUserRole<Guid>> builder) => builder.ToTable("UserRoles");
+    public void Configure(EntityTypeBuilder<IdentityUserRole<Guid>> builder)
+    {
+        builder.ToTable("UserRoles");
+
+        // EER: each user has exactly one role (disjoint specialisation). Identity
+        // allows many; this unique index makes the database refuse a second one.
+        builder.HasIndex(r => r.UserId).IsUnique();
+    }
 }
 
 internal sealed class UserClaimConfiguration : IEntityTypeConfiguration<IdentityUserClaim<Guid>>

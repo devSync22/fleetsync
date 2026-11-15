@@ -14,8 +14,12 @@ namespace FleetSync.Modules.Auth.Endpoints;
 /// <summary>Names of the module's authorization and rate-limit policies.</summary>
 internal static class AuthPolicies
 {
-    /// <summary>Fleet Administrators and Owners may review staff applications.</summary>
-    public const string StaffReviewer = "auth:staff-reviewer";
+    /// <summary>
+    /// Fleet Administrators review applications and profile changes, deactivate
+    /// accounts and read the audit log. Only them: the EER's reviewed_by and
+    /// approved_by columns reference FLEET_ADMINISTRATOR.
+    /// </summary>
+    public const string FleetAdministrator = "auth:fleet-administrator";
 
     /// <summary>Per-IP limit for anonymous endpoints (sign-in, registration, emails).</summary>
     public const string PublicRateLimit = "auth:public";

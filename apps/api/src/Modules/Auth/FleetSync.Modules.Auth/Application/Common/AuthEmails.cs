@@ -20,9 +20,12 @@ internal sealed class AuthEmails(IOptions<AuthOptions> options)
         Hi {firstName},
 
         Thanks for registering with FleetSync (reference {reference}).
-        Confirm your email address to activate your account:
+        Confirm your email address:
 
         {WebLink("verify-email", token)}
+
+        Once it's confirmed, a Fleet Administrator will review your registration and
+        we'll email you when you can sign in.
 
         This link expires in {Lifetimes.EmailVerificationHours} hours. If you didn't register, ignore this email.
         """);
@@ -40,9 +43,9 @@ internal sealed class AuthEmails(IOptions<AuthOptions> options)
         This link expires in {Lifetimes.PasswordResetMinutes} minutes. If you didn't ask for this, you can ignore this email.
         """);
 
-    public EmailMessage StaffApplicationReceived(string to, string firstName, string reference) => new(
+    public EmailMessage ApplicationReceived(string to, string firstName, string reference) => new(
         to,
-        "We received your FleetSync staff application",
+        "We received your FleetSync application",
         $"""
         Hi {firstName},
 
@@ -63,9 +66,20 @@ internal sealed class AuthEmails(IOptions<AuthOptions> options)
         This link expires in {Lifetimes.StaffActivationDays} days.
         """);
 
-    public EmailMessage StaffApplicationRejected(string to, string firstName, string reference, string reason) => new(
+    public EmailMessage CustomerApproved(string to, string firstName) => new(
         to,
-        "Update on your FleetSync staff application",
+        "Your FleetSync account was approved",
+        $"""
+        Hi {firstName},
+
+        Good news: your registration was approved. Sign in with the email and password you registered with:
+
+        {Links.WebAppBaseUrl.TrimEnd('/')}/login
+        """);
+
+    public EmailMessage ApplicationRejected(string to, string firstName, string reference, string reason) => new(
+        to,
+        "Update on your FleetSync application",
         $"""
         Hi {firstName},
 
@@ -74,6 +88,26 @@ internal sealed class AuthEmails(IOptions<AuthOptions> options)
         Reason: {reason}
 
         Contact your Fleet Administrator if you have questions.
+        """);
+
+    public EmailMessage ProfileChangeApproved(string to, string firstName, string field) => new(
+        to,
+        "Your FleetSync profile was updated",
+        $"""
+        Hi {firstName},
+
+        Your request to change your {field} was approved and is now on your account.
+        """);
+
+    public EmailMessage ProfileChangeRejected(string to, string firstName, string field, string reason) => new(
+        to,
+        "Update on your FleetSync profile change",
+        $"""
+        Hi {firstName},
+
+        Your request to change your {field} was not approved.
+
+        Reason: {reason}
         """);
 
     private string WebLink(string path, string token) =>

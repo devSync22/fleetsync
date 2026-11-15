@@ -1,17 +1,17 @@
-namespace FleetSync.Modules.Auth.Domain.StaffApplications;
+namespace FleetSync.Modules.Auth.Domain.Applications;
 
 /// <summary>
-/// A file attached to a staff application (NIC copy, driving licence…).
+/// A file attached to a user application (NIC copy, driving licence…).
 /// The bytes live in document storage; this row holds the metadata and the storage key.
 /// </summary>
-internal sealed class StaffApplicationDocument
+internal sealed class ApplicationDocument
 {
     // Required by EF Core.
-    private StaffApplicationDocument()
+    private ApplicationDocument()
     {
     }
 
-    public StaffApplicationDocument(
+    public ApplicationDocument(
         string fileName,
         string contentType,
         long sizeBytes,
@@ -28,7 +28,8 @@ internal sealed class StaffApplicationDocument
 
     public Guid Id { get; private set; }
 
-    public Guid StaffApplicationId { get; private set; }
+    /// <summary>The application the file belongs to (set by EF Core through the relationship).</summary>
+    public Guid ApplicationId { get; private set; }
 
     /// <summary>Original file name, shown to the reviewer (sanitised, no path).</summary>
     public string FileName { get; private set; } = string.Empty;

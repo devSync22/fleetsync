@@ -3,15 +3,15 @@ namespace FleetSync.Modules.Auth.Domain;
 /// <summary>What a <see cref="OneTimeToken"/> may be used for.</summary>
 internal enum OneTimeTokenPurpose
 {
-    /// <summary>Link in the "verify your email" message after customer registration.</summary>
-    EmailVerification = 1,
+    // 1 was EmailVerification: customer email verification now lives on the
+    // application (USER_APPLICATION), because no account exists before approval.
 
     /// <summary>Link in the "reset your password" message.</summary>
     PasswordReset = 2,
 }
 
 /// <summary>
-/// A single-use, expiring token sent to a user by email (verify email, reset password).
+/// A single-use, expiring token sent to a user by email (reset password).
 ///
 /// The emailed link carries only the raw token (e.g. /reset-password?token=…);
 /// the token alone identifies the account, which is what the web pages expect.

@@ -58,8 +58,9 @@ Content-Type: application/json
 
 { "email": "{{email}}" }
 
-### Staff applications awaiting review (Fleet Administrator token)
-GET {{host}}/api/auth/staff-applications?status=pending
+### Applications awaiting review, customers and staff (Fleet Administrator token)
+# Customers must be approved here before they can sign in.
+GET {{host}}/api/auth/applications?status=pending
 Authorization: Bearer {{login.response.body.accessToken}}
 
 ### Sign out

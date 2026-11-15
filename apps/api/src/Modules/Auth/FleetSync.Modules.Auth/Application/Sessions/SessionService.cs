@@ -1,5 +1,7 @@
 using FleetSync.Modules.Auth.Application.Common;
 using FleetSync.Modules.Auth.Domain;
+using FleetSync.Modules.Auth.Domain.Applications;
+using FleetSync.Modules.Auth.Domain.Auditing;
 using FleetSync.Modules.Auth.Infrastructure.Persistence;
 using FleetSync.Modules.Auth.Infrastructure.Security;
 using Microsoft.AspNetCore.Identity;
@@ -24,8 +26,10 @@ internal sealed record IssuedSession(
 /// </summary>
 internal sealed class SessionService(
     UserManager<ApplicationUser> userManager,
+    IPasswordHasher<ApplicationUser> passwordHasher,
     AuthDbContext db,
     AccessTokenIssuer accessTokens,
+    AuditTrail audit,
     IOptions<AuthOptions> options,
     TimeProvider clock)
 {
@@ -33,11 +37,11 @@ internal sealed class SessionService(
 
     public async Task<Result<IssuedSession>> LoginAsync(LoginRequest request, CancellationToken cancellationToken)
     {
-        var user = await userManager.FindByEmailAsync(FieldRules.NormalizeEmail(request.Email));
+        var email = FieldRules.NormalizeEmail(request.Email);
+        var user = await userManager.FindByEmailAsync(email);
         if (user is null)
         {
-            // Same response as a wrong password, so the form can't reveal which emails exist.
-            return AuthErrors.InvalidCredentials(attemptsLeft: null);
+            return await LoginWithoutAccountAsync(email, request.Password, cancellationToken);
         }
 
         if (await userManager.IsLockedOutAsync(user))
@@ -47,11 +51,16 @@ internal sealed class SessionService(
 
         if (!await userManager.CheckPasswordAsync(user, request.Password))
         {
+            // Recorded first: AccessFailedAsync saves the context, audit row included.
+            audit.RecordForUser(AuditActions.LoginFailed, user.Id, details: "Wrong password");
+
             // Counts the failure; Identity locks the account when the limit is reached.
             await userManager.AccessFailedAsync(user);
 
             if (await userManager.IsLockedOutAsync(user))
             {
+                audit.RecordForUser(AuditActions.LockedOut, user.Id);
+                await db.SaveChangesAsync(cancellationToken);
                 return AuthErrors.LockedOut(user.LockoutEnd!.Value);
             }
 
@@ -59,7 +68,14 @@ internal sealed class SessionService(
             return AuthErrors.InvalidCredentials(options.Value.Lockout.MaxFailedAttempts - failed);
         }
 
-        // Checked after the password so unverified accounts don't reveal themselves to guessers.
+        // Checked after the password so these states don't reveal themselves to guessers.
+        if (!user.IsActive)
+        {
+            audit.RecordForUser(AuditActions.LoginFailed, user.Id, details: "Account deactivated");
+            await db.SaveChangesAsync(cancellationToken);
+            return AuthErrors.AccountDisabled;
+        }
+
         if (!user.EmailConfirmed)
         {
             return AuthErrors.EmailNotVerified;
@@ -67,8 +83,42 @@ internal sealed class SessionService(
 
         await userManager.ResetAccessFailedCountAsync(user);
         user.LastSignInAt = clock.GetUtcNow();
+        audit.RecordForUser(AuditActions.Login, user.Id, details: request.RememberMe ? "Remember me" : null);
 
         return await IssueSessionAsync(user, request.RememberMe, cancellationToken);
+    }
+
+    /// <summary>
+    /// No account with this email. A customer whose application is still pending
+    /// is told so, but only when the password matches the one they registered
+    /// with, so this can't be used to discover who has applied.
+    /// </summary>
+    private async Task<Result<IssuedSession>> LoginWithoutAccountAsync(
+        string email,
+        string password,
+        CancellationToken cancellationToken)
+    {
+        var normalized = UserApplication.NormalizeEmail(email);
+        var pending = await db.UserApplications.AsNoTracking().SingleOrDefaultAsync(
+            a => a.NormalizedEmail == normalized
+                 && a.RequestedRole == ApplicantRole.Customer
+                 && a.Status == ApplicationStatus.Pending
+                 && a.PasswordHash != null,
+            cancellationToken);
+
+        if (pending is not null
+            && passwordHasher.VerifyHashedPassword(new ApplicationUser(), pending.PasswordHash!, password)
+                != PasswordVerificationResult.Failed)
+        {
+            return pending.IsEmailVerified ? AuthErrors.PendingApproval : AuthErrors.EmailNotVerified;
+        }
+
+        // The email isn't stored: anyone can type anything here, and the IP is enough to spot guessing.
+        audit.Record(AuditActions.LoginFailed, AuditEntityTypes.User, entityId: null, userId: null, "Unknown email");
+        await db.SaveChangesAsync(cancellationToken);
+
+        // Same response as a wrong password, so the form can't reveal which emails exist.
+        return AuthErrors.InvalidCredentials(attemptsLeft: null);
     }
 
     public async Task<Result<IssuedSession>> RefreshAsync(string? rawToken, CancellationToken cancellationToken)
@@ -91,6 +141,8 @@ internal sealed class SessionService(
         {
             // A rotated-out token came back: assume it leaked and end the whole session family.
             await RevokeFamilyAsync(stored.FamilyId, now, cancellationToken);
+            audit.RecordForUser(AuditActions.RefreshTokenReuse, stored.UserId, details: "All sessions from this sign-in ended");
+            await db.SaveChangesAsync(cancellationToken);
             return AuthErrors.InvalidRefreshToken;
         }
 
@@ -100,14 +152,15 @@ internal sealed class SessionService(
         }
 
         var user = await userManager.FindByIdAsync(stored.UserId.ToString());
-        if (user is null || await userManager.IsLockedOutAsync(user))
+        // Deactivated or locked accounts lose their sessions at the next refresh.
+        if (user is null || !user.IsActive || await userManager.IsLockedOutAsync(user))
         {
             await RevokeFamilyAsync(stored.FamilyId, now, cancellationToken);
             return AuthErrors.InvalidRefreshToken;
         }
 
         var raw = SecureToken.Generate();
-        var successor = stored.Rotate(SecureToken.Hash(raw), now, RefreshLifetime(stored.IsPersistent));
+        var successor = stored.Rotate(SecureToken.Hash(raw), now, RefreshLifetime(stored.IsPersistent), audit.CurrentClient());
         db.RefreshTokens.Add(successor);
 
         try
@@ -137,6 +190,8 @@ internal sealed class SessionService(
         if (stored is not null)
         {
             await RevokeFamilyAsync(stored.FamilyId, clock.GetUtcNow(), cancellationToken);
+            audit.RecordForUser(AuditActions.Logout, stored.UserId);
+            await db.SaveChangesAsync(cancellationToken);
         }
     }
 
@@ -164,7 +219,7 @@ internal sealed class SessionService(
     {
         var raw = SecureToken.Generate();
         var refreshToken = RefreshToken.IssueNew(
-            user.Id, SecureToken.Hash(raw), rememberMe, clock.GetUtcNow(), RefreshLifetime(rememberMe));
+            user.Id, SecureToken.Hash(raw), rememberMe, clock.GetUtcNow(), RefreshLifetime(rememberMe), audit.CurrentClient());
 
         db.RefreshTokens.Add(refreshToken);
         await db.SaveChangesAsync(cancellationToken);

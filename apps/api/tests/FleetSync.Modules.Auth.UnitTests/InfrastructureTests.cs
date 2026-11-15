@@ -1,7 +1,7 @@
 using System.Text;
 using FleetSync.Modules.Auth.Application.Common;
 using FleetSync.Modules.Auth.Domain;
-using FleetSync.Modules.Auth.Domain.StaffApplications;
+using FleetSync.Modules.Auth.Domain.Applications;
 using FleetSync.Modules.Auth.Infrastructure.Persistence;
 using FleetSync.Modules.Auth.Infrastructure.Security;
 using FleetSync.Modules.Auth.Infrastructure.Storage;

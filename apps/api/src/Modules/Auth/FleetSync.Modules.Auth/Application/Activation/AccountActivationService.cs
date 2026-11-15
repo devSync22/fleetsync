@@ -1,6 +1,7 @@
 using FleetSync.Modules.Auth.Application.Common;
 using FleetSync.Modules.Auth.Domain;
-using FleetSync.Modules.Auth.Domain.StaffApplications;
+using FleetSync.Modules.Auth.Domain.Applications;
+using FleetSync.Modules.Auth.Domain.Auditing;
 using FleetSync.Modules.Auth.Infrastructure.Persistence;
 using FleetSync.Modules.Auth.Infrastructure.Security;
 using Microsoft.AspNetCore.Identity;
@@ -15,6 +16,8 @@ namespace FleetSync.Modules.Auth.Application.Activation;
 internal sealed class AccountActivationService(
     AuthDbContext db,
     UserManager<ApplicationUser> userManager,
+    RoleAssignment roles,
+    AuditTrail audit,
     TimeProvider clock)
 {
     public async Task<Result<AccountApprovalResponse>> LookupAsync(
@@ -31,7 +34,7 @@ internal sealed class AccountActivationService(
         var reviewedAt = application.ReviewedAt!.Value;
         return new AccountApprovalResponse(
             application.FirstName,
-            application.Role,
+            application.RequestedRole,
             StaffId: null,
             Depot: null,
             application.Email,
@@ -54,6 +57,13 @@ internal sealed class AccountActivationService(
             return AuthErrors.EmailAlreadyRegistered;
         }
 
+        // licence_number is unique across drivers; check before creating anything.
+        if (application.LicenceNumber is not null
+            && await db.Drivers.AnyAsync(d => d.LicenceNumber == application.LicenceNumber, cancellationToken))
+        {
+            return AuthErrors.LicenceTaken;
+        }
+
         var now = clock.GetUtcNow();
         var user = new ApplicationUser
         {
@@ -74,8 +84,15 @@ internal sealed class AccountActivationService(
             return IdentityErrorMapper.ToAuthError(created);
         }
 
-        await userManager.AddToRoleAsync(user, application.Role.ToAuthRole());
+        // Identity role + the EER subtype row (DRIVER with the licence, MECHANIC…).
+        var assigned = await roles.AssignFromApplicationAsync(user, application, companyId: null);
+        if (!assigned.Succeeded)
+        {
+            return IdentityErrorMapper.ToAuthError(assigned);
+        }
+
         application.MarkActivated(user.Id, now);
+        audit.RecordForUser(AuditActions.AccountActivated, user.Id, details: application.Reference);
 
         try
         {
@@ -91,7 +108,7 @@ internal sealed class AccountActivationService(
         return Result.Success();
     }
 
-    private async Task<StaffApplication?> FindActivatableAsync(string rawToken, CancellationToken cancellationToken)
+    private async Task<UserApplication?> FindActivatableAsync(string rawToken, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(rawToken))
         {
@@ -99,7 +116,7 @@ internal sealed class AccountActivationService(
         }
 
         var hash = SecureToken.Hash(rawToken);
-        var application = await db.StaffApplications
+        var application = await db.UserApplications
             .SingleOrDefaultAsync(a => a.ActivationTokenHash == hash, cancellationToken);
 
         return application is not null && application.CanActivate(clock.GetUtcNow()) ? application : null;

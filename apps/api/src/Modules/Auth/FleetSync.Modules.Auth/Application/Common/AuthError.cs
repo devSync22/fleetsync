@@ -73,33 +73,110 @@ internal static class AuthErrors
         "Choose a stronger password.",
         new Dictionary<string, object?> { ["errors"] = new Dictionary<string, string[]> { ["password"] = reasons.ToArray() } });
 
-    public static readonly AuthError StaffApplicationDuplicate = new(
-        "staff_application.duplicate",
+    public static readonly AuthError AccountDisabled = new(
+        "auth.account_disabled",
+        StatusCodes.Status403Forbidden,
+        "Account deactivated",
+        "This account has been deactivated. Contact your Fleet Administrator.");
+
+    /// <summary>Customer signed in with the right password, but the application isn't approved yet.</summary>
+    public static readonly AuthError PendingApproval = new(
+        "auth.pending_approval",
+        StatusCodes.Status403Forbidden,
+        "Waiting for approval",
+        "Your registration is being reviewed. We'll email you once it's approved.");
+
+    public static readonly AuthError ApplicationDuplicate = new(
+        "application.duplicate",
         StatusCodes.Status409Conflict,
         "Application already submitted",
         "An application with this email or NIC is already being processed.");
 
-    public static readonly AuthError StaffApplicationNotFound = new(
-        "staff_application.not_found",
+    public static readonly AuthError ApplicationNotFound = new(
+        "application.not_found",
         StatusCodes.Status404NotFound,
         "Application not found",
-        "The staff application does not exist.");
+        "The application does not exist.");
 
-    public static AuthError StaffApplicationNotPending(string status) => new(
-        "staff_application.not_pending",
+    public static AuthError ApplicationNotPending(string status) => new(
+        "application.not_pending",
         StatusCodes.Status409Conflict,
         "Application already reviewed",
         $"Only pending applications can be reviewed. This one is {status}.");
 
+    /// <summary>A customer application can't be approved before the applicant verifies their email.</summary>
+    public static readonly AuthError ApplicationEmailNotVerified = new(
+        "application.email_not_verified",
+        StatusCodes.Status409Conflict,
+        "Email not verified yet",
+        "The applicant hasn't confirmed their email address. Approve it once they have.");
+
+    public static readonly AuthError LicenceTaken = new(
+        "application.licence_taken",
+        StatusCodes.Status409Conflict,
+        "Licence already registered",
+        "A driver with this licence number already exists.");
+
     public static readonly AuthError DocumentNotFound = new(
-        "staff_application.document_not_found",
+        "application.document_not_found",
         StatusCodes.Status404NotFound,
         "Document not found",
         "The document does not exist.");
 
     public static AuthError InvalidDocument(string fileName, string reason) => new(
-        "staff_application.invalid_document",
+        "application.invalid_document",
         StatusCodes.Status400BadRequest,
         "Document not accepted",
         $"{fileName}: {reason}");
+
+    public static readonly AuthError UserNotFound = new(
+        "user.not_found",
+        StatusCodes.Status404NotFound,
+        "User not found",
+        "The account does not exist.");
+
+    /// <summary>An administrator tried to deactivate their own account (they would lock themselves out).</summary>
+    public static readonly AuthError CannotDeactivateSelf = new(
+        "user.cannot_deactivate_self",
+        StatusCodes.Status400BadRequest,
+        "You can't deactivate your own account",
+        "Ask another Fleet Administrator to do it.");
+
+    public static readonly AuthError ProfileChangeDuplicate = new(
+        "profile_change.duplicate",
+        StatusCodes.Status409Conflict,
+        "Change already requested",
+        "You already have a pending request for this field. Wait for it to be reviewed.");
+
+    public static readonly AuthError ProfileChangeNotFound = new(
+        "profile_change.not_found",
+        StatusCodes.Status404NotFound,
+        "Request not found",
+        "The profile change request does not exist.");
+
+    public static AuthError ProfileChangeNotPending(string status) => new(
+        "profile_change.not_pending",
+        StatusCodes.Status409Conflict,
+        "Request already reviewed",
+        $"Only pending requests can be reviewed. This one is {status}.");
+
+    /// <summary>Administrators can't approve or reject changes to their own account.</summary>
+    public static readonly AuthError ProfileChangeSelfReview = new(
+        "profile_change.self_review",
+        StatusCodes.Status403Forbidden,
+        "You can't review your own request",
+        "Another Fleet Administrator must review changes to your account.");
+
+    public static AuthError ProfileFieldNotAllowed(string field) => new(
+        "profile_change.field_not_allowed",
+        StatusCodes.Status400BadRequest,
+        "This detail can't be changed",
+        $"\"{field}\" doesn't apply to your account.");
+
+    /// <summary>The new value is the same as the current one.</summary>
+    public static readonly AuthError ProfileChangeNoChange = new(
+        "profile_change.no_change",
+        StatusCodes.Status400BadRequest,
+        "Nothing to change",
+        "The new value is the same as the current one.");
 }

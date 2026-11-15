@@ -21,7 +21,8 @@ internal sealed class RefreshToken
         string tokenHash,
         bool isPersistent,
         DateTimeOffset createdAt,
-        DateTimeOffset expiresAt)
+        DateTimeOffset expiresAt,
+        ClientInfo client)
     {
         Id = Guid.CreateVersion7();
         UserId = userId;
@@ -30,6 +31,8 @@ internal sealed class RefreshToken
         IsPersistent = isPersistent;
         CreatedAt = createdAt;
         ExpiresAt = expiresAt;
+        IpAddress = client.IpAddress;
+        UserAgent = client.UserAgent;
     }
 
     public Guid Id { get; private set; }
@@ -55,23 +58,30 @@ internal sealed class RefreshToken
     /// <summary>The token that replaced this one during rotation, if any.</summary>
     public Guid? ReplacedByTokenId { get; private set; }
 
+    /// <summary>Client IP when this token was issued (USER_SESSION.ip_address).</summary>
+    public string? IpAddress { get; private set; }
+
+    /// <summary>Browser / app User-Agent when issued (USER_SESSION.user_agent), truncated to 512 characters.</summary>
+    public string? UserAgent { get; private set; }
+
     /// <summary>Starts a new rotation chain (a fresh sign-in).</summary>
     public static RefreshToken IssueNew(
         Guid userId,
         string tokenHash,
         bool isPersistent,
         DateTimeOffset now,
-        TimeSpan lifetime) =>
-        new(userId, Guid.CreateVersion7(), tokenHash, isPersistent, now, now + lifetime);
+        TimeSpan lifetime,
+        ClientInfo client) =>
+        new(userId, Guid.CreateVersion7(), tokenHash, isPersistent, now, now + lifetime, client);
 
     /// <summary>
     /// Revokes this token and returns its successor in the same family.
     /// The caller must check <see cref="IsActive"/> first.
     /// </summary>
-    public RefreshToken Rotate(string newTokenHash, DateTimeOffset now, TimeSpan lifetime)
+    public RefreshToken Rotate(string newTokenHash, DateTimeOffset now, TimeSpan lifetime, ClientInfo client)
     {
         var successor = new RefreshToken(
-            UserId, FamilyId, newTokenHash, IsPersistent, now, now + lifetime);
+            UserId, FamilyId, newTokenHash, IsPersistent, now, now + lifetime, client);
 
         RevokedAt = now;
         ReplacedByTokenId = successor.Id;
@@ -84,4 +94,12 @@ internal sealed class RefreshToken
 
     /// <summary>Revokes the token (no-op if it is already revoked).</summary>
     public void Revoke(DateTimeOffset now) => RevokedAt ??= now;
+}
+
+/// <summary>Where a request came from; recorded on sessions and audit entries.</summary>
+internal sealed record ClientInfo(string? IpAddress, string? UserAgent)
+{
+    public const int MaxUserAgentLength = 512;
+
+    public static readonly ClientInfo Unknown = new(null, null);
 }

@@ -1,5 +1,5 @@
 using FleetSync.Modules.Auth.Application.Common;
-using FleetSync.Modules.Auth.Domain.StaffApplications;
+using FleetSync.Modules.Auth.Domain.Applications;
 using FluentValidation;
 
 namespace FleetSync.Modules.Auth.Application.Activation;
@@ -19,7 +19,7 @@ internal sealed record ActivateAccountRequest(string Token, string Password);
 /// </summary>
 internal sealed record AccountApprovalResponse(
     string FirstName,
-    StaffRole Role,
+    ApplicantRole Role,
     string? StaffId,
     string? Depot,
     string SignInEmail,

@@ -1,11 +1,13 @@
 using System.Threading.RateLimiting;
 using FleetSync.Modules.Auth.Application.Abstractions;
 using FleetSync.Modules.Auth.Application.Activation;
+using FleetSync.Modules.Auth.Application.Applications;
 using FleetSync.Modules.Auth.Application.Common;
 using FleetSync.Modules.Auth.Application.Passwords;
 using FleetSync.Modules.Auth.Application.Registration;
+using FleetSync.Modules.Auth.Application.ProfileChanges;
 using FleetSync.Modules.Auth.Application.Sessions;
-using FleetSync.Modules.Auth.Application.StaffApplications;
+using FleetSync.Modules.Auth.Application.Users;
 using FleetSync.Modules.Auth.Domain;
 using FleetSync.Modules.Auth.Endpoints;
 using FleetSync.Modules.Auth.Infrastructure.Email;
@@ -59,8 +61,8 @@ public static class AuthModule
         AddRateLimits(services);
 
         services.AddAuthorizationBuilder()
-            .AddPolicy(AuthPolicies.StaffReviewer, policy =>
-                policy.RequireAuthenticatedUser().RequireRole(AuthRoles.FleetAdministrator, AuthRoles.Owner));
+            .AddPolicy(AuthPolicies.FleetAdministrator, policy =>
+                policy.RequireAuthenticatedUser().RequireRole(AuthRoles.FleetAdministrator));
 
         // Readiness probe: /health/ready reports unhealthy if the auth tables can't be reached.
         services.AddHealthChecks()
@@ -70,6 +72,9 @@ public static class AuthModule
 
         services.TryAddSingleton(TimeProvider.System);
 
+        // AuditTrail and sessions read the client's IP and User-Agent from the current request.
+        services.AddHttpContextAccessor();
+
         // Infrastructure adapters (swap these for production implementations later).
         services.AddSingleton<IEmailSender, LoggingEmailSender>();
         services.AddSingleton<IDocumentStorage, LocalDocumentStorage>();
@@ -77,13 +82,19 @@ public static class AuthModule
         services.AddSingleton<AccessTokenIssuer>();
         services.AddSingleton<AuthEmails>();
 
-        // Use-case services, one per flow.
+        // Shared building blocks.
         services.AddScoped<OneTimeTokenService>();
+        services.AddScoped<AuditTrail>();
+        services.AddScoped<RoleAssignment>();
+
+        // Use-case services, one per flow.
         services.AddScoped<SessionService>();
         services.AddScoped<CustomerRegistrationService>();
-        services.AddScoped<StaffApplicationService>();
+        services.AddScoped<UserApplicationService>();
         services.AddScoped<AccountActivationService>();
         services.AddScoped<PasswordResetService>();
+        services.AddScoped<ProfileChangeService>();
+        services.AddScoped<UserAdministrationService>();
 
         services.AddHostedService<DevAdminSeeder>();
 
@@ -99,8 +110,9 @@ public static class AuthModule
 
         group.MapSessionEndpoints();
         group.MapRegistrationEndpoints();
-        group.MapStaffApplicationEndpoints(options);
+        group.MapApplicationEndpoints(options);
         group.MapAccountEndpoints();
+        group.MapProfileAndUserEndpoints();
 
         return endpoints;
     }

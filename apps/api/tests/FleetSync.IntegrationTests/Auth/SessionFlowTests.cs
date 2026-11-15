@@ -5,12 +5,12 @@ using static FleetSync.IntegrationTests.Auth.AuthTestHelpers;
 
 namespace FleetSync.IntegrationTests.Auth;
 
-/// <summary>Customer registration, email verification and the session lifecycle.</summary>
+/// <summary>Customer registration, email verification, approval and the session lifecycle.</summary>
 [Collection(DatabaseCollection.Name)]
 public sealed class SessionFlowTests(AuthApiFactory factory)
 {
     [Fact]
-    public async Task Customer_registers_verifies_signs_in_refreshes_and_signs_out()
+    public async Task Customer_registers_verifies_is_approved_signs_in_refreshes_and_signs_out()
     {
         var client = factory.CreateBrowserClient();
         var email = UniqueEmail("customer");
@@ -19,12 +19,25 @@ public sealed class SessionFlowTests(AuthApiFactory factory)
         var registered = await ReadJsonAsync(await RegisterCustomerAsync(client, email));
         Assert.StartsWith("REG-", registered.GetProperty("reference").GetString());
 
-        // Sign-in is blocked until the email is verified.
+        // No account exists yet. With the right password the customer is told what's missing.
         await AssertProblemAsync(await LoginAsync(client, email), HttpStatusCode.Forbidden, "auth.email_not_verified");
 
         var verify = await client.PostAsJsonAsync(
             "/api/auth/verify-email", new { token = factory.Emails.LatestToken(email, "Verify") });
         Assert.Equal(HttpStatusCode.NoContent, verify.StatusCode);
+
+        await AssertProblemAsync(await LoginAsync(client, email), HttpStatusCode.Forbidden, "auth.pending_approval");
+
+        // A wrong password still looks like any other failed sign-in.
+        await AssertProblemAsync(await LoginAsync(client, email, "Wrong2026Pass"), HttpStatusCode.Unauthorized, "auth.invalid_credentials");
+
+        // A Fleet Administrator approves: the account, CUSTOMER row and company are created.
+        var admin = await CreateAdminClientAsync(factory);
+        var approved = await ReadJsonAsync(
+            await admin.PostAsync($"/api/auth/applications/{await FindApplicationIdAsync(admin, email)}/approve", content: null));
+        Assert.Equal("approved", approved.GetProperty("status").GetString());
+        Assert.Equal(System.Text.Json.JsonValueKind.String, approved.GetProperty("userId").ValueKind);
+        Assert.True(factory.Emails.HasEmail(email, "approved"));
 
         // Browser sign-in: the refresh token is an HttpOnly cookie, never in the body.
         var login = await LoginAsync(client, email, rememberMe: true);
@@ -65,7 +78,31 @@ public sealed class SessionFlowTests(AuthApiFactory factory)
 
         (await RegisterCustomerAsync(client, email)).EnsureSuccessStatusCode();
 
+        // While the first application is open…
+        await AssertProblemAsync(await RegisterCustomerAsync(client, email), HttpStatusCode.Conflict, "application.duplicate");
+    }
+
+    [Fact]
+    public async Task Registering_an_email_that_already_has_an_account_is_rejected()
+    {
+        var client = factory.CreateBrowserClient();
+        var email = UniqueEmail("taken");
+        await RegisterApprovedCustomerAsync(factory, client, email);
+
         await AssertProblemAsync(await RegisterCustomerAsync(client, email), HttpStatusCode.Conflict, "auth.email_taken");
+    }
+
+    [Fact]
+    public async Task Unverified_customer_application_cannot_be_approved()
+    {
+        var email = UniqueEmail("unverified");
+        (await RegisterCustomerAsync(factory.CreateBrowserClient(), email)).EnsureSuccessStatusCode();
+
+        var admin = await CreateAdminClientAsync(factory);
+        await AssertProblemAsync(
+            await admin.PostAsync($"/api/auth/applications/{await FindApplicationIdAsync(admin, email)}/approve", content: null),
+            HttpStatusCode.Conflict,
+            "application.email_not_verified");
     }
 
     [Fact]
@@ -84,7 +121,7 @@ public sealed class SessionFlowTests(AuthApiFactory factory)
     {
         var client = factory.CreateBrowserClient();
         var email = UniqueEmail("lockout");
-        await RegisterVerifiedCustomerAsync(factory, client, email);
+        await RegisterApprovedCustomerAsync(factory, client, email);
 
         for (var attemptsLeft = 4; attemptsLeft >= 1; attemptsLeft--)
         {
@@ -115,7 +152,7 @@ public sealed class SessionFlowTests(AuthApiFactory factory)
     {
         var mobile = factory.CreateMobileClient();
         var email = UniqueEmail("mobile");
-        await RegisterVerifiedCustomerAsync(factory, mobile, email);
+        await RegisterApprovedCustomerAsync(factory, mobile, email);
 
         // Mobile clients receive the refresh token in the body.
         var first = (await ReadJsonAsync(await LoginAsync(mobile, email))).GetProperty("refreshToken").GetString();

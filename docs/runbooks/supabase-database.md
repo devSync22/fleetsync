@@ -14,7 +14,7 @@ to switch between local PostgreSQL and Supabase.
 | Schema     | Owner                  | Contents                                             |
 | ---------- | ---------------------- | ---------------------------------------------------- |
 | `public`   | `FleetSyncDbContext`   | Shared baseline migration history                    |
-| `identity` | Auth module            | Users, roles, sessions, staff applications, tokens   |
+| `identity` | Auth module            | Users, role subtypes, applications, profile changes, audit log, sessions, tokens |
 
 Supabase reserves several schemas for its own services, including `auth`,
 `storage`, `realtime`, `extensions`, `graphql`, `vault` and `cron`. Never

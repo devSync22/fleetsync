@@ -48,6 +48,21 @@ internal static partial class FieldRules
             .NotEmpty().WithMessage("Enter your full name.")
             .MaximumLength(150).WithMessage("Use 150 characters or fewer.");
 
+    /// <summary>
+    /// Optional driving licence expiry: empty, or a yyyy-MM-dd date that hasn't passed yet.
+    /// </summary>
+    public static IRuleBuilderOptions<T, string?> LicenceExpiry<T>(this IRuleBuilder<T, string?> rule) =>
+        rule
+            .Must(value => string.IsNullOrWhiteSpace(value) || TryParseDate(value, out _))
+            .WithMessage("Enter the licence expiry date as YYYY-MM-DD.")
+            .Must(value => !TryParseDate(value, out var date) || date >= DateOnly.FromDateTime(DateTime.UtcNow))
+            .WithMessage("This licence has expired.");
+
+    /// <summary>Parses a yyyy-MM-dd date (the format the API uses for dates).</summary>
+    public static bool TryParseDate(string? value, out DateOnly date) =>
+        DateOnly.TryParseExact(value?.Trim(), "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.None, out date);
+
     /// <summary>"077 123-4567" → "+94771234567"; already-international numbers keep their form.</summary>
     public static string NormalizeMobile(string mobile)
     {

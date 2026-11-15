@@ -2,6 +2,7 @@ using FleetSync.Modules.Auth.Application.Abstractions;
 using FleetSync.Modules.Auth.Application.Common;
 using FleetSync.Modules.Auth.Application.Sessions;
 using FleetSync.Modules.Auth.Domain;
+using FleetSync.Modules.Auth.Domain.Auditing;
 using FleetSync.Modules.Auth.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +22,7 @@ internal sealed class PasswordResetService(
     SessionService sessions,
     IEmailSender emailSender,
     AuthEmails emails,
+    AuditTrail audit,
     IOptions<AuthOptions> options,
     TimeProvider clock)
 {
@@ -34,7 +36,8 @@ internal sealed class PasswordResetService(
     public async Task RequestResetAsync(ForgotPasswordRequest request, CancellationToken cancellationToken)
     {
         var user = await userManager.FindByEmailAsync(FieldRules.NormalizeEmail(request.Email));
-        if (user is null || !user.EmailConfirmed)
+        // Deactivated accounts get no link: a new password wouldn't let them in anyway.
+        if (user is null || !user.EmailConfirmed || !user.IsActive)
         {
             return;
         }
@@ -44,6 +47,7 @@ internal sealed class PasswordResetService(
             OneTimeTokenPurpose.PasswordReset,
             TimeSpan.FromMinutes(options.Value.Tokens.PasswordResetMinutes),
             cancellationToken);
+        audit.RecordForUser(AuditActions.PasswordResetRequested, user.Id);
         await db.SaveChangesAsync(cancellationToken);
 
         var firstName = user.FullName.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? user.FullName;
@@ -105,6 +109,7 @@ internal sealed class PasswordResetService(
         await userManager.SetLockoutEndDateAsync(user, null);
         await userManager.ResetAccessFailedCountAsync(user);
         await sessions.RevokeAllForUserAsync(user.Id, cancellationToken);
+        audit.RecordForUser(AuditActions.PasswordReset, user.Id, details: "All sessions ended");
 
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);

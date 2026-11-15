@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AuthDbContext))]
-    [Migration("20261113062546_AddAuthModule")]
+    [Migration("20261115071916_AddAuthModule")]
     partial class AddAuthModule
     {
         /// <inheritdoc />
@@ -56,6 +56,11 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
 
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
                     b.Property<DateTimeOffset?>("LastSignInAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -89,6 +94,9 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("boolean");
 
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
@@ -96,6 +104,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("NormalizedEmail")
+                        .IsUnique()
                         .HasDatabaseName("EmailIndex");
 
                     b.HasIndex("NormalizedUserName")
@@ -105,47 +114,239 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                     b.ToTable("Users", "identity");
                 });
 
-            modelBuilder.Entity("FleetSync.Modules.Auth.Domain.CustomerProfile", b =>
+            modelBuilder.Entity("FleetSync.Modules.Auth.Domain.Applications.ApplicationDocument", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("BillingAddress")
+                    b.Property<Guid>("ApplicationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ContentType")
                         .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("StorageKey")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<DateTimeOffset>("UploadedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.ToTable("ApplicationDocuments", "identity");
+                });
+
+            modelBuilder.Entity("FleetSync.Modules.Auth.Domain.Applications.UserApplication", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ActivatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("ActivationTokenExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ActivationTokenHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ApplicationFormCode")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("BillingAddress")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
                     b.Property<string>("BusinessRegistrationNo")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
                     b.Property<string>("CompanyName")
-                        .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset?>("EmailVerificationTokenExpiresAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EmailVerificationTokenHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset?>("EmailVerifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("LicenceClass")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateOnly?>("LicenceExpiry")
+                        .HasColumnType("date");
+
+                    b.Property<string>("LicenceNumber")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("Mobile")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Nic")
+                        .HasMaxLength(12)
+                        .HasColumnType("character varying(12)");
+
+                    b.Property<string>("NormalizedEmail")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("text");
 
                     b.Property<string>("Reference")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
-                    b.Property<Guid>("UserId")
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("RequestedRole")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTimeOffset?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ReviewedByName")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<Guid?>("ReviewedByUserId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("Pending");
+
+                    b.Property<DateTimeOffset>("SubmittedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("ActivationTokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("EmailVerificationTokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("Nic");
+
+                    b.HasIndex("NormalizedEmail");
 
                     b.HasIndex("Reference")
                         .IsUnique();
 
+                    b.HasIndex("ReviewedByUserId");
+
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("CustomerProfiles", "identity");
+                    b.HasIndex("Status", "SubmittedAt");
+
+                    b.ToTable("UserApplications", "identity", t =>
+                        {
+                            t.HasCheckConstraint("CK_UserApplications_Customer_Company", "\"RequestedRole\" <> 'Customer' OR (\"CompanyName\" IS NOT NULL AND \"BusinessRegistrationNo\" IS NOT NULL AND \"BillingAddress\" IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_UserApplications_Driver_Licence", "\"RequestedRole\" <> 'Driver' OR (\"LicenceNumber\" IS NOT NULL AND \"LicenceClass\" IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_UserApplications_Staff_Nic", "\"RequestedRole\" = 'Customer' OR \"Nic\" IS NOT NULL");
+                        });
+                });
+
+            modelBuilder.Entity("FleetSync.Modules.Auth.Domain.Auditing.AuditLogEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Details")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("EntityId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(45)
+                        .HasColumnType("character varying(45)");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Action", "OccurredAt");
+
+                    b.HasIndex("UserId", "OccurredAt");
+
+                    b.ToTable("AuditLog", "identity");
                 });
 
             modelBuilder.Entity("FleetSync.Modules.Auth.Domain.OneTimeToken", b =>
@@ -209,6 +410,64 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                     b.ToTable("PasswordHistory", "identity");
                 });
 
+            modelBuilder.Entity("FleetSync.Modules.Auth.Domain.ProfileChanges.ProfileChangeRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ApprovedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Field")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("FieldName");
+
+                    b.Property<string>("NewValue")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("OldValue")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTimeOffset>("RequestedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("Pending");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApprovedByUserId");
+
+                    b.HasIndex("Status", "RequestedAt");
+
+                    b.HasIndex("UserId", "Field")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ProfileChangeRequests_OnePendingPerField")
+                        .HasFilter("\"Status\" = 'Pending'");
+
+                    b.ToTable("ProfileChangeRequests", "identity");
+                });
+
             modelBuilder.Entity("FleetSync.Modules.Auth.Domain.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -224,6 +483,10 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("FamilyId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(45)
+                        .HasColumnType("character varying(45)");
+
                     b.Property<bool>("IsPersistent")
                         .HasColumnType("boolean");
 
@@ -237,6 +500,10 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -259,154 +526,122 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                     b.ToTable("RefreshTokens", "identity");
                 });
 
-            modelBuilder.Entity("FleetSync.Modules.Auth.Domain.StaffApplications.StaffApplication", b =>
+            modelBuilder.Entity("FleetSync.Modules.Auth.Domain.Roles.Customer", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("UserId");
+
+                    b.HasIndex("CompanyId");
+
+                    b.ToTable("Customers", "identity");
+                });
+
+            modelBuilder.Entity("FleetSync.Modules.Auth.Domain.Roles.CustomerCompany", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTimeOffset?>("ActivatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset?>("ActivationTokenExpiresAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("ActivationTokenHash")
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<string>("ApplicationFormCode")
-                        .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
-
-                    b.Property<string>("Email")
+                    b.Property<string>("BillingAddress")
                         .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)");
-
-                    b.Property<string>("LicenceClass")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<string>("LicenceNumber")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<string>("Mobile")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<string>("Nic")
-                        .IsRequired()
-                        .HasMaxLength(12)
-                        .HasColumnType("character varying(12)");
-
-                    b.Property<string>("NormalizedEmail")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<string>("Reference")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<string>("RejectionReason")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
-                    b.Property<DateTimeOffset?>("ReviewedAt")
+                    b.Property<string>("BusinessRegistrationNo")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("CompanyName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("ReviewedByName")
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)");
-
-                    b.Property<Guid?>("ReviewedByUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Role")
+                    b.Property<string>("NormalizedBusinessRegistrationNo")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<DateTimeOffset>("SubmittedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<uint>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("xid")
-                        .HasColumnName("xmin");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ActivationTokenHash")
+                    b.HasIndex("NormalizedBusinessRegistrationNo")
                         .IsUnique();
 
-                    b.HasIndex("Nic");
-
-                    b.HasIndex("NormalizedEmail");
-
-                    b.HasIndex("Reference")
-                        .IsUnique();
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("Status", "SubmittedAt");
-
-                    b.ToTable("StaffApplications", "identity");
+                    b.ToTable("CustomerCompanies", "identity");
                 });
 
-            modelBuilder.Entity("FleetSync.Modules.Auth.Domain.StaffApplications.StaffApplicationDocument", b =>
+            modelBuilder.Entity("FleetSync.Modules.Auth.Domain.Roles.Driver", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("ContentType")
+                    b.Property<string>("LicenceClass")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
-                    b.Property<string>("FileName")
+                    b.Property<DateOnly?>("LicenceExpiry")
+                        .HasColumnType("date");
+
+                    b.Property<string>("LicenceNumber")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
 
-                    b.Property<long>("SizeBytes")
-                        .HasColumnType("bigint");
+                    b.HasKey("UserId");
 
-                    b.Property<Guid>("StaffApplicationId")
+                    b.HasIndex("LicenceNumber")
+                        .IsUnique();
+
+                    b.ToTable("Drivers", "identity");
+                });
+
+            modelBuilder.Entity("FleetSync.Modules.Auth.Domain.Roles.FleetAdministrator", b =>
+                {
+                    b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("StorageKey")
-                        .IsRequired()
-                        .HasMaxLength(300)
-                        .HasColumnType("character varying(300)");
+                    b.HasKey("UserId");
 
-                    b.Property<DateTimeOffset>("UploadedAt")
-                        .HasColumnType("timestamp with time zone");
+                    b.ToTable("FleetAdministrators", "identity");
+                });
 
-                    b.HasKey("Id");
+            modelBuilder.Entity("FleetSync.Modules.Auth.Domain.Roles.FleetOwner", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
 
-                    b.HasIndex("StaffApplicationId");
+                    b.HasKey("UserId");
 
-                    b.ToTable("StaffApplicationDocuments", "identity");
+                    b.ToTable("FleetOwners", "identity");
+                });
+
+            modelBuilder.Entity("FleetSync.Modules.Auth.Domain.Roles.Mechanic", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("Mechanics", "identity");
+                });
+
+            modelBuilder.Entity("FleetSync.Modules.Auth.Domain.Roles.OperationalCoordinator", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("OperationalCoordinators", "identity");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", b =>
@@ -561,6 +796,9 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("RoleId");
 
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
                     b.ToTable("UserRoles", "identity");
                 });
 
@@ -583,13 +821,34 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                     b.ToTable("UserTokens", "identity");
                 });
 
-            modelBuilder.Entity("FleetSync.Modules.Auth.Domain.CustomerProfile", b =>
+            modelBuilder.Entity("FleetSync.Modules.Auth.Domain.Applications.ApplicationDocument", b =>
+                {
+                    b.HasOne("FleetSync.Modules.Auth.Domain.Applications.UserApplication", null)
+                        .WithMany("Documents")
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("FleetSync.Modules.Auth.Domain.Applications.UserApplication", b =>
+                {
+                    b.HasOne("FleetSync.Modules.Auth.Domain.Roles.FleetAdministrator", null)
+                        .WithMany()
+                        .HasForeignKey("ReviewedByUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("FleetSync.Modules.Auth.Domain.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+                });
+
+            modelBuilder.Entity("FleetSync.Modules.Auth.Domain.Auditing.AuditLogEntry", b =>
                 {
                     b.HasOne("FleetSync.Modules.Auth.Domain.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("FleetSync.Modules.Auth.Domain.OneTimeToken", b =>
@@ -610,6 +869,20 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("FleetSync.Modules.Auth.Domain.ProfileChanges.ProfileChangeRequest", b =>
+                {
+                    b.HasOne("FleetSync.Modules.Auth.Domain.Roles.FleetAdministrator", null)
+                        .WithMany()
+                        .HasForeignKey("ApprovedByUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("FleetSync.Modules.Auth.Domain.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("FleetSync.Modules.Auth.Domain.RefreshToken", b =>
                 {
                     b.HasOne("FleetSync.Modules.Auth.Domain.ApplicationUser", null)
@@ -619,19 +892,61 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("FleetSync.Modules.Auth.Domain.StaffApplications.StaffApplication", b =>
+            modelBuilder.Entity("FleetSync.Modules.Auth.Domain.Roles.Customer", b =>
                 {
-                    b.HasOne("FleetSync.Modules.Auth.Domain.ApplicationUser", null)
+                    b.HasOne("FleetSync.Modules.Auth.Domain.Roles.CustomerCompany", null)
                         .WithMany()
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("CompanyId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("FleetSync.Modules.Auth.Domain.ApplicationUser", null)
+                        .WithOne()
+                        .HasForeignKey("FleetSync.Modules.Auth.Domain.Roles.Customer", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
-            modelBuilder.Entity("FleetSync.Modules.Auth.Domain.StaffApplications.StaffApplicationDocument", b =>
+            modelBuilder.Entity("FleetSync.Modules.Auth.Domain.Roles.Driver", b =>
                 {
-                    b.HasOne("FleetSync.Modules.Auth.Domain.StaffApplications.StaffApplication", null)
-                        .WithMany("Documents")
-                        .HasForeignKey("StaffApplicationId")
+                    b.HasOne("FleetSync.Modules.Auth.Domain.ApplicationUser", null)
+                        .WithOne()
+                        .HasForeignKey("FleetSync.Modules.Auth.Domain.Roles.Driver", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("FleetSync.Modules.Auth.Domain.Roles.FleetAdministrator", b =>
+                {
+                    b.HasOne("FleetSync.Modules.Auth.Domain.ApplicationUser", null)
+                        .WithOne()
+                        .HasForeignKey("FleetSync.Modules.Auth.Domain.Roles.FleetAdministrator", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("FleetSync.Modules.Auth.Domain.Roles.FleetOwner", b =>
+                {
+                    b.HasOne("FleetSync.Modules.Auth.Domain.ApplicationUser", null)
+                        .WithOne()
+                        .HasForeignKey("FleetSync.Modules.Auth.Domain.Roles.FleetOwner", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("FleetSync.Modules.Auth.Domain.Roles.Mechanic", b =>
+                {
+                    b.HasOne("FleetSync.Modules.Auth.Domain.ApplicationUser", null)
+                        .WithOne()
+                        .HasForeignKey("FleetSync.Modules.Auth.Domain.Roles.Mechanic", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("FleetSync.Modules.Auth.Domain.Roles.OperationalCoordinator", b =>
+                {
+                    b.HasOne("FleetSync.Modules.Auth.Domain.ApplicationUser", null)
+                        .WithOne()
+                        .HasForeignKey("FleetSync.Modules.Auth.Domain.Roles.OperationalCoordinator", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -687,7 +1002,7 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("FleetSync.Modules.Auth.Domain.StaffApplications.StaffApplication", b =>
+            modelBuilder.Entity("FleetSync.Modules.Auth.Domain.Applications.UserApplication", b =>
                 {
                     b.Navigation("Documents");
                 });

@@ -4,26 +4,6 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Configurations;
 
-internal sealed class CustomerProfileConfiguration : IEntityTypeConfiguration<CustomerProfile>
-{
-    public void Configure(EntityTypeBuilder<CustomerProfile> builder)
-    {
-        builder.ToTable("CustomerProfiles");
-        builder.HasKey(p => p.Id);
-
-        builder.Property(p => p.Reference).HasMaxLength(20).IsRequired();
-        builder.Property(p => p.CompanyName).HasMaxLength(200).IsRequired();
-        builder.Property(p => p.BusinessRegistrationNo).HasMaxLength(50).IsRequired();
-        builder.Property(p => p.BillingAddress).HasMaxLength(500).IsRequired();
-
-        builder.HasIndex(p => p.Reference).IsUnique();
-        builder.HasIndex(p => p.UserId).IsUnique();
-
-        // Deleting an account removes its profile.
-        builder.HasOne<ApplicationUser>().WithMany().HasForeignKey(p => p.UserId).OnDelete(DeleteBehavior.Cascade);
-    }
-}
-
 internal sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
 {
     public void Configure(EntityTypeBuilder<RefreshToken> builder)
@@ -36,6 +16,10 @@ internal sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refre
         builder.HasIndex(t => t.TokenHash).IsUnique();
         builder.HasIndex(t => t.FamilyId);
         builder.HasIndex(t => t.UserId);
+
+        // IPv6 text form is at most 45 characters.
+        builder.Property(t => t.IpAddress).HasMaxLength(45);
+        builder.Property(t => t.UserAgent).HasMaxLength(ClientInfo.MaxUserAgentLength);
 
         // PostgreSQL xmin as an optimistic concurrency token: two simultaneous refreshes
         // of the same token can't both rotate it.

@@ -1,8 +1,8 @@
 using System.Security.Claims;
+using FleetSync.Modules.Auth.Application.Applications;
 using FleetSync.Modules.Auth.Application.Common;
 using FleetSync.Modules.Auth.Application.Registration;
-using FleetSync.Modules.Auth.Application.StaffApplications;
-using FleetSync.Modules.Auth.Domain.StaffApplications;
+using FleetSync.Modules.Auth.Domain.Applications;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -12,18 +12,21 @@ using Microsoft.Extensions.Options;
 
 namespace FleetSync.Modules.Auth.Endpoints;
 
-/// <summary>Staff applications: public submission and Fleet Administrator review.</summary>
-internal static class StaffApplicationEndpoints
+/// <summary>
+/// USER_APPLICATION: public staff submission, and Fleet Administrator review
+/// of every application (customers and staff) under /applications.
+/// </summary>
+internal static class ApplicationEndpoints
 {
-    public static void MapStaffApplicationEndpoints(this RouteGroupBuilder group, IOptions<AuthOptions> options)
+    public static void MapApplicationEndpoints(this RouteGroupBuilder group, IOptions<AuthOptions> options)
     {
         // Room for the maximum number of files plus the text fields.
         var documents = options.Value.Documents;
         var maxRequestBytes = (documents.MaxFileSizeBytes * documents.MaxFileCount) + (1024 * 1024);
 
-        group.MapPost("/staff-applications", SubmitAsync)
+        group.MapPost("/staff-applications", SubmitStaffAsync)
             .WithName("SubmitStaffApplication")
-            .WithSummary("Apply for a driver, mechanic or coordinator account (multipart/form-data)")
+            .WithSummary("Apply for a driver, mechanic, coordinator or owner account (multipart/form-data)")
             .Accepts<SubmitStaffApplicationForm>("multipart/form-data")
             .ProducesValidationProblem()
             // Token-based API, no auth cookies are read here, so antiforgery tokens aren't needed.
@@ -31,35 +34,35 @@ internal static class StaffApplicationEndpoints
             .WithMetadata(new RequestSizeLimitAttribute(maxRequestBytes))
             .RequireRateLimiting(AuthPolicies.PublicRateLimit);
 
-        var review = group.MapGroup("/staff-applications")
-            .RequireAuthorization(AuthPolicies.StaffReviewer);
+        var review = group.MapGroup("/applications")
+            .RequireAuthorization(AuthPolicies.FleetAdministrator);
 
         review.MapGet("/", ListAsync)
-            .WithName("ListStaffApplications")
-            .WithSummary("List applications, newest first (filter by status)");
+            .WithName("ListApplications")
+            .WithSummary("List applications, newest first (filter by status and role)");
 
         review.MapGet("/{id:guid}", GetAsync)
-            .WithName("GetStaffApplication")
+            .WithName("GetApplication")
             .WithSummary("Application details with document list");
 
         review.MapGet("/{id:guid}/documents/{documentId:guid}", DownloadDocumentAsync)
-            .WithName("DownloadStaffApplicationDocument")
+            .WithName("DownloadApplicationDocument")
             .WithSummary("Download an attached document");
 
         review.MapPost("/{id:guid}/approve", ApproveAsync)
-            .WithName("ApproveStaffApplication")
-            .WithSummary("Approve and email the applicant an activation link");
+            .WithName("ApproveApplication")
+            .WithSummary("Approve: customers can sign in at once; staff are emailed an activation link");
 
         review.MapPost("/{id:guid}/reject", RejectAsync)
-            .WithName("RejectStaffApplication")
+            .WithName("RejectApplication")
             .WithSummary("Reject with a reason the applicant will see")
-            .WithValidation<RejectStaffApplicationRequest>();
+            .WithValidation<RejectApplicationRequest>();
     }
 
-    private static async Task<Results<Created<RegistrationSubmittedResponse>, ValidationProblem, ProblemHttpResult>> SubmitAsync(
+    private static async Task<Results<Created<RegistrationSubmittedResponse>, ValidationProblem, ProblemHttpResult>> SubmitStaffAsync(
         [FromForm] SubmitStaffApplicationForm form,
         IFormFileCollection files,
-        StaffApplicationService applications,
+        UserApplicationService applications,
         IServiceProvider services,
         CancellationToken cancellationToken)
     {
@@ -74,39 +77,59 @@ internal static class StaffApplicationEndpoints
             return invalid;
         }
 
-        var result = await applications.SubmitAsync(command, cancellationToken);
+        var result = await applications.SubmitStaffAsync(command, cancellationToken);
         return result.IsSuccess
             ? TypedResults.Created((string?)null, result.Value)
             : result.Error.ToProblem();
     }
 
-    private static async Task<Results<Ok<PagedResponse<StaffApplicationSummaryResponse>>, ValidationProblem>> ListAsync(
-        StaffApplicationService applications,
+    private static async Task<Results<Ok<PagedResponse<ApplicationSummaryResponse>>, ValidationProblem>> ListAsync(
+        UserApplicationService applications,
         CancellationToken cancellationToken,
         string? status = null,
+        string? role = null,
         int page = 1,
         int pageSize = 20)
     {
-        StaffApplicationStatus? filter = null;
+        var errors = new Dictionary<string, string[]>();
+
+        ApplicationStatus? statusFilter = null;
         if (status is not null)
         {
-            if (!ApiEnum.TryParse<StaffApplicationStatus>(status, out var parsed))
+            if (ApiEnum.TryParse<ApplicationStatus>(status, out var parsed))
             {
-                return TypedResults.ValidationProblem(new Dictionary<string, string[]>
-                {
-                    ["status"] = [$"Use one of: {ApiEnum.Options<StaffApplicationStatus>()}."],
-                });
+                statusFilter = parsed;
             }
-
-            filter = parsed;
+            else
+            {
+                errors["status"] = [$"Use one of: {ApiEnum.Options<ApplicationStatus>()}."];
+            }
         }
 
-        return TypedResults.Ok(await applications.ListAsync(filter, page, pageSize, cancellationToken));
+        ApplicantRole? roleFilter = null;
+        if (role is not null)
+        {
+            if (ApiEnum.TryParse<ApplicantRole>(role, out var parsed))
+            {
+                roleFilter = parsed;
+            }
+            else
+            {
+                errors["role"] = [$"Use one of: {ApiEnum.Options<ApplicantRole>()}."];
+            }
+        }
+
+        if (errors.Count > 0)
+        {
+            return TypedResults.ValidationProblem(errors);
+        }
+
+        return TypedResults.Ok(await applications.ListAsync(statusFilter, roleFilter, page, pageSize, cancellationToken));
     }
 
-    private static async Task<Results<Ok<StaffApplicationDetailsResponse>, ProblemHttpResult>> GetAsync(
+    private static async Task<Results<Ok<ApplicationDetailsResponse>, ProblemHttpResult>> GetAsync(
         Guid id,
-        StaffApplicationService applications,
+        UserApplicationService applications,
         CancellationToken cancellationToken)
     {
         var result = await applications.GetAsync(id, cancellationToken);
@@ -116,7 +139,7 @@ internal static class StaffApplicationEndpoints
     private static async Task<Results<FileStreamHttpResult, ProblemHttpResult>> DownloadDocumentAsync(
         Guid id,
         Guid documentId,
-        StaffApplicationService applications,
+        UserApplicationService applications,
         CancellationToken cancellationToken)
     {
         var result = await applications.OpenDocumentAsync(id, documentId, cancellationToken);
@@ -125,21 +148,21 @@ internal static class StaffApplicationEndpoints
             : result.Error.ToProblem();
     }
 
-    private static async Task<Results<Ok<StaffApplicationDetailsResponse>, ProblemHttpResult>> ApproveAsync(
+    private static async Task<Results<Ok<ApplicationDetailsResponse>, ProblemHttpResult>> ApproveAsync(
         Guid id,
         ClaimsPrincipal user,
-        StaffApplicationService applications,
+        UserApplicationService applications,
         CancellationToken cancellationToken)
     {
         var result = await applications.ApproveAsync(id, user.GetUserId(), cancellationToken);
         return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Error.ToProblem();
     }
 
-    private static async Task<Results<Ok<StaffApplicationDetailsResponse>, ProblemHttpResult>> RejectAsync(
+    private static async Task<Results<Ok<ApplicationDetailsResponse>, ProblemHttpResult>> RejectAsync(
         Guid id,
-        RejectStaffApplicationRequest request,
+        RejectApplicationRequest request,
         ClaimsPrincipal user,
-        StaffApplicationService applications,
+        UserApplicationService applications,
         CancellationToken cancellationToken)
     {
         var result = await applications.RejectAsync(id, user.GetUserId(), request, cancellationToken);

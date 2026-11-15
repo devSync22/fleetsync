@@ -23,7 +23,8 @@ internal sealed class AuthDbContextDesignTimeFactory : IDesignTimeDbContextFacto
         var options = new DbContextOptionsBuilder<AuthDbContext>();
         AuthDbContextOptions.Configure(options, connectionString);
 
-        return new AuthDbContext(options.Options);
+        // The clock only stamps UpdatedAt on save, which the ef tools never do.
+        return new AuthDbContext(options.Options, TimeProvider.System);
     }
 }
 

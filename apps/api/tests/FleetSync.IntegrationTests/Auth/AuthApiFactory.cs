@@ -60,6 +60,13 @@ public sealed class AuthApiFactory : WebApplicationFactory<Program>, IAsyncLifet
         return client;
     }
 
+    /// <summary>Reads the database directly, for asserting on rows the API doesn't expose.</summary>
+    internal async Task<T> QueryAsync<T>(Func<AuthDbContext, Task<T>> query)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        return await query(scope.ServiceProvider.GetRequiredService<AuthDbContext>());
+    }
+
     public async Task InitializeAsync()
     {
         await using var scope = Services.CreateAsyncScope();

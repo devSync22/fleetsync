@@ -2,7 +2,9 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using FleetSync.Modules.Auth.Application.Common;
 using FleetSync.Modules.Auth.Domain;
+using FleetSync.Modules.Auth.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -31,7 +33,7 @@ internal static class AuthTestHelpers
             password,
         });
 
-    /// <summary>Registers a customer and follows the verification email.</summary>
+    /// <summary>Registers a customer and follows the verification email (the application is then waiting for review).</summary>
     public static async Task RegisterVerifiedCustomerAsync(AuthApiFactory factory, HttpClient client, string email)
     {
         (await RegisterCustomerAsync(client, email)).EnsureSuccessStatusCode();
@@ -41,17 +43,52 @@ internal static class AuthTestHelpers
         Assert.Equal(HttpStatusCode.NoContent, verified.StatusCode);
     }
 
+    /// <summary>Registers, verifies and has an administrator approve a customer, who can then sign in.</summary>
+    public static async Task RegisterApprovedCustomerAsync(AuthApiFactory factory, HttpClient client, string email)
+    {
+        await RegisterVerifiedCustomerAsync(factory, client, email);
+
+        var admin = await CreateAdminClientAsync(factory);
+        var id = await FindApplicationIdAsync(admin, email);
+        (await admin.PostAsync($"/api/auth/applications/{id}/approve", content: null)).EnsureSuccessStatusCode();
+    }
+
+    /// <summary>The id of the newest application from <paramref name="email"/>, via the review list.</summary>
+    public static async Task<string> FindApplicationIdAsync(HttpClient admin, string email)
+    {
+        var list = await ReadJsonAsync(await admin.GetAsync("/api/auth/applications?pageSize=100"));
+        return list.GetProperty("items").EnumerateArray()
+            .First(i => i.GetProperty("email").GetString() == email)
+            .GetProperty("id").GetString()!;
+    }
+
+    /// <summary>A client signed in as the given (approved) user, with the access token set.</summary>
+    public static async Task<HttpClient> SignedInClientAsync(AuthApiFactory factory, string email, string password = Password)
+    {
+        var client = factory.CreateMobileClient();
+        var session = await ReadJsonAsync(await LoginAsync(client, email, password));
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", session.GetProperty("accessToken").GetString());
+        return client;
+    }
+
     public static Task<HttpResponseMessage> LoginAsync(HttpClient client, string email, string password = Password, bool rememberMe = false) =>
         client.PostAsJsonAsync("/api/auth/login", new { email, password, rememberMe });
 
     /// <summary>Creates a Fleet Administrator directly and returns a client signed in as them.</summary>
-    public static async Task<HttpClient> CreateAdminClientAsync(AuthApiFactory factory)
+    public static async Task<HttpClient> CreateAdminClientAsync(AuthApiFactory factory) =>
+        await SignedInClientAsync(factory, await CreateAdminAsync(factory));
+
+    /// <summary>Creates a Fleet Administrator (Identity role + FLEET_ADMINISTRATOR row) and returns their email.</summary>
+    public static async Task<string> CreateAdminAsync(AuthApiFactory factory)
     {
         var email = UniqueEmail("admin");
 
         await using (var scope = factory.Services.CreateAsyncScope())
         {
             var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var roles = scope.ServiceProvider.GetRequiredService<RoleAssignment>();
+            var db = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
             var admin = new ApplicationUser
             {
                 UserName = email,
@@ -61,14 +98,11 @@ internal static class AuthTestHelpers
                 CreatedAt = DateTimeOffset.UtcNow,
             };
             Assert.True((await users.CreateAsync(admin, Password)).Succeeded);
-            Assert.True((await users.AddToRoleAsync(admin, AuthRoles.FleetAdministrator)).Succeeded);
+            Assert.True((await roles.AssignFleetAdministratorAsync(admin)).Succeeded);
+            await db.SaveChangesAsync();
         }
 
-        var client = factory.CreateMobileClient();
-        var session = await ReadJsonAsync(await LoginAsync(client, email));
-        client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", session.GetProperty("accessToken").GetString());
-        return client;
+        return email;
     }
 
     public static async Task<JsonElement> ReadJsonAsync(HttpResponseMessage response)

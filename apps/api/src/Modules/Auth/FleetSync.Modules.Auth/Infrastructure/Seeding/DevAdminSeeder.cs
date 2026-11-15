@@ -1,4 +1,6 @@
+using FleetSync.Modules.Auth.Application.Common;
 using FleetSync.Modules.Auth.Domain;
+using FleetSync.Modules.Auth.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -31,6 +33,8 @@ internal sealed partial class DevAdminSeeder(
         {
             await using var scope = scopeFactory.CreateAsyncScope();
             var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var db = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+            var roles = scope.ServiceProvider.GetRequiredService<RoleAssignment>();
 
             if (await users.FindByEmailAsync(admin.Email) is not null)
             {
@@ -46,14 +50,19 @@ internal sealed partial class DevAdminSeeder(
                 CreatedAt = clock.GetUtcNow(),
             };
 
+            // Account, Identity role and FLEET_ADMINISTRATOR row together or not at all.
+            await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+
             var created = await users.CreateAsync(user, admin.Password);
-            if (!created.Succeeded)
+            var assigned = created.Succeeded ? await roles.AssignFleetAdministratorAsync(user) : created;
+            if (!assigned.Succeeded)
             {
-                LogSeedFailed(string.Join(" ", created.Errors.Select(e => e.Description)));
+                LogSeedFailed(string.Join(" ", assigned.Errors.Select(e => e.Description)));
                 return;
             }
 
-            await users.AddToRoleAsync(user, AuthRoles.FleetAdministrator);
+            await db.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
             LogSeeded(admin.Email);
         }
         catch (Exception exception)

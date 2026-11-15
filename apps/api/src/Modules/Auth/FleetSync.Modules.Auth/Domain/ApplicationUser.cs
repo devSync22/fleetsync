@@ -17,4 +17,17 @@ internal sealed class ApplicationUser : IdentityUser<Guid>
 
     /// <summary>Last successful sign-in (UTC); null until the first sign-in.</summary>
     public DateTimeOffset? LastSignInAt { get; set; }
+
+    /// <summary>
+    /// is_active: false when a Fleet Administrator has deactivated the account.
+    /// Inactive accounts can't sign in or refresh their session.
+    /// </summary>
+    public bool IsActive { get; set; } = true;
+
+    /// <summary>
+    /// updated_at: last change to the account's details (name, email, phone,
+    /// password, active flag). Set by AuthDbContext; sign-in bookkeeping
+    /// (failed-attempt counter, last sign-in) doesn't count as an update.
+    /// </summary>
+    public DateTimeOffset? UpdatedAt { get; set; }
 }

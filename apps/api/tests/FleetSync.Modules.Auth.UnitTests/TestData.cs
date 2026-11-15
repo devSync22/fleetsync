@@ -1,4 +1,4 @@
-using FleetSync.Modules.Auth.Domain.StaffApplications;
+using FleetSync.Modules.Auth.Domain.Applications;
 using Microsoft.Extensions.Options;
 
 namespace FleetSync.Modules.Auth.UnitTests;
@@ -16,16 +16,30 @@ internal static class TestData
         return Microsoft.Extensions.Options.Options.Create(options);
     }
 
-    public static StaffApplication StaffApplication(StaffRole role = StaffRole.Driver) => new(
+    public static UserApplication StaffApplication(ApplicantRole role = ApplicantRole.Driver) => UserApplication.ForStaff(
         "REG-2026-0001",
         applicationFormCode: null,
+        role,
         "Tharindu Wijesinghe",
         "199012345678",
         "tharindu@example.com",
         "+94771234567",
-        role,
         licenceNumber: "B1234567",
         licenceClass: LicenceClass.Heavy,
+        licenceExpiry: new DateOnly(2030, 1, 31),
         documents: [],
         Now);
+
+    public static UserApplication CustomerApplication() => UserApplication.ForCustomer(
+        "REG-2026-0002",
+        "Sachini Fernando",
+        "sachini@example.com",
+        "+94771234567",
+        "Hayleys Freight (Pvt) Ltd",
+        "PV 12345",
+        "No. 25, Galle Road, Colombo 03",
+        passwordHash: "password-hash",
+        emailVerificationTokenHash: "verify-hash",
+        Now,
+        TimeSpan.FromHours(48));
 }

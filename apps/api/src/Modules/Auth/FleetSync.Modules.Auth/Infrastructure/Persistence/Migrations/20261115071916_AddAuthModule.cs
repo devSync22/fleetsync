@@ -22,6 +22,23 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                 schema: "identity");
 
             migrationBuilder.CreateTable(
+                name: "CustomerCompanies",
+                schema: "identity",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    CompanyName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    BusinessRegistrationNo = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    NormalizedBusinessRegistrationNo = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    BillingAddress = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CustomerCompanies", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Roles",
                 schema: "identity",
                 columns: table => new
@@ -45,6 +62,8 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                     FullName = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     LastSignInAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     UserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
@@ -89,23 +108,130 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "CustomerProfiles",
+                name: "AuditLog",
                 schema: "identity",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Reference = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    CompanyName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    BusinessRegistrationNo = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    BillingAddress = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                    EntityType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    EntityId = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: true),
+                    Action = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    OccurredAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    Details = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    IpAddress = table.Column<string>(type: "character varying(45)", maxLength: 45, nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CustomerProfiles", x => x.Id);
+                    table.PrimaryKey("PK_AuditLog", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_CustomerProfiles_Users_UserId",
+                        name: "FK_AuditLog_Users_UserId",
+                        column: x => x.UserId,
+                        principalSchema: "identity",
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Customers",
+                schema: "identity",
+                columns: table => new
+                {
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CompanyId = table.Column<Guid>(type: "uuid", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Customers", x => x.UserId);
+                    table.ForeignKey(
+                        name: "FK_Customers_CustomerCompanies_CompanyId",
+                        column: x => x.CompanyId,
+                        principalSchema: "identity",
+                        principalTable: "CustomerCompanies",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_Customers_Users_UserId",
+                        column: x => x.UserId,
+                        principalSchema: "identity",
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Drivers",
+                schema: "identity",
+                columns: table => new
+                {
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    LicenceNumber = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    LicenceClass = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    LicenceExpiry = table.Column<DateOnly>(type: "date", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Drivers", x => x.UserId);
+                    table.ForeignKey(
+                        name: "FK_Drivers_Users_UserId",
+                        column: x => x.UserId,
+                        principalSchema: "identity",
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "FleetAdministrators",
+                schema: "identity",
+                columns: table => new
+                {
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FleetAdministrators", x => x.UserId);
+                    table.ForeignKey(
+                        name: "FK_FleetAdministrators_Users_UserId",
+                        column: x => x.UserId,
+                        principalSchema: "identity",
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "FleetOwners",
+                schema: "identity",
+                columns: table => new
+                {
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FleetOwners", x => x.UserId);
+                    table.ForeignKey(
+                        name: "FK_FleetOwners_Users_UserId",
+                        column: x => x.UserId,
+                        principalSchema: "identity",
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Mechanics",
+                schema: "identity",
+                columns: table => new
+                {
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Mechanics", x => x.UserId);
+                    table.ForeignKey(
+                        name: "FK_Mechanics_Users_UserId",
                         column: x => x.UserId,
                         principalSchema: "identity",
                         principalTable: "Users",
@@ -131,6 +257,25 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                     table.PrimaryKey("PK_OneTimeTokens", x => x.Id);
                     table.ForeignKey(
                         name: "FK_OneTimeTokens_Users_UserId",
+                        column: x => x.UserId,
+                        principalSchema: "identity",
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "OperationalCoordinators",
+                schema: "identity",
+                columns: table => new
+                {
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OperationalCoordinators", x => x.UserId);
+                    table.ForeignKey(
+                        name: "FK_OperationalCoordinators_Users_UserId",
                         column: x => x.UserId,
                         principalSchema: "identity",
                         principalTable: "Users",
@@ -174,6 +319,8 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                     ExpiresAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     RevokedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     ReplacedByTokenId = table.Column<Guid>(type: "uuid", nullable: true),
+                    IpAddress = table.Column<string>(type: "character varying(45)", maxLength: 45, nullable: true),
+                    UserAgent = table.Column<string>(type: "character varying(512)", maxLength: 512, nullable: true),
                     xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false)
                 },
                 constraints: table =>
@@ -186,46 +333,6 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "StaffApplications",
-                schema: "identity",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Reference = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    ApplicationFormCode = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: true),
-                    FullName = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
-                    Nic = table.Column<string>(type: "character varying(12)", maxLength: 12, nullable: false),
-                    Email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
-                    NormalizedEmail = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
-                    Mobile = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    Role = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    LicenceNumber = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
-                    LicenceClass = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
-                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    SubmittedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    ReviewedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    ReviewedByUserId = table.Column<Guid>(type: "uuid", nullable: true),
-                    ReviewedByName = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: true),
-                    RejectionReason = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    ActivationTokenHash = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: true),
-                    ActivationTokenExpiresAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    ActivatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: true),
-                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_StaffApplications", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_StaffApplications_Users_UserId",
-                        column: x => x.UserId,
-                        principalSchema: "identity",
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -323,12 +430,105 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "StaffApplicationDocuments",
+                name: "ProfileChangeRequests",
                 schema: "identity",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    StaffApplicationId = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    FieldName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    OldValue = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
+                    NewValue = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false, defaultValue: "Pending"),
+                    RequestedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    ReviewedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    ApprovedByUserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    RejectionReason = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProfileChangeRequests", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ProfileChangeRequests_FleetAdministrators_ApprovedByUserId",
+                        column: x => x.ApprovedByUserId,
+                        principalSchema: "identity",
+                        principalTable: "FleetAdministrators",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_ProfileChangeRequests_Users_UserId",
+                        column: x => x.UserId,
+                        principalSchema: "identity",
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "UserApplications",
+                schema: "identity",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Reference = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    ApplicationFormCode = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: true),
+                    FullName = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
+                    Nic = table.Column<string>(type: "character varying(12)", maxLength: 12, nullable: true),
+                    Email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
+                    NormalizedEmail = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
+                    Mobile = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    RequestedRole = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    LicenceNumber = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: true),
+                    LicenceClass = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
+                    LicenceExpiry = table.Column<DateOnly>(type: "date", nullable: true),
+                    CompanyName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    BusinessRegistrationNo = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    BillingAddress = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    PasswordHash = table.Column<string>(type: "text", nullable: true),
+                    EmailVerificationTokenHash = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: true),
+                    EmailVerificationTokenExpiresAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    EmailVerifiedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false, defaultValue: "Pending"),
+                    SubmittedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    ReviewedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    ReviewedByUserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    ReviewedByName = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: true),
+                    RejectionReason = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    ActivationTokenHash = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: true),
+                    ActivationTokenExpiresAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    ActivatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserApplications", x => x.Id);
+                    table.CheckConstraint("CK_UserApplications_Customer_Company", "\"RequestedRole\" <> 'Customer' OR (\"CompanyName\" IS NOT NULL AND \"BusinessRegistrationNo\" IS NOT NULL AND \"BillingAddress\" IS NOT NULL)");
+                    table.CheckConstraint("CK_UserApplications_Driver_Licence", "\"RequestedRole\" <> 'Driver' OR (\"LicenceNumber\" IS NOT NULL AND \"LicenceClass\" IS NOT NULL)");
+                    table.CheckConstraint("CK_UserApplications_Staff_Nic", "\"RequestedRole\" = 'Customer' OR \"Nic\" IS NOT NULL");
+                    table.ForeignKey(
+                        name: "FK_UserApplications_FleetAdministrators_ReviewedByUserId",
+                        column: x => x.ReviewedByUserId,
+                        principalSchema: "identity",
+                        principalTable: "FleetAdministrators",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_UserApplications_Users_UserId",
+                        column: x => x.UserId,
+                        principalSchema: "identity",
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ApplicationDocuments",
+                schema: "identity",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ApplicationId = table.Column<Guid>(type: "uuid", nullable: false),
                     FileName = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     ContentType = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     SizeBytes = table.Column<long>(type: "bigint", nullable: false),
@@ -337,12 +537,12 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_StaffApplicationDocuments", x => x.Id);
+                    table.PrimaryKey("PK_ApplicationDocuments", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_StaffApplicationDocuments_StaffApplications_StaffApplicatio~",
-                        column: x => x.StaffApplicationId,
+                        name: "FK_ApplicationDocuments_UserApplications_ApplicationId",
+                        column: x => x.ApplicationId,
                         principalSchema: "identity",
-                        principalTable: "StaffApplications",
+                        principalTable: "UserApplications",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -362,17 +562,41 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_CustomerProfiles_Reference",
+                name: "IX_ApplicationDocuments_ApplicationId",
                 schema: "identity",
-                table: "CustomerProfiles",
-                column: "Reference",
+                table: "ApplicationDocuments",
+                column: "ApplicationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AuditLog_Action_OccurredAt",
+                schema: "identity",
+                table: "AuditLog",
+                columns: new[] { "Action", "OccurredAt" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AuditLog_UserId_OccurredAt",
+                schema: "identity",
+                table: "AuditLog",
+                columns: new[] { "UserId", "OccurredAt" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CustomerCompanies_NormalizedBusinessRegistrationNo",
+                schema: "identity",
+                table: "CustomerCompanies",
+                column: "NormalizedBusinessRegistrationNo",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_CustomerProfiles_UserId",
+                name: "IX_Customers_CompanyId",
                 schema: "identity",
-                table: "CustomerProfiles",
-                column: "UserId",
+                table: "Customers",
+                column: "CompanyId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Drivers_LicenceNumber",
+                schema: "identity",
+                table: "Drivers",
+                column: "LicenceNumber",
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -393,6 +617,26 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                 schema: "identity",
                 table: "PasswordHistory",
                 columns: new[] { "UserId", "CreatedAt" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProfileChangeRequests_ApprovedByUserId",
+                schema: "identity",
+                table: "ProfileChangeRequests",
+                column: "ApprovedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProfileChangeRequests_OnePendingPerField",
+                schema: "identity",
+                table: "ProfileChangeRequests",
+                columns: new[] { "UserId", "FieldName" },
+                unique: true,
+                filter: "\"Status\" = 'Pending'");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProfileChangeRequests_Status_RequestedAt",
+                schema: "identity",
+                table: "ProfileChangeRequests",
+                columns: new[] { "Status", "RequestedAt" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_RefreshTokens_FamilyId",
@@ -427,48 +671,56 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_StaffApplicationDocuments_StaffApplicationId",
+                name: "IX_UserApplications_ActivationTokenHash",
                 schema: "identity",
-                table: "StaffApplicationDocuments",
-                column: "StaffApplicationId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_StaffApplications_ActivationTokenHash",
-                schema: "identity",
-                table: "StaffApplications",
+                table: "UserApplications",
                 column: "ActivationTokenHash",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_StaffApplications_Nic",
+                name: "IX_UserApplications_EmailVerificationTokenHash",
                 schema: "identity",
-                table: "StaffApplications",
+                table: "UserApplications",
+                column: "EmailVerificationTokenHash",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserApplications_Nic",
+                schema: "identity",
+                table: "UserApplications",
                 column: "Nic");
 
             migrationBuilder.CreateIndex(
-                name: "IX_StaffApplications_NormalizedEmail",
+                name: "IX_UserApplications_NormalizedEmail",
                 schema: "identity",
-                table: "StaffApplications",
+                table: "UserApplications",
                 column: "NormalizedEmail");
 
             migrationBuilder.CreateIndex(
-                name: "IX_StaffApplications_Reference",
+                name: "IX_UserApplications_Reference",
                 schema: "identity",
-                table: "StaffApplications",
+                table: "UserApplications",
                 column: "Reference",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_StaffApplications_Status_SubmittedAt",
+                name: "IX_UserApplications_ReviewedByUserId",
                 schema: "identity",
-                table: "StaffApplications",
+                table: "UserApplications",
+                column: "ReviewedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserApplications_Status_SubmittedAt",
+                schema: "identity",
+                table: "UserApplications",
                 columns: new[] { "Status", "SubmittedAt" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_StaffApplications_UserId",
+                name: "IX_UserApplications_UserId",
                 schema: "identity",
-                table: "StaffApplications",
-                column: "UserId");
+                table: "UserApplications",
+                column: "UserId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserClaims_UserId",
@@ -489,10 +741,18 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                 column: "RoleId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_UserRoles_UserId",
+                schema: "identity",
+                table: "UserRoles",
+                column: "UserId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "EmailIndex",
                 schema: "identity",
                 table: "Users",
-                column: "NormalizedEmail");
+                column: "NormalizedEmail",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "UserNameIndex",
@@ -506,7 +766,27 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "CustomerProfiles",
+                name: "ApplicationDocuments",
+                schema: "identity");
+
+            migrationBuilder.DropTable(
+                name: "AuditLog",
+                schema: "identity");
+
+            migrationBuilder.DropTable(
+                name: "Customers",
+                schema: "identity");
+
+            migrationBuilder.DropTable(
+                name: "Drivers",
+                schema: "identity");
+
+            migrationBuilder.DropTable(
+                name: "FleetOwners",
+                schema: "identity");
+
+            migrationBuilder.DropTable(
+                name: "Mechanics",
                 schema: "identity");
 
             migrationBuilder.DropTable(
@@ -514,7 +794,15 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                 schema: "identity");
 
             migrationBuilder.DropTable(
+                name: "OperationalCoordinators",
+                schema: "identity");
+
+            migrationBuilder.DropTable(
                 name: "PasswordHistory",
+                schema: "identity");
+
+            migrationBuilder.DropTable(
+                name: "ProfileChangeRequests",
                 schema: "identity");
 
             migrationBuilder.DropTable(
@@ -523,10 +811,6 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
 
             migrationBuilder.DropTable(
                 name: "RoleClaims",
-                schema: "identity");
-
-            migrationBuilder.DropTable(
-                name: "StaffApplicationDocuments",
                 schema: "identity");
 
             migrationBuilder.DropTable(
@@ -546,11 +830,19 @@ namespace FleetSync.Modules.Auth.Infrastructure.Persistence.Migrations
                 schema: "identity");
 
             migrationBuilder.DropTable(
-                name: "StaffApplications",
+                name: "UserApplications",
+                schema: "identity");
+
+            migrationBuilder.DropTable(
+                name: "CustomerCompanies",
                 schema: "identity");
 
             migrationBuilder.DropTable(
                 name: "Roles",
+                schema: "identity");
+
+            migrationBuilder.DropTable(
+                name: "FleetAdministrators",
                 schema: "identity");
 
             migrationBuilder.DropTable(

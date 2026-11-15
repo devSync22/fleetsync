@@ -6,20 +6,20 @@ using Microsoft.AspNetCore.Routing;
 
 namespace FleetSync.Modules.Auth.Endpoints;
 
-/// <summary>Customer self-registration and email verification.</summary>
+/// <summary>Customer registration (creates an application for review) and email verification.</summary>
 internal static class RegistrationEndpoints
 {
     public static void MapRegistrationEndpoints(this RouteGroupBuilder group)
     {
         group.MapPost("/register/customer", RegisterCustomerAsync)
             .WithName("RegisterCustomer")
-            .WithSummary("Create a customer company account (email verification required)")
+            .WithSummary("Apply for a customer account: verify the email, then a Fleet Administrator approves")
             .WithValidation<RegisterCustomerRequest>()
             .RequireRateLimiting(AuthPolicies.PublicRateLimit);
 
         group.MapPost("/verify-email", VerifyEmailAsync)
             .WithName("VerifyEmail")
-            .WithSummary("Confirm an email address with the emailed token")
+            .WithSummary("Confirm the applicant's email address with the emailed token")
             .WithValidation<VerifyEmailRequest>()
             .RequireRateLimiting(AuthPolicies.PublicRateLimit);
 
