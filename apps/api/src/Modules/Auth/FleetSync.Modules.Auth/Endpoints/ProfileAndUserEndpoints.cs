@@ -56,7 +56,8 @@ internal static class ProfileAndUserEndpoints
         group.MapGet("/audit-log", ListAuditLogAsync)
             .WithName("ListAuditLog")
             .WithSummary("Security events, newest first (filter by userId and action)")
-            .RequireAuthorization(AuthPolicies.FleetAdministrator);
+            // GET only, so the read-only Fleet Owner may use it too.
+            .RequireAuthorization(AuthPolicies.AuditTrailReader);
     }
 
     private static async Task<Results<Created<ProfileChangeResponse>, ProblemHttpResult>> RequestChangeAsync(
@@ -137,6 +138,6 @@ internal static class ProfileAndUserEndpoints
         Guid? userId = null,
         string? action = null,
         int page = 1,
-        int pageSize = 50) =>
+        int pageSize = 20) =>
         TypedResults.Ok(await users.ListAuditLogAsync(userId, action, page, pageSize, cancellationToken));
 }

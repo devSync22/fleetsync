@@ -33,7 +33,8 @@ internal sealed class UserAdministrationService(
     SessionService sessions,
     AuditTrail audit)
 {
-    private const int MaxPageSize = 200;
+    // API rule: lists default to 20 items, at most 100.
+    private const int MaxPageSize = 100;
 
     /// <summary>
     /// Deactivating also ends every session, so the person is signed out

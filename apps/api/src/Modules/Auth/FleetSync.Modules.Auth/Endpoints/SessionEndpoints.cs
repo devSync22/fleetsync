@@ -17,16 +17,20 @@ internal static class SessionEndpoints
             .WithName("Login")
             .WithSummary("Sign in with email and password")
             .WithValidation<LoginRequest>()
-            .RequireRateLimiting(AuthPolicies.PublicRateLimit);
+            .RequireRateLimiting(AuthPolicies.PublicRateLimit)
+            .AllowAnonymous();
 
         group.MapPost("/refresh", RefreshAsync)
             .WithName("RefreshSession")
             .WithSummary("Exchange a refresh token for a new access token")
-            .RequireRateLimiting(AuthPolicies.PublicRateLimit);
+            .RequireRateLimiting(AuthPolicies.PublicRateLimit)
+            .AllowAnonymous();
 
         group.MapPost("/logout", LogoutAsync)
             .WithName("Logout")
-            .WithSummary("End the current session");
+            .WithSummary("End the current session")
+            // Works with an expired access token: only the refresh token matters.
+            .AllowAnonymous();
 
         group.MapGet("/me", GetCurrentUserAsync)
             .WithName("GetCurrentUser")

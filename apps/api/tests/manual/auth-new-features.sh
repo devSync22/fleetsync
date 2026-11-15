@@ -7,25 +7,27 @@
 # Test cases are described in docs/testing/auth-api-testing.md (part B).
 #
 # Prerequisites
-#   - API running in Development on http://localhost:5215 with its console
-#     output written to a file (emailed links are read from it), and a high
-#     rate limit so the run isn't throttled:
-#       Auth__RateLimiting__PermitLimit=1000 dotnet run --project apps/api/src/FleetSync.Api \
-#         --launch-profile http > /tmp/fleetsync-api.log 2>&1 &
+#   - API running in Development on http://localhost:5215 with a high rate
+#     limit so the run isn't throttled:
+#       Auth__RateLimiting__PermitLimit=1000 dotnet run --project apps/api/src/FleetSync.Api --launch-profile http
+#   - Emailed links are read from the dev pickup folder
+#     apps/api/src/FleetSync.Api/App_Data/dev-emails (override with EMAIL_DIR=...)
 #   - Dev admin configured in User Secrets (Auth:DevAdmin:Email / Password)
 #   - Database: the API's connection string from User Secrets, or
 #     ConnectionStrings__FleetSyncDatabase if set (same precedence as the API)
 #   - curl, jq, python3, psql
 #
 # Usage (from the repo root):
-#   bash apps/api/tests/manual/auth-new-features.sh /tmp/fleetsync-api.log
+#   bash apps/api/tests/manual/auth-new-features.sh
 #
 # Every run uses new qa-<run id>-…@fleetsync.test emails, so it can be repeated.
 set -uo pipefail
 
 HOST=${FLEETSYNC_API:-http://localhost:5215}
-API_LOG=${1:?Pass the API log file as the first argument}
-REPO=$(cd "$(dirname "$0")/../../../.." && pwd)
+REPO=${REPO:-$(cd "$(dirname "$0")/../../../.." && pwd)}
+# Development saves emails here instead of sending them (Auth:Email:PickupDirectory).
+EMAIL_DIR=${EMAIL_DIR:-$REPO/apps/api/src/FleetSync.Api/App_Data/dev-emails}
+mkdir -p "$EMAIL_DIR"
 API_PROJECT="$REPO/apps/api/src/FleetSync.Api"
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
@@ -82,7 +84,7 @@ field() { jq -r "if ($1) == null then \"\" else ($1) end" "$WORK/body" 2>/dev/nu
 # check ID "description" expected-status [extra-assertion-result]
 check() {
   local id=$1 desc=$2 expected=$3 extra=${4:-ok}
-  local got="$STATUS"; [[ -n "$(field .code)" ]] && got="$STATUS $(field .code)"
+  local got="$STATUS"; [[ -n "$(field .errorCode)" ]] && got="$STATUS $(field .errorCode)"
   if [[ "$STATUS" == "$expected" && "$extra" == "ok" ]]; then
     PASS=$((PASS+1)); printf 'PASS | %-5s | %-66s | %s\n' "$id" "$desc" "$got"
   else
@@ -94,18 +96,21 @@ check() {
 dbcheck() { STATUS=db; echo '{}' > "$WORK/body"; check "$1" "$2" db "$3"; }
 is() { [[ "$1" == "$2" ]] && echo ok || echo "($3: '$1')"; }
 
-# Latest emailed token for an address, from the API log (URL-decoded).
+# Latest emailed token for an address, from the dev email pickup folder (URL-decoded).
 token_for() {
   sleep 0.5
-  python3 -I - "$API_LOG" "$1" <<'PY'
-import re, sys, urllib.parse
-log, addr = open(sys.argv[1], encoding="utf-8", errors="replace").read(), sys.argv[2]
-at = log.rfind(f"Email to {addr}")
-m = re.search(r"token=([^\s&]+)", log[at:]) if at >= 0 else None
-print(urllib.parse.unquote(m.group(1)) if m else "")
-PY
+  python3 -I - "$EMAIL_DIR" "$1" <<'PY2'
+import os, re, sys, urllib.parse
+folder, addr = sys.argv[1], sys.argv[2]
+for name in sorted(os.listdir(folder), reverse=True):        # file names sort by time
+    text = open(os.path.join(folder, name), encoding="utf-8").read()
+    if text.startswith(f"To: {addr}\n"):
+        m = re.search(r"token=([^\s&]+)", text)
+        print(urllib.parse.unquote(m.group(1)) if m else ""); break
+PY2
 }
-emails_to() { grep -c "Email to $1 " "$API_LOG"; }
+# emails_to ADDRESS [SUBJECT-TEXT] -> how many emails were saved for that address
+emails_to() { grep -lx "To: $1" "$EMAIL_DIR"/*.txt 2>/dev/null | xargs -r grep -l "^Subject: .*${2:-}" | wc -l; }
 
 # --- test data -----------------------------------------------------------------
 RUN=$(date +%s)
@@ -158,12 +163,12 @@ dbcheck CA02 "No account exists yet; application is pending with a password hash
   "$(is "$(pg "select (select count(*) from identity.\"Users\" where \"NormalizedEmail\"=upper('$C1')) || ':' || \"Status\" || ':' || (\"PasswordHash\" is not null) from identity.\"UserApplications\" where \"NormalizedEmail\"=upper('$C1')")" "0:Pending:true" state)"
 
 login "$C1"
-check CA03 "Sign-in before verifying (right password) -> told to verify" 403 "$(is "$(field .code)" auth.email_not_verified code)"
+check CA03 "Sign-in before verifying (right password) -> told to verify" 403 "$(is "$(field .errorCode)" auth.email_not_verified code)"
 login "$C1" Wrong2026Pass
-check CA04 "Sign-in before verifying (wrong password) reveals nothing" 401 "$(is "$(field .code)" auth.invalid_credentials code)"
+check CA04 "Sign-in before verifying (wrong password) reveals nothing" 401 "$(is "$(field .errorCode)" auth.invalid_credentials code)"
 
 json POST /api/auth/register/customer "$(customer_body "$C1")"
-check CA05 "Second registration while the first is open" 409 "$(is "$(field .code)" application.duplicate code)"
+check CA05 "Second registration while the first is open" 409 "$(is "$(field .errorCode)" application.duplicate code)"
 
 json POST /api/auth/verify-email/resend "{\"email\":\"$C1\"}"
 FIRST_TOKEN=$(token_for "$C1")
@@ -172,7 +177,7 @@ json POST /api/auth/verify-email "{\"token\":\"$FIRST_TOKEN\"}"
 check CA07 "Verify with the resent token" 204
 
 login "$C1"
-check CA08 "Verified but not approved -> pending approval" 403 "$(is "$(field .code)" auth.pending_approval code)"
+check CA08 "Verified but not approved -> pending approval" 403 "$(is "$(field .errorCode)" auth.pending_approval code)"
 
 req GET "/api/auth/applications?role=customer&status=pending&pageSize=100" -H "$ADMIN_AUTH"
 check CA09 "Review list filtered by role=customer shows it as verified" 200 \
@@ -182,17 +187,17 @@ check CA10 "Unknown role filter" 400 "$( jq -e '.errors.role' "$WORK/body" >/dev
 
 json POST /api/auth/register/customer "$(customer_body "$C2")"
 req POST "/api/auth/applications/$(app_id "$C2")/approve" -H "$ADMIN_AUTH"
-check CA11 "Approving an unverified customer is refused" 409 "$(is "$(field .code)" application.email_not_verified code)"
+check CA11 "Approving an unverified customer is refused" 409 "$(is "$(field .errorCode)" application.email_not_verified code)"
 
 C1_APP=$(app_id "$C1")
 req POST "/api/auth/applications/$C1_APP/approve" -H "$ADMIN_AUTH"
 C1_ID=$(field .userId)
 check CA12 "Approve the verified customer -> account linked (userId)" 200 \
   "$( [[ "$(field .status)" == approved && -n "$C1_ID" ]] && echo ok || echo '(no userId)')"
-check CA13 "Approval email sent to the customer" 200 "$(grep -q "Email to $C1 | Your FleetSync account was approved" "$API_LOG" && echo ok || echo '(no email)')"
+check CA13 "Approval email sent to the customer" 200 "$( [[ $(emails_to "$C1" "Your FleetSync account was approved") -ge 1 ]] && echo ok || echo '(no email)')"
 
 req POST "/api/auth/applications/$C1_APP/approve" -H "$ADMIN_AUTH"
-check CA14 "Approving twice" 409 "$(is "$(field .code)" application.not_pending code)"
+check CA14 "Approving twice" 409 "$(is "$(field .errorCode)" application.not_pending code)"
 
 login "$C1"
 check CA15 "Approved customer signs in with the registration password" 200 \
@@ -219,10 +224,10 @@ check CA19 "Reject a customer with a reason" 200 "$(is "$(field .status)" reject
 dbcheck CA20 "Rejected application keeps no password hash and creates no account" \
   "$(is "$(pg "select (\"PasswordHash\" is null) || ':' || (\"UserId\" is null) from identity.\"UserApplications\" where \"Id\"='$C4_APP'")" "true:true" state)"
 login "$C4"
-check CA21 "Rejected customer can't sign in" 401 "$(is "$(field .code)" auth.invalid_credentials code)"
+check CA21 "Rejected customer can't sign in" 401 "$(is "$(field .errorCode)" auth.invalid_credentials code)"
 
 json POST /api/auth/register/customer "$(customer_body "$C1")"
-check CA22 "Registering an email that now has an account" 409 "$(is "$(field .code)" auth.email_taken code)"
+check CA22 "Registering an email that now has an account" 409 "$(is "$(field .errorCode)" auth.email_taken code)"
 
 # ============================================================================
 # 2. Staff roles and EER subtype tables
@@ -281,7 +286,7 @@ dbcheck SR19 "Application reviewed_by references the Fleet Administrator" \
   "$(is "$(pg "select \"ReviewedByUserId\" from identity.\"UserApplications\" where \"NormalizedEmail\"=upper('$DRV')")" "$ADMIN_ID" reviewer)"
 
 staff "$(q drv2)" "${RUN}25" driver -F licenceNumber=$LIC -F licenceClass=light
-check SR20 "Another driver with the same licence number" 409 "$(is "$(field .code)" application.licence_taken code)"
+check SR20 "Another driver with the same licence number" 409 "$(is "$(field .errorCode)" application.licence_taken code)"
 
 OWN_AUTH=$(bearer "$OWN")
 req GET /api/auth/applications -H "$OWN_AUTH"
@@ -308,13 +313,13 @@ check PC04 "Request a phone change (old and new values normalised)" 201 \
 dbcheck PC05 "Not applied before approval" "$(is "$(pg "select \"PhoneNumber\" from identity.\"Users\" where \"Id\"='$C1_ID'")" "+94771234567" phone)"
 
 json POST $PCR '{"field":"phone","newValue":"077 111 2222"}' -H "$C1_AUTH"
-check PC06 "Second pending request for the same field" 409 "$(is "$(field .code)" profile_change.duplicate code)"
+check PC06 "Second pending request for the same field" 409 "$(is "$(field .errorCode)" profile_change.duplicate code)"
 json POST $PCR '{"field":"full-name","newValue":"QA Customer"}' -H "$C1_AUTH"
-check PC07 "Same as the current value" 400 "$(is "$(field .code)" profile_change.no_change code)"
+check PC07 "Same as the current value" 400 "$(is "$(field .errorCode)" profile_change.no_change code)"
 json POST $PCR '{"field":"licence-number","newValue":"Z1"}' -H "$C1_AUTH"
-check PC08 "Licence field for a customer" 400 "$(is "$(field .code)" profile_change.field_not_allowed code)"
+check PC08 "Licence field for a customer" 400 "$(is "$(field .errorCode)" profile_change.field_not_allowed code)"
 json POST $PCR "{\"field\":\"email\",\"newValue\":\"$ADMIN\"}" -H "$C1_AUTH"
-check PC09 "Email already used by another account" 409 "$(is "$(field .code)" auth.email_taken code)"
+check PC09 "Email already used by another account" 409 "$(is "$(field .errorCode)" auth.email_taken code)"
 
 req GET $PCR/mine -H "$C1_AUTH"
 check PC10 "User lists their own requests" 200 "$(is "$(jq 'length' "$WORK/body")" 1 count)"
@@ -330,9 +335,9 @@ check PC14 "Admin approves the phone change" 200 "$(is "$(field .status)" approv
 dbcheck PC15 "Phone applied, updated_at set, approved_by = admin" \
   "$(is "$(pg "select u.\"PhoneNumber\" || ':' || (u.\"UpdatedAt\" is not null) || ':' || r.\"ApprovedByUserId\" from identity.\"Users\" u join identity.\"ProfileChangeRequests\" r on r.\"UserId\"=u.\"Id\" where r.\"Id\"='$PC_PHONE'")" "+94777654321:true:$ADMIN_ID" state)"
 req POST $PCR/$PC_PHONE/approve -H "$ADMIN_AUTH"
-check PC16 "Approving twice" 409 "$(is "$(field .code)" profile_change.not_pending code)"
+check PC16 "Approving twice" 409 "$(is "$(field .errorCode)" profile_change.not_pending code)"
 req POST $PCR/00000000-0000-0000-0000-000000000000/approve -H "$ADMIN_AUTH"
-check PC17 "Unknown request id" 404 "$(is "$(field .code)" profile_change.not_found code)"
+check PC17 "Unknown request id" 404 "$(is "$(field .errorCode)" profile_change.not_found code)"
 
 NEW_EMAIL=$(q cust1-renamed)
 json POST $PCR "{\"field\":\"email\",\"newValue\":\"$NEW_EMAIL\"}" -H "$C1_AUTH"
@@ -360,7 +365,7 @@ pg "delete from identity.\"ProfileChangeRequests\" where \"UserId\"='$ADMIN_ID' 
 json POST $PCR "{\"field\":\"full-name\",\"newValue\":\"QA Admin $RUN\"}" -H "$ADMIN_AUTH"
 PC_SELF=$(field .id)
 req POST $PCR/$PC_SELF/approve -H "$ADMIN_AUTH"
-check PC26 "Admin can't approve their own change" 403 "$(is "$(field .code)" profile_change.self_review code)"
+check PC26 "Admin can't approve their own change" 403 "$(is "$(field .errorCode)" profile_change.self_review code)"
 # Leave nothing pending on the shared admin account for the next run.
 pg "delete from identity.\"ProfileChangeRequests\" where \"Id\"='$PC_SELF'" >/dev/null
 
@@ -377,18 +382,18 @@ dbcheck US01 "Sign-in (failed or successful) doesn't change updated_at" "$(is "$
 json PUT /api/auth/users/$C3_ID/status '{"isActive":false}' -H "$C1_AUTH"
 check US02 "Non-admin can't deactivate" 403
 json PUT /api/auth/users/00000000-0000-0000-0000-000000000000/status '{"isActive":false}' -H "$ADMIN_AUTH"
-check US03 "Unknown user" 404 "$(is "$(field .code)" user.not_found code)"
+check US03 "Unknown user" 404 "$(is "$(field .errorCode)" user.not_found code)"
 json PUT /api/auth/users/$ADMIN_ID/status '{"isActive":false}' -H "$ADMIN_AUTH"
-check US04 "Admin can't deactivate themselves" 400 "$(is "$(field .code)" user.cannot_deactivate_self code)"
+check US04 "Admin can't deactivate themselves" 400 "$(is "$(field .errorCode)" user.cannot_deactivate_self code)"
 
 json PUT /api/auth/users/$C3_ID/status '{"isActive":false}' -H "$ADMIN_AUTH"
 check US05 "Admin deactivates a customer" 200 "$( [[ "$(field .isActive)" == false && -n "$(field .updatedAt)" ]] && echo ok || echo '(state)')"
 login "$C3"
-check US06 "Deactivated account, right password" 403 "$(is "$(field .code)" auth.account_disabled code)"
+check US06 "Deactivated account, right password" 403 "$(is "$(field .errorCode)" auth.account_disabled code)"
 login "$C3" Wrong2026Pass
-check US07 "Deactivated account, wrong password reveals nothing" 401 "$(is "$(field .code)" auth.invalid_credentials code)"
+check US07 "Deactivated account, wrong password reveals nothing" 401 "$(is "$(field .errorCode)" auth.invalid_credentials code)"
 json POST /api/auth/refresh "{\"refreshToken\":\"$C3_RT\"}" -H 'X-Client-Type: mobile'
-check US08 "Existing session ended" 401 "$(is "$(field .code)" auth.invalid_refresh_token code)"
+check US08 "Existing session ended" 401 "$(is "$(field .errorCode)" auth.invalid_refresh_token code)"
 SENT=$(emails_to "$C3")
 json POST /api/auth/forgot-password "{\"email\":\"$C3\"}"
 check US09 "Forgot password still 202 but no email is sent" 202 "$(is "$(sleep 0.5; emails_to "$C3")" "$SENT" emails)"

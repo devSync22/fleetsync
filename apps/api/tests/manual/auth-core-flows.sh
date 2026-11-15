@@ -6,17 +6,20 @@
 # Test cases are described in docs/testing/auth-api-testing.md.
 # Drives the real HTTP endpoints with curl against a running API and prints
 # PASS/FAIL per test case. Emailed tokens (verify / reset / activate) are read
-# from the API console log, because Development uses LoggingEmailSender.
+# from the dev email pickup folder (Development saves emails there).
 #
-# Usage (from the repo root): bash apps/api/tests/manual/auth-core-flows.sh <api-log-file> [ratelimit]
+# Usage (from the repo root): bash apps/api/tests/manual/auth-core-flows.sh [ratelimit]
+# Emails are read from apps/api/src/FleetSync.Api/App_Data/dev-emails (override with EMAIL_DIR=...).
 #   - default mode runs every functional case (expects a high rate limit)
 #   - "ratelimit" mode only checks that the 11th request in a minute gets 429
 set -uo pipefail
 
 HOST=${FLEETSYNC_API:-http://localhost:5215}
-API_LOG=${1:?Pass the API log file as the first argument}
-MODE=${2:-functional}
-REPO=$(cd "$(dirname "$0")/../../../.." && pwd)
+REPO=${REPO:-$(cd "$(dirname "$0")/../../../.." && pwd)}
+# Development saves emails here instead of sending them (Auth:Email:PickupDirectory).
+EMAIL_DIR=${EMAIL_DIR:-$REPO/apps/api/src/FleetSync.Api/App_Data/dev-emails}
+mkdir -p "$EMAIL_DIR"
+MODE=${1:-functional}
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 
@@ -44,7 +47,7 @@ field() { jq -r "$1 // empty" "$WORK/body" 2>/dev/null; }
 # The optional 4th argument is "ok" when an additional assertion passed.
 check() {
   local id=$1 desc=$2 expected=$3 extra=${4:-ok}
-  local got="$STATUS"; [[ -n "$(field .code)" ]] && got="$STATUS $(field .code)"
+  local got="$STATUS"; [[ -n "$(field .errorCode)" ]] && got="$STATUS $(field .errorCode)"
   if [[ "$STATUS" == "$expected" && "$extra" == "ok" ]]; then
     PASS=$((PASS+1)); printf 'PASS | %-4s | %-62s | %s\n' "$id" "$desc" "$got" | tee -a "$RESULTS"
   else
@@ -56,17 +59,21 @@ check() {
 # is "a" "b" -> "ok" when equal, otherwise a short reason (used as check's 4th arg)
 is() { [[ "$1" == "$2" ]] && echo ok || echo "($3: '$1')"; }
 
-# Latest emailed token for an address, taken from the API log (URL-decoded).
+# Latest emailed token for an address, from the dev email pickup folder (URL-decoded).
 token_for() {
   sleep 0.5
-  python3 -I - "$API_LOG" "$1" <<'PY'
-import re, sys, urllib.parse
-log, addr = open(sys.argv[1], encoding="utf-8", errors="replace").read(), sys.argv[2]
-at = log.rfind(f"Email to {addr}")
-m = re.search(r"token=([^\s&]+)", log[at:]) if at >= 0 else None
-print(urllib.parse.unquote(m.group(1)) if m else "")
-PY
+  python3 -I - "$EMAIL_DIR" "$1" <<'PY2'
+import os, re, sys, urllib.parse
+folder, addr = sys.argv[1], sys.argv[2]
+for name in sorted(os.listdir(folder), reverse=True):        # file names sort by time
+    text = open(os.path.join(folder, name), encoding="utf-8").read()
+    if text.startswith(f"To: {addr}\n"):
+        m = re.search(r"token=([^\s&]+)", text)
+        print(urllib.parse.unquote(m.group(1)) if m else ""); break
+PY2
 }
+# emails_to ADDRESS [SUBJECT-TEXT] -> how many emails were saved for that address
+emails_to() { grep -lx "To: $1" "$EMAIL_DIR"/*.txt 2>/dev/null | xargs -r grep -l "^Subject: .*${2:-}" | wc -l; }
 
 # Refresh cookie value from the last response's Set-Cookie header.
 refresh_cookie() { grep -i '^set-cookie: fleetsync_refresh=' "$WORK/headers" | sed -E 's/^[^=]+=([^;]*).*/\1/I' | tr -d '\r'; }
@@ -126,13 +133,13 @@ json POST /api/auth/register/customer "$(customer_body "$CUST" "$CUST_PW")"
 check R1 "Register customer with valid data" 201 "$( [[ "$(field .reference)" =~ ^REG-[0-9]{4}-[0-9]+$ ]] && echo ok || echo '(bad reference)')"
 
 json POST /api/auth/register/customer "$(customer_body "$CUST" "$CUST_PW")"
-check R2 "Register again while the first application is open" 409 "$(is "$(field .code)" application.duplicate code)"
+check R2 "Register again while the first application is open" 409 "$(is "$(field .errorCode)" application.duplicate code)"
 
 json POST /api/auth/register/customer '{"companyName":"","businessRegistrationNo":"PV 1","billingAddress":"x","fullName":"A","mobile":"12345","email":"not-an-email","password":"weak"}'
 check R3 "Register with invalid fields -> per-field errors" 400 "$( [[ $(jq '.errors | has("email") and has("password") and has("mobile") and has("companyName")' "$WORK/body") == true ]] && echo ok || echo '(missing field errors)')"
 
 json POST /api/auth/login "{\"email\":\"$CUST\",\"password\":\"$CUST_PW\",\"rememberMe\":false}"
-check R4 "Login (right password) before verifying email" 403 "$(is "$(field .code)" auth.email_not_verified code)"
+check R4 "Login (right password) before verifying email" 403 "$(is "$(field .errorCode)" auth.email_not_verified code)"
 
 json POST /api/auth/verify-email/resend "{\"email\":\"$CUST\"}"
 check R5 "Resend verification email" 202
@@ -141,36 +148,36 @@ json POST /api/auth/verify-email/resend '{"email":"nobody-at-all@fleetsync.test"
 check R6 "Resend for unknown email still 202 (no account enumeration)" 202
 
 json POST /api/auth/verify-email '{"token":"not-a-real-token"}'
-check R7 "Verify email with an invalid token" 400 "$(is "$(field .code)" auth.invalid_token code)"
+check R7 "Verify email with an invalid token" 400 "$(is "$(field .errorCode)" auth.invalid_token code)"
 
 VERIFY_TOKEN=$(token_for "$CUST")
 json POST /api/auth/verify-email "{\"token\":\"$VERIFY_TOKEN\"}"
 check R8 "Verify email with the emailed token" 204
 
 json POST /api/auth/verify-email "{\"token\":\"$VERIFY_TOKEN\"}"
-check R9 "Reuse the same verification token" 400 "$(is "$(field .code)" auth.invalid_token code)"
+check R9 "Reuse the same verification token" 400 "$(is "$(field .errorCode)" auth.invalid_token code)"
 
 json POST /api/auth/login "{\"email\":\"$CUST\",\"password\":\"$CUST_PW\",\"rememberMe\":false}"
-check R10 "Verified but not yet approved: told it's pending" 403 "$(is "$(field .code)" auth.pending_approval code)"
+check R10 "Verified but not yet approved: told it's pending" 403 "$(is "$(field .errorCode)" auth.pending_approval code)"
 
 json POST /api/auth/login "{\"email\":\"$CUST\",\"password\":\"Wrongpass1\",\"rememberMe\":false}"
-check R11 "Pending + wrong password looks like any failed login" 401 "$(is "$(field .code)" auth.invalid_credentials code)"
+check R11 "Pending + wrong password looks like any failed login" 401 "$(is "$(field .errorCode)" auth.invalid_credentials code)"
 
 UNVER="qa-$RUN-unverified@fleetsync.test"
 json POST /api/auth/register/customer "$(customer_body "$UNVER" "$CUST_PW")"
 approve_customer "$UNVER"
-check R12 "Admin can't approve an unverified customer" 409 "$(is "$(field .code)" application.email_not_verified code)"
+check R12 "Admin can't approve an unverified customer" 409 "$(is "$(field .errorCode)" application.email_not_verified code)"
 
 approve_customer "$CUST"
 CUST_ID=$(field .userId)
 check R13 "Admin approves the verified customer -> account created" 200 "$( [[ "$(field .status)" == approved && -n "$CUST_ID" ]] && echo ok || echo '(no account)')"
 
 json POST /api/auth/register/customer "$(customer_body "$CUST" "$CUST_PW")"
-check R14 "Register with an email that now has an account" 409 "$(is "$(field .code)" auth.email_taken code)"
+check R14 "Register with an email that now has an account" 409 "$(is "$(field .errorCode)" auth.email_taken code)"
 
 # --- 3. Sessions: login, me, refresh, logout --------------------------------
 json POST /api/auth/login "{\"email\":\"$CUST\",\"password\":\"Wrongpass1\",\"rememberMe\":false}"
-check S1 "Login with wrong password -> attemptsLeft shown" 401 "$( [[ "$(field .code)" == auth.invalid_credentials && -n "$(field .attemptsLeft)" ]] && echo ok || echo '(no attemptsLeft)')"
+check S1 "Login with wrong password -> attemptsLeft shown" 401 "$( [[ "$(field .errorCode)" == auth.invalid_credentials && -n "$(field .attemptsLeft)" ]] && echo ok || echo '(no attemptsLeft)')"
 
 json POST /api/auth/login '{"email":"nobody-at-all@fleetsync.test","password":"Wrongpass1","rememberMe":false}'
 check S2 "Login with unknown email -> no attemptsLeft" 401 "$( [[ -z "$(field .attemptsLeft)" ]] && echo ok || echo '(leaks attemptsLeft)')"
@@ -196,7 +203,7 @@ COOKIE2=$(refresh_cookie)
 check S7 "Refresh with cookie -> new access token, rotated cookie" 200 "$( [[ -n "$(field .accessToken)" && -n "$COOKIE2" && "$COOKIE2" != "$COOKIE1" ]] && echo ok || echo '(not rotated)')"
 
 req POST /api/auth/refresh -H "Cookie: fleetsync_refresh=$COOKIE1"
-check S8 "Reuse the OLD refresh cookie (replay) is rejected" 401 "$(is "$(field .code)" auth.invalid_refresh_token code)"
+check S8 "Reuse the OLD refresh cookie (replay) is rejected" 401 "$(is "$(field .errorCode)" auth.invalid_refresh_token code)"
 
 req POST /api/auth/refresh -H "Cookie: fleetsync_refresh=$COOKIE2"
 check S9 "After replay, the newest cookie is revoked too (session ended)" 401
@@ -239,20 +246,20 @@ json POST /api/auth/reset-password/lookup "{\"token\":\"$RESET_TOKEN\"}"
 check P3 "Reset lookup returns the account email" 200 "$(is "$(field .email)" "$CUST" email)"
 
 json POST /api/auth/reset-password/lookup '{"token":"bogus"}'
-check P4 "Reset lookup with an invalid token" 400 "$(is "$(field .code)" auth.invalid_token code)"
+check P4 "Reset lookup with an invalid token" 400 "$(is "$(field .errorCode)" auth.invalid_token code)"
 
 json POST /api/auth/reset-password "{\"token\":\"$RESET_TOKEN\",\"newPassword\":\"weak\"}"
 check P5 "Reset with a weak password" 400
 
 json POST /api/auth/reset-password "{\"token\":\"$RESET_TOKEN\",\"newPassword\":\"$CUST_PW\"}"
-check P6 "Reset to the current password (reuse) is refused" 400 "$(is "$(field .code)" auth.password_reused code)"
+check P6 "Reset to the current password (reuse) is refused" 400 "$(is "$(field .errorCode)" auth.password_reused code)"
 
 NEW_PW="Newpass2026B"
 json POST /api/auth/reset-password "{\"token\":\"$RESET_TOKEN\",\"newPassword\":\"$NEW_PW\"}"
 check P7 "Reset to a new valid password" 204
 
 json POST /api/auth/reset-password "{\"token\":\"$RESET_TOKEN\",\"newPassword\":\"Another2026C\"}"
-check P8 "Reuse the reset token" 400 "$(is "$(field .code)" auth.invalid_token code)"
+check P8 "Reuse the reset token" 400 "$(is "$(field .errorCode)" auth.invalid_token code)"
 
 json POST /api/auth/login "{\"email\":\"$CUST\",\"password\":\"$CUST_PW\",\"rememberMe\":false}"
 check P9 "Old password no longer works" 401
@@ -271,7 +278,7 @@ staff "$DRV" "$NIC_DRV" driver -F "documents=@$WORK/nic.pdf"
 check A1 "Driver application without licence details" 400 "$( jq -e '.errors | has("licenceNumber")' "$WORK/body" >/dev/null && echo ok || echo '(no licence error)')"
 
 staff "$DRV" "$NIC_DRV" driver -F licenceNumber=B$RUN -F licenceClass=heavy -F "documents=@$WORK/fake.pdf"
-check A2 "Upload a text file renamed to .pdf" 400 "$(is "$(field .code)" application.invalid_document code)"
+check A2 "Upload a text file renamed to .pdf" 400 "$(is "$(field .errorCode)" application.invalid_document code)"
 
 staff "$DRV" "$NIC_DRV" driver -F licenceNumber=B$RUN -F licenceClass=heavy -F "documents=@$WORK/photo.png"
 check A3 "Upload a PNG (only PDF/JPG allowed)" 400
@@ -283,7 +290,7 @@ staff "$DRV" "$NIC_DRV" driver -F licenceNumber=B$RUN -F licenceClass=heavy -F "
 check A5 "Valid driver application (PDF + JPG)" 201 "$( [[ "$(field .reference)" =~ ^REG- ]] && echo ok || echo '(no reference)')"
 
 staff "qa-$RUN-other@fleetsync.test" "$NIC_DRV" driver -F licenceNumber=B$RUN -F licenceClass=heavy -F "documents=@$WORK/nic.pdf"
-check A6 "Second open application with the same NIC" 409 "$(is "$(field .code)" application.duplicate code)"
+check A6 "Second open application with the same NIC" 409 "$(is "$(field .errorCode)" application.duplicate code)"
 
 staff "$MECH" "$NIC_MECH" mechanic -F "documents=@$WORK/nic.pdf"
 check A7 "Valid mechanic application (no licence needed)" 201
@@ -310,7 +317,7 @@ req GET "/api/auth/applications/$DRV_ID/documents/$DOC_ID" "${AUTH[@]}"
 check A13 "Download an attached document" 200 "$( head -c4 "$WORK/body" | grep -q -e '%PDF' -e $'\xFF\xD8\xFF' && echo ok || echo '(wrong content)')"
 
 req GET "/api/auth/applications/00000000-0000-0000-0000-000000000000" "${AUTH[@]}"
-check A14 "Details of a non-existent application" 404 "$(is "$(field .code)" application.not_found code)"
+check A14 "Details of a non-existent application" 404 "$(is "$(field .errorCode)" application.not_found code)"
 
 json POST "/api/auth/applications/$MECH_ID/reject" '{"reason":""}' "${AUTH[@]}"
 check A15 "Reject without a reason" 400
@@ -319,7 +326,7 @@ json POST "/api/auth/applications/$MECH_ID/reject" '{"reason":"NIC copy is unrea
 check A16 "Reject with a reason" 200 "$(is "$(field .status)" rejected status)"
 
 json POST "/api/auth/applications/$MECH_ID/approve" '{}' "${AUTH[@]}"
-check A17 "Approve an already-rejected application" 409 "$(is "$(field .code)" application.not_pending code)"
+check A17 "Approve an already-rejected application" 409 "$(is "$(field .errorCode)" application.not_pending code)"
 
 req POST "/api/auth/applications/$DRV_ID/approve" "${AUTH[@]}"
 check A18 "Approve the driver application" 200 "$(is "$(field .status)" approved status)"
@@ -338,7 +345,7 @@ json POST /api/auth/activation "{\"token\":\"$ACT_TOKEN\",\"password\":\"$DRV_PW
 check A22 "Activate with a valid password" 204
 
 json POST /api/auth/activation "{\"token\":\"$ACT_TOKEN\",\"password\":\"$DRV_PW\"}"
-check A23 "Reuse the activation token" 400 "$(is "$(field .code)" auth.invalid_token code)"
+check A23 "Reuse the activation token" 400 "$(is "$(field .errorCode)" auth.invalid_token code)"
 
 json POST /api/auth/login "{\"email\":\"$DRV\",\"password\":\"$DRV_PW\",\"rememberMe\":false}"
 DRV_ACCESS=$(field .accessToken)

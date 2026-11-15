@@ -16,31 +16,36 @@ internal static class AccountEndpoints
             .WithName("LookupActivation")
             .WithSummary("Approval details for the activation screen")
             .WithValidation<ActivationLookupRequest>()
-            .RequireRateLimiting(AuthPolicies.PublicRateLimit);
+            .RequireRateLimiting(AuthPolicies.PublicRateLimit)
+            .AllowAnonymous();
 
         group.MapPost("/activation", ActivateAsync)
             .WithName("ActivateAccount")
             .WithSummary("Create the staff account's password")
             .WithValidation<ActivateAccountRequest>()
-            .RequireRateLimiting(AuthPolicies.PublicRateLimit);
+            .RequireRateLimiting(AuthPolicies.PublicRateLimit)
+            .AllowAnonymous();
 
         group.MapPost("/forgot-password", ForgotPasswordAsync)
             .WithName("ForgotPassword")
             .WithSummary("Email a password reset link (always 202)")
             .WithValidation<ForgotPasswordRequest>()
-            .RequireRateLimiting(AuthPolicies.PublicRateLimit);
+            .RequireRateLimiting(AuthPolicies.PublicRateLimit)
+            .AllowAnonymous();
 
         group.MapPost("/reset-password/lookup", LookupResetAsync)
             .WithName("LookupPasswordReset")
             .WithSummary("Check a reset link and get its account email")
             .WithValidation<ResetPasswordLookupRequest>()
-            .RequireRateLimiting(AuthPolicies.PublicRateLimit);
+            .RequireRateLimiting(AuthPolicies.PublicRateLimit)
+            .AllowAnonymous();
 
         group.MapPost("/reset-password", ResetPasswordAsync)
             .WithName("ResetPassword")
             .WithSummary("Set a new password with the emailed token")
             .WithValidation<ResetPasswordRequest>()
-            .RequireRateLimiting(AuthPolicies.PublicRateLimit);
+            .RequireRateLimiting(AuthPolicies.PublicRateLimit)
+            .AllowAnonymous();
     }
 
     private static async Task<Results<Ok<AccountApprovalResponse>, ProblemHttpResult>> LookupActivationAsync(

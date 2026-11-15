@@ -1,5 +1,5 @@
 # FleetSync API requests for the VS Code REST Client / Rider / Visual Studio.
-# Emailed links (verify, reset, activate) are printed in the API console in Development.
+# Emailed links (verify, reset, activate) are saved in App_Data/dev-emails/ in Development.
 
 @host = http://localhost:5215
 @email = sachini@example.com
@@ -25,7 +25,7 @@ Content-Type: application/json
   "password": "{{password}}"
 }
 
-### Verify email (token from the console log)
+### Verify email (token from the newest file in App_Data/dev-emails/)
 POST {{host}}/api/auth/verify-email
 Content-Type: application/json
 

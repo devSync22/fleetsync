@@ -15,11 +15,17 @@ namespace FleetSync.Modules.Auth.Endpoints;
 internal static class AuthPolicies
 {
     /// <summary>
-    /// Fleet Administrators review applications and profile changes, deactivate
-    /// accounts and read the audit log. Only them: the EER's reviewed_by and
-    /// approved_by columns reference FLEET_ADMINISTRATOR.
+    /// Account management (DI-01, DI-02): reviewing applications and profile
+    /// changes, deactivating accounts. Fleet Administrators only; the EER's
+    /// reviewed_by and approved_by columns reference FLEET_ADMINISTRATOR.
     /// </summary>
-    public const string FleetAdministrator = "auth:fleet-administrator";
+    public const string FleetAdministrator = "RequireFleetAdministrator";
+
+    /// <summary>
+    /// Reading the audit trail: Fleet Administrators, plus the Fleet Owner, who
+    /// is read-only everywhere. Only ever used on GET endpoints.
+    /// </summary>
+    public const string AuditTrailReader = "RequireAuditTrailReader";
 
     /// <summary>Per-IP limit for anonymous endpoints (sign-in, registration, emails).</summary>
     public const string PublicRateLimit = "auth:public";
@@ -29,11 +35,11 @@ internal static class EndpointHelpers
 {
     /// <summary>
     /// Converts an <see cref="AuthError"/> to an RFC 9457 problem response with a
-    /// stable "code" the frontends can switch on (e.g. "auth.locked_out").
+    /// stable "errorCode" the frontends can switch on (e.g. "auth.locked_out").
     /// </summary>
     public static ProblemHttpResult ToProblem(this AuthError error)
     {
-        var extensions = new Dictionary<string, object?> { ["code"] = error.Code };
+        var extensions = new Dictionary<string, object?> { ["errorCode"] = error.Code };
         foreach (var (key, value) in error.Extensions ?? new Dictionary<string, object?>())
         {
             extensions[key] = value;
@@ -74,7 +80,7 @@ internal static class EndpointHelpers
         return TypedResults.ValidationProblem(
             errors,
             title: "Some fields need attention",
-            extensions: new Dictionary<string, object?> { ["code"] = "validation_failed" });
+            extensions: new Dictionary<string, object?> { ["errorCode"] = "validation_failed" });
     }
 }
 

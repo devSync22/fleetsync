@@ -5,7 +5,7 @@ namespace FleetSync.Modules.Auth.Application.Common;
 /// <summary>
 /// An expected failure (wrong password, expired link…), returned instead of thrown.
 /// The endpoint layer turns it into an RFC 9457 ProblemDetails response where
-/// <see cref="Code"/> is a stable, machine-readable value the frontends can switch on.
+/// <see cref="Code"/> is a stable, machine-readable value (sent as "errorCode") the frontends can switch on.
 /// </summary>
 internal sealed record AuthError(
     string Code,

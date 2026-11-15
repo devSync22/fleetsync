@@ -88,8 +88,12 @@ this, and the role's subtype row is written in the same transaction
 
    `dotnet ef database update --project apps/api/src/Modules/Auth/FleetSync.Modules.Auth --startup-project apps/api/src/FleetSync.Api --context AuthDbContext`
 
-5. Run the API. In Development, emails are written to the console log instead
-   of being sent, so you can copy verify, reset and activation links from there.
+5. Run the API. In Development, emails are saved as text files in
+   `apps/api/src/FleetSync.Api/App_Data/dev-emails/` instead of being sent
+   (git-ignored; setting `Auth:Email:PickupDirectory`). Open the newest file to
+   copy a verify, reset or activation link. The log shows only the recipient,
+   subject and file name: links carry single-use tokens, which must never
+   appear in logs.
 
 ## Endpoints
 
@@ -125,8 +129,18 @@ All routes are under `/api/auth`. In Development, browse and try them at
 | PUT    | `/users/{id}/status`                      | admin      | `{ isActive }`; deactivating ends all sessions |
 | GET    | `/audit-log?userId=&action=&page=&pageSize=` | admin   | Security events, newest first             |
 
-"Admin" means the `fleet-administrator` role only: the EER's `reviewed_by` and
-`approved_by` columns reference FLEET_ADMINISTRATOR.
+"Admin" means the `fleet-administrator` role only (policy
+`RequireFleetAdministrator`): account management is Fleet Administrator only
+(DI-01, DI-02), and the EER's `reviewed_by` and `approved_by` columns reference
+FLEET_ADMINISTRATOR. The read-only **Fleet Owner** may also call
+`GET /audit-log` (policy `RequireAuditTrailReader`).
+
+**Deny by default.** The host sets a fallback policy: every endpoint requires a
+signed-in user unless it is marked `AllowAnonymous()`. The "anyone" rows above
+are the anonymous ones, plus the health checks and, in Development, the
+OpenAPI document and `/scalar`.
+
+**Lists** default to 20 items per page; `pageSize` is capped at 100.
 
 ## Notes for frontend integration
 
@@ -147,8 +161,8 @@ Send it back as `{ "refreshToken": "…" }` to `/refresh` and `/logout`.
 the old one. Reusing an old token ends the whole session, so run only one
 refresh at a time.
 
-**Remember me.** With `rememberMe: true` the session lasts 30 days and the
-cookie is persistent. Otherwise the session lasts 1 day and the cookie ends
+**Remember me.** The refresh token lasts 7 days either way (Authentication API
+Contract). With `rememberMe: true` the cookie is persistent; otherwise it ends
 when the browser closes.
 
 **Enums.** Enums are kebab-case strings: roles (`driver`, `mechanic`,
@@ -157,10 +171,10 @@ when the browser closes.
 (`pending`, `approved`, `rejected`, `activated`) and profile change statuses
 (`pending`, `approved`, `rejected`).
 
-**Errors.** Errors are RFC 9457 ProblemDetails, with a stable `code` field
+**Errors.** Errors are RFC 9457 ProblemDetails, with a stable `errorCode` field
 and a `traceId`:
 
-| `code`                               | Status | Notes                                     |
+| `errorCode`                          | Status | Notes                                     |
 | ------------------------------------ | ------ | ----------------------------------------- |
 | `validation_failed`                  | 400    | `errors` holds messages per field (camelCase) |
 | `auth.invalid_credentials`           | 401    | `attemptsLeft` when the account exists    |
@@ -190,7 +204,7 @@ lowercase line added.
 
 ## Before production
 
-- Replace `LoggingEmailSender` with a real email provider.
+- Replace `PickupFolderEmailSender` with a real email provider.
 - Replace `LocalDocumentStorage` with durable storage, or a mounted volume
   that is backed up.
 - Supply `Auth:Jwt:SigningKey` from a secret store.

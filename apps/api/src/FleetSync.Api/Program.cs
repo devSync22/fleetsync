@@ -5,6 +5,7 @@ using FleetSync.Api.OpenApi;
 using FleetSync.Infrastructure;
 using FleetSync.Infrastructure.Persistence;
 using FleetSync.Modules.Auth;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Scalar.AspNetCore;
@@ -33,6 +34,12 @@ builder.Services.AddInfrastructure(connectionString);
 // Modules (modular monolith): each module registers its own
 // database context, services and endpoints.
 builder.Services.AddAuthModule(builder.Configuration, connectionString);
+
+// Deny by default: any endpoint that doesn't declare a policy or
+// AllowAnonymous() requires a signed-in user, so a forgotten
+// RequireAuthorization() in a new module never leaves data public.
+builder.Services.AddAuthorizationBuilder()
+    .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
 
 // Errors are returned as RFC 9457 ProblemDetails with a trace id,
 // so clients can show a message and support can find the log entry.
@@ -80,10 +87,11 @@ app.UseStatusCodePages();
 // interactive API reference rendered from it by Scalar (/scalar).
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.MapOpenApi().AllowAnonymous();
     app.MapScalarApiReference(options => options
-        .WithTitle("FleetSync API")
-        .AddPreferredSecuritySchemes("Bearer"));
+            .WithTitle("FleetSync API")
+            .AddPreferredSecuritySchemes("Bearer"))
+        .AllowAnonymous();
 }
 
 app.UseCors();
@@ -91,23 +99,25 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
 
+// Health probes are anonymous: load balancers and uptime checks call them without a token.
+
 // Keep the original endpoint as a liveness check
 app.MapHealthChecks("/health", new HealthCheckOptions
 {
     Predicate = _ => false
-});
+}).AllowAnonymous();
 
 // Explicit liveness endpoint
 app.MapHealthChecks("/health/live", new HealthCheckOptions
 {
     Predicate = _ => false
-});
+}).AllowAnonymous();
 
 // PostgreSQL readiness endpoint
 app.MapHealthChecks("/health/ready", new HealthCheckOptions
 {
     Predicate = check => check.Tags.Contains("ready")
-});
+}).AllowAnonymous();
 
 // Module endpoints
 app.MapAuthEndpoints();

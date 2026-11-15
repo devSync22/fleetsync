@@ -17,6 +17,8 @@ internal sealed class AuthOptions
 
     public DocumentOptions Documents { get; set; } = new();
 
+    public EmailOptions Email { get; set; } = new();
+
     public LockoutOptions Lockout { get; set; } = new();
 
     public RateLimitOptions RateLimiting { get; set; } = new();
@@ -37,11 +39,17 @@ internal sealed class JwtOptions
     /// <summary>Access tokens are short-lived; clients refresh them silently.</summary>
     public int AccessTokenMinutes { get; set; } = 15;
 
-    /// <summary>Refresh token lifetime when "Remember me" is not ticked.</summary>
-    public int RefreshTokenDays { get; set; } = 1;
+    /// <summary>
+    /// Refresh token lifetime when "Remember me" is not ticked. 7 days per the
+    /// Authentication API Contract; the browser cookie still ends with the session.
+    /// </summary>
+    public int RefreshTokenDays { get; set; } = 7;
 
-    /// <summary>Refresh token lifetime when "Remember me" is ticked.</summary>
-    public int RememberMeRefreshTokenDays { get; set; } = 30;
+    /// <summary>
+    /// Refresh token lifetime when "Remember me" is ticked (persistent cookie).
+    /// Same 7 days as the contract; kept separate so it can differ if the team decides to.
+    /// </summary>
+    public int RememberMeRefreshTokenDays { get; set; } = 7;
 }
 
 /// <summary>Base URLs used to build the links placed in emails.</summary>
@@ -73,6 +81,13 @@ internal sealed class DocumentOptions
     public long MaxFileSizeBytes { get; set; } = 5 * 1024 * 1024;
 
     public int MaxFileCount { get; set; } = 5;
+}
+
+/// <summary>Development email delivery (see PickupFolderEmailSender).</summary>
+internal sealed class EmailOptions
+{
+    /// <summary>Folder the emails are saved to; relative paths are resolved against the API's content root.</summary>
+    public string PickupDirectory { get; set; } = "App_Data/dev-emails";
 }
 
 /// <summary>Account lockout policy (matches MAX_LOGIN_ATTEMPTS / LOCKOUT_MINUTES on the web).</summary>

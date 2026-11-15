@@ -15,19 +15,22 @@ internal static class RegistrationEndpoints
             .WithName("RegisterCustomer")
             .WithSummary("Apply for a customer account: verify the email, then a Fleet Administrator approves")
             .WithValidation<RegisterCustomerRequest>()
-            .RequireRateLimiting(AuthPolicies.PublicRateLimit);
+            .RequireRateLimiting(AuthPolicies.PublicRateLimit)
+            .AllowAnonymous();
 
         group.MapPost("/verify-email", VerifyEmailAsync)
             .WithName("VerifyEmail")
             .WithSummary("Confirm the applicant's email address with the emailed token")
             .WithValidation<VerifyEmailRequest>()
-            .RequireRateLimiting(AuthPolicies.PublicRateLimit);
+            .RequireRateLimiting(AuthPolicies.PublicRateLimit)
+            .AllowAnonymous();
 
         group.MapPost("/verify-email/resend", ResendVerificationAsync)
             .WithName("ResendVerificationEmail")
             .WithSummary("Send a new verification link (always 202)")
             .WithValidation<ResendVerificationRequest>()
-            .RequireRateLimiting(AuthPolicies.PublicRateLimit);
+            .RequireRateLimiting(AuthPolicies.PublicRateLimit)
+            .AllowAnonymous();
     }
 
     private static async Task<Results<Created<RegistrationSubmittedResponse>, ProblemHttpResult>> RegisterCustomerAsync(

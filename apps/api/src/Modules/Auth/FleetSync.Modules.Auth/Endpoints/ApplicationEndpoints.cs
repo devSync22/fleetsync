@@ -32,7 +32,8 @@ internal static class ApplicationEndpoints
             // Token-based API, no auth cookies are read here, so antiforgery tokens aren't needed.
             .DisableAntiforgery()
             .WithMetadata(new RequestSizeLimitAttribute(maxRequestBytes))
-            .RequireRateLimiting(AuthPolicies.PublicRateLimit);
+            .RequireRateLimiting(AuthPolicies.PublicRateLimit)
+            .AllowAnonymous();
 
         var review = group.MapGroup("/applications")
             .RequireAuthorization(AuthPolicies.FleetAdministrator);

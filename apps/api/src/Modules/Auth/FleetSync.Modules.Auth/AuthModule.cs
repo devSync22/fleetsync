@@ -62,7 +62,9 @@ public static class AuthModule
 
         services.AddAuthorizationBuilder()
             .AddPolicy(AuthPolicies.FleetAdministrator, policy =>
-                policy.RequireAuthenticatedUser().RequireRole(AuthRoles.FleetAdministrator));
+                policy.RequireAuthenticatedUser().RequireRole(AuthRoles.FleetAdministrator))
+            .AddPolicy(AuthPolicies.AuditTrailReader, policy =>
+                policy.RequireAuthenticatedUser().RequireRole(AuthRoles.FleetAdministrator, AuthRoles.Owner));
 
         // Readiness probe: /health/ready reports unhealthy if the auth tables can't be reached.
         services.AddHealthChecks()
@@ -76,7 +78,7 @@ public static class AuthModule
         services.AddHttpContextAccessor();
 
         // Infrastructure adapters (swap these for production implementations later).
-        services.AddSingleton<IEmailSender, LoggingEmailSender>();
+        services.AddSingleton<IEmailSender, PickupFolderEmailSender>();
         services.AddSingleton<IDocumentStorage, LocalDocumentStorage>();
         services.AddScoped<IReferenceNumberGenerator, ReferenceNumberGenerator>();
         services.AddSingleton<AccessTokenIssuer>();

@@ -8,7 +8,7 @@ and the features added when the database was rebuilt to match the EER diagram.
 | **Branch** | `feature/KAN-226-auth-backend` |
 | **Environment** | API on `http://localhost:5215` (Development), .NET 10 |
 | **Database** | Supabase PostgreSQL (session pooler, `ap-southeast-1`), schema `identity`, migration `20261115071916_AddAuthModule`. Both parts also passed on a local PostgreSQL 18.6 |
-| **Method** | Black-box HTTP calls with `curl` + `jq` against the running API; emailed tokens are read from the API log; part B also checks rows with `psql` |
+| **Method** | Black-box HTTP calls with `curl` + `jq` against the running API; emailed tokens are read from the dev email folder (`App_Data/dev-emails`); part B also checks rows with `psql` |
 | **Scripts** | [`auth-core-flows.sh`](../../apps/api/tests/manual/auth-core-flows.sh) (part A), [`auth-new-features.sh`](../../apps/api/tests/manual/auth-new-features.sh) (part B) |
 | **Last updated** | 2026-11-15 |
 
@@ -30,38 +30,39 @@ and the features added when the database was rebuilt to match the EER diagram.
 | B | Session metadata | 1 | ✅ all passed |
 | | **Total** | **160** | **160 passed** |
 
-**Part A** passed 68/68 on Supabase (latest run `1794730452`) and on local
-PostgreSQL (run `1794729902`, plus RL1).
+**Part A** passed 68/68 on Supabase (latest run `1794731096`, plus RL1) and on
+local PostgreSQL (run `1794729902`).
 
-**Part B** passed 91/91 on Supabase (run `1794730368`) and on local PostgreSQL
-(run `1794729962`). The failures seen along the way were all mistakes in the
+**Part B** passed 91/91 on Supabase (latest run `1794731145`) and on local
+PostgreSQL (run `1794729962`). The failures seen along the way were all mistakes in the
 test script or leftover test data, described under [Findings](#findings).
 
-Alongside: **78 unit tests** and **23 integration tests** (including
-`EerTablesTests`) all pass. The API log had no errors in any run.
+Alongside: **79 unit tests** and **29 integration tests** (including
+`EerTablesTests` and `ApiRulesTests`) all pass. The API log had no errors and
+no tokens in any run.
 
 ## How to run
 
-1. Start the API in Development, writing its log to a file (emailed links are
-   read from it) and raising the rate limit so the run isn't throttled:
+1. Start the API in Development, raising the rate limit so the run isn't
+   throttled. Emailed links are read from `App_Data/dev-emails/`, where
+   Development saves emails:
 
    ```bash
-   Auth__RateLimiting__PermitLimit=1000 dotnet run --project apps/api/src/FleetSync.Api \
-     --launch-profile http > /tmp/fleetsync-api.log 2>&1 &
+   Auth__RateLimiting__PermitLimit=1000 dotnet run --project apps/api/src/FleetSync.Api --launch-profile http
    ```
 
 2. From the repo root, run either part:
 
    ```bash
-   bash apps/api/tests/manual/auth-core-flows.sh   /tmp/fleetsync-api.log   # part A
-   bash apps/api/tests/manual/auth-new-features.sh /tmp/fleetsync-api.log   # part B
+   bash apps/api/tests/manual/auth-core-flows.sh     # part A
+   bash apps/api/tests/manual/auth-new-features.sh   # part B
    ```
 
 3. For the rate-limit case (RL1), restart the API **without** the
    `PermitLimit` override and run:
 
    ```bash
-   bash apps/api/tests/manual/auth-core-flows.sh /tmp/fleetsync-api.log ratelimit
+   bash apps/api/tests/manual/auth-core-flows.sh ratelimit
    ```
 
 Prerequisites: `curl`, `jq`, `python3`, `psql`; the connection string and
@@ -71,7 +72,7 @@ repeated. Part B stops with exit code 2 if the database or the dev admin can't
 be reached.
 
 **Expected result** is the HTTP status and, where relevant, the ProblemDetails
-`code`. "Database check passes" means the script queried the tables directly.
+`errorCode`. "Database check passes" means the script queried the tables directly.
 
 # Part A — Core flows
 
@@ -352,7 +353,15 @@ Driver, mechanic, coordinator and owner applications. On activation each account
    PC26 because an interrupted earlier run had left the shared admin's own
    change request pending (one pending request per field is enforced). The
    script now clears that leftover before the case; the rerun passed.
-8. **No server errors.** The API log had no `fail` entries or unhandled
+8. **Backend guide alignment.** After the backend guide was adopted, the API
+   was changed to match it: error responses use `errorCode`; deny-by-default
+   fallback policy; `RequireFleetAdministrator` for account management and
+   read-only Fleet Owner access to `GET /audit-log`; lists capped at 100;
+   refresh tokens last 7 days; Development emails go to files, so no tokens
+   reach the log. Both parts were rerun on Supabase afterwards and passed.
+   These rules are also covered by `ApiRulesTests` (integration) and
+   `PickupFolderEmailSenderTests` (unit).
+9. **No server errors.** The API log had no `fail` entries or unhandled
    exceptions in any run.
 
 ## Not covered
@@ -366,9 +375,9 @@ Driver, mechanic, coordinator and owner applications. On activation each account
 ## Also covered by automated tests
 
 - **Integration tests** (`apps/api/tests/FleetSync.IntegrationTests/Auth/`:
-  `SessionFlowTests`, `StaffAndPasswordFlowTests`, `EerTablesTests`) run the
+  `SessionFlowTests`, `StaffAndPasswordFlowTests`, `EerTablesTests`, `ApiRulesTests`) run the
   same flows in-process against the `fleetsync_test` database.
-- **Unit tests** (`FleetSync.Modules.Auth.UnitTests`, 78 tests, all passing)
+- **Unit tests** (`FleetSync.Modules.Auth.UnitTests`, 79 tests, all passing)
   cover validators and domain rules: application and profile-change states,
   token rotation, registration-number normalisation.
 

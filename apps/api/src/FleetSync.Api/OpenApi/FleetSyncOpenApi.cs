@@ -39,7 +39,7 @@ internal static class FleetSyncOpenApi
                 "and paste it under *Authentication → Bearer*. Access tokens expire after 15 minutes.\n\n" +
                 "**Refresh tokens:** browsers receive an HttpOnly cookie; mobile clients send " +
                 "`X-Client-Type: mobile` on `/login`, `/refresh` and `/logout` and get the token in the body.\n\n" +
-                "**Errors** are RFC 9457 ProblemDetails with a stable `code` field and a `traceId`.",
+                "**Errors** are RFC 9457 ProblemDetails with a stable `errorCode` field and a `traceId`.",
         };
 
         document.Components ??= new OpenApiComponents();
@@ -56,9 +56,9 @@ internal static class FleetSyncOpenApi
     }
 
     /// <summary>
-    /// Marks only endpoints that have [Authorize] / RequireAuthorization() as
-    /// needing the Bearer token, so public endpoints (login, register...) stay
-    /// shown as anonymous. [AllowAnonymous] wins over [Authorize], as at runtime.
+    /// Marks every endpoint as needing the Bearer token unless it is
+    /// AllowAnonymous (login, register…): the host's fallback policy denies
+    /// by default, so "no metadata" means "signed in" at runtime too.
     /// </summary>
     private static Task RequireBearerWhereAuthorized(
         OpenApiOperation operation,
@@ -66,8 +66,7 @@ internal static class FleetSyncOpenApi
         CancellationToken cancellationToken)
     {
         var metadata = context.Description.ActionDescriptor.EndpointMetadata;
-        var requiresAuth = metadata.OfType<IAuthorizeData>().Any()
-            && !metadata.OfType<IAllowAnonymous>().Any();
+        var requiresAuth = !metadata.OfType<IAllowAnonymous>().Any();
 
         if (requiresAuth)
         {

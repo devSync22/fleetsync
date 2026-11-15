@@ -112,14 +112,14 @@ internal static class AuthTestHelpers
         return JsonDocument.Parse(body).RootElement;
     }
 
-    /// <summary>Asserts an error response and its stable "code".</summary>
+    /// <summary>Asserts an error response and its stable "errorCode".</summary>
     public static async Task<JsonElement> AssertProblemAsync(HttpResponseMessage response, HttpStatusCode status, string code)
     {
         var body = await response.Content.ReadAsStringAsync();
         Assert.True(status == response.StatusCode, $"Expected {(int)status} but got {(int)response.StatusCode}: {body}");
 
         var problem = JsonDocument.Parse(body).RootElement;
-        Assert.Equal(code, problem.GetProperty("code").GetString());
+        Assert.Equal(code, problem.GetProperty("errorCode").GetString());
         return problem;
     }
 }
