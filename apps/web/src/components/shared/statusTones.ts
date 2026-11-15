@@ -17,6 +17,7 @@ export const statusMeta = {
   declined: { label: 'Declined by customer', tone: 'neutral' },
   'quote-declined': { label: 'Quote declined', tone: 'neutral' },
   busy: { label: 'Busy', tone: 'neutral' },
+  refunded: { label: 'Refunded', tone: 'neutral' },
   // pending — pending / due soon
   pending: { label: 'Pending', tone: 'pending' },
   'pending-review': { label: 'Pending review', tone: 'pending' },

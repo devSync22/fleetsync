@@ -1,11 +1,13 @@
 import { ApiError } from '@/services/apiClient'
 import { MOCK_TODAY, myOrdersMock, type MyOrderRecord } from '../mocks/myOrdersMock'
+import { orderDetailsMock } from '../mocks/orderDetailsMock'
 import { myOrdersTabs } from '../myOrdersTabs'
-import type { CustomerOrderRow, MyOrdersPeriod, MyOrdersQuery, MyOrdersResult, MyOrdersTab } from '../types'
+import type { CustomerOrderDetail, CustomerOrderRow, MyOrdersPeriod, MyOrdersQuery, MyOrdersResult, MyOrdersTab } from '../types'
 
 /*
  * Mocked until the customer order endpoints exist:
- *   getMyOrders → apiClient.get<MyOrdersResult>('/customer/orders', { params: query })
+ *   getMyOrders    → apiClient.get<MyOrdersResult>('/customer/orders', { params: query })
+ *   getOrderDetail → apiClient.get<CustomerOrderDetail>(`/customer/orders/${orderId}`)
  *
  * The mock filters, counts and paginates the way the endpoint will, so the page only reads
  * the result. In dev, add `mock=empty` or `mock=error` to the URL query.
@@ -79,4 +81,13 @@ export async function getMyOrders(query: MyOrdersQuery): Promise<MyOrdersResult>
   const items = inTab.slice((page - 1) * MY_ORDERS_PAGE_SIZE, page * MY_ORDERS_PAGE_SIZE).map(toRow)
 
   return { items, total: inTab.length, page, pageCount, tabCounts }
+}
+
+/** One order of the signed-in customer. Rejects with a 404 ApiError for an unknown id. */
+export async function getOrderDetail(orderId: string): Promise<CustomerOrderDetail> {
+  await mockRequest()
+  // Future call: apiClient.get<CustomerOrderDetail>(`/customer/orders/${orderId}`)
+  const detail = orderDetailsMock.find((order) => order.orderId === orderId)
+  if (!detail) throw new ApiError(`We couldn’t find order ${orderId} in your account.`, 404)
+  return detail
 }
