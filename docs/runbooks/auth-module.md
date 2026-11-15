@@ -55,7 +55,8 @@ on Auth internals.
 
 ## Endpoints
 
-All routes are under `/api/auth`. In Development the full contract is at
+All routes are under `/api/auth`. In Development, browse and try them at
+`http://localhost:5215/scalar` (Scalar UI); the raw contract is at
 `/openapi/v1.json`, and sample requests are in `FleetSync.Api.http`.
 
 | Method | Route                                     | Who        | Purpose                                   |

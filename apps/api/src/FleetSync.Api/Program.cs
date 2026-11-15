@@ -1,16 +1,19 @@
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using FleetSync.Api.OpenApi;
 using FleetSync.Infrastructure;
 using FleetSync.Infrastructure.Persistence;
 using FleetSync.Modules.Auth;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// OpenAPI
-builder.Services.AddOpenApi();
+// OpenAPI: the document is generated from the endpoints by the built-in
+// Microsoft.AspNetCore.OpenApi; FleetSyncOpenApi adds the title and JWT scheme.
+builder.Services.AddOpenApi(FleetSyncOpenApi.Configure);
 
 // Read the database connection string
 var connectionString =
@@ -73,10 +76,14 @@ var app = builder.Build();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
-// Development OpenAPI endpoint
+// Development only: the raw OpenAPI document (/openapi/v1.json) and the
+// interactive API reference rendered from it by Scalar (/scalar).
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference(options => options
+        .WithTitle("FleetSync API")
+        .AddPreferredSecuritySchemes("Bearer"));
 }
 
 app.UseCors();
