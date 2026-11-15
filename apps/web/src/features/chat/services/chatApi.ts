@@ -57,6 +57,14 @@ function simulateOtherSide(sent: MockMessage) {
   }, 4000)
 }
 
+// Tests only: puts the shared mock store back to the seed data so each test starts fresh.
+export function resetChatMockForTests() {
+  store.splice(0, store.length, ...chatMessagesMock.map((m) => ({ ...m })))
+  listeners.clear()
+  autoReplied.clear()
+  nextId = 1
+}
+
 export function createMockChatService(viewer: ChatViewer): ChatService {
   const myRooms = () => chatRoomsMock.filter((room) => room.memberIds.includes(viewer.id))
 

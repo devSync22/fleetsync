@@ -25,3 +25,8 @@ export async function getNotifications(role: NotificationRole = 'coordinator'): 
 export async function markRead(ids: string[]): Promise<void> {
   ids.forEach((id) => readIds.add(id))
 }
+
+// Tests only: clears read state so each test starts from the mock data.
+export function resetNotificationsMockForTests() {
+  readIds.clear()
+}
