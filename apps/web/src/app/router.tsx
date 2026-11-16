@@ -1,4 +1,11 @@
 import { createBrowserRouter, Navigate } from 'react-router'
+import { CustomerRegistrationPage } from '@/features/auth/pages/CustomerRegistrationPage'
+import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage'
+import { LoginPage } from '@/features/auth/pages/LoginPage'
+import { SetNewPasswordPage } from '@/features/auth/pages/SetNewPasswordPage'
+import { SignedInPage } from '@/features/auth/pages/SignedInPage'
+import { StaffApplicationPage } from '@/features/auth/pages/StaffApplicationPage'
+import { VerifyEmailPage } from '@/features/auth/pages/VerifyEmailPage'
 import { AvailabilityPage } from '@/features/availability/pages/AvailabilityPage'
 import { ChatPage } from '@/features/chat/pages/ChatPage'
 import { CoordinatorDashboardPage } from '@/features/coordinator-dashboard/pages/CoordinatorDashboardPage'
@@ -21,14 +28,39 @@ import { TripCancelledPage } from '@/features/trips/pages/TripCancelledPage'
 import { TripCreatedPage } from '@/features/trips/pages/TripCreatedPage'
 import { TripDetailsPage } from '@/features/trips/pages/TripDetailsPage'
 import { TripsPage } from '@/features/trips/pages/TripsPage'
+import { NotFoundPage } from './NotFoundPage'
+import { RedirectTo } from './RedirectTo'
+import { AuthLayout } from './layouts/AuthLayout'
 import { CoordinatorLayout } from './layouts/CoordinatorLayout'
 import { CustomerLayout } from './layouts/CustomerLayout'
-import { NotFoundPage } from './NotFoundPage'
+import { RequireAuth } from './layouts/RequireAuth'
 
-/** All routes, grouped per role. Add /admin, /customer, /owner and /auth when work on them starts. */
+/**
+ * All routes, grouped per role area (/auth/*, /coordinator/*, /customer/*; /admin/* and /owner/*
+ * get their own group and layout as their screens are built).
+ * The role areas are not behind RequireAuth yet: their screens still run on mock data.
+ */
 export const router = createBrowserRouter([
-  // TODO: send users to their role's home once sign-in exists
-  { path: '/', element: <Navigate to="/coordinator" replace /> },
+  {
+    path: '/auth',
+    element: <AuthLayout />,
+    children: [
+      { index: true, element: <Navigate to="login" replace /> },
+      { path: 'login', element: <LoginPage /> },
+      { path: 'register', element: <CustomerRegistrationPage /> },
+      { path: 'request-staff-account', element: <StaffApplicationPage /> },
+      { path: 'verify-email', element: <VerifyEmailPage /> },
+      { path: 'forgot-password', element: <ForgotPasswordPage /> },
+      { path: 'reset-password', element: <SetNewPasswordPage /> },
+    ],
+  },
+  {
+    element: <RequireAuth />,
+    children: [
+      // Temporary landing page after sign-in, until each role is sent to its own home.
+      { path: '/', element: <SignedInPage /> },
+    ],
+  },
   {
     path: '/coordinator',
     element: <CoordinatorLayout />,
@@ -67,5 +99,9 @@ export const router = createBrowserRouter([
       { path: '*', element: <NotFoundPage /> },
     ],
   },
+  // Short links used in emails (verify / reset) and old bookmarks.
+  { path: '/login', element: <RedirectTo path="/auth/login" /> },
+  { path: '/verify-email', element: <RedirectTo path="/auth/verify-email" /> },
+  { path: '/reset-password', element: <RedirectTo path="/auth/reset-password" /> },
   { path: '*', element: <NotFoundPage /> },
 ])
