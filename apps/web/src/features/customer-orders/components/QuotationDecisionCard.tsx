@@ -65,7 +65,7 @@ export function QuotationDecisionCard({
       {status === 'accepted' &&
         (quotation.paymentDue ? (
           <Button asChild className="w-full">
-            <Link to={`${orderPath}/pay`}>Go to payment</Link>
+            <Link to={`/customer/quotations/${quotation.orderId}/pay`}>Go to payment</Link>
           </Button>
         ) : (
           <Button asChild variant="outline" className="w-full">

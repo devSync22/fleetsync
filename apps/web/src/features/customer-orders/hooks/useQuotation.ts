@@ -27,7 +27,7 @@ export function useQuotation(orderId: string) {
 
   async function acceptAndPay() {
     const accepted = await accept.run(orderId)
-    if (accepted) navigate(`/customer/orders/${orderId}/pay`)
+    if (accepted) navigate(`/customer/quotations/${orderId}/pay`)
   }
 
   /** Resolves to true when the quotation was declined (so the dialog can close). */

@@ -27,7 +27,7 @@ function HeaderActions({ order }: { order: CustomerOrderDetail }) {
     order.status === 'quoted'
       ? { label: 'Review quote', to: `/customer/quotations/${order.orderId}` }
       : order.payment?.status === 'awaiting-payment'
-        ? { label: 'Pay now', to: `/customer/orders/${order.orderId}/pay` }
+        ? { label: 'Pay now', to: `/customer/quotations/${order.orderId}/pay` }
         : null
 
   return (

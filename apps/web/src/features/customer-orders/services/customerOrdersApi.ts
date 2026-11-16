@@ -1,5 +1,6 @@
 import { formatLKR } from '@/lib/utils'
 import { ApiError } from '@/services/apiClient'
+import { registerMockOrderStore } from '@/services/mockOrderStore'
 import { MOCK_NOW, MOCK_TODAY, myOrdersMock, type MyOrderRecord } from '../mocks/myOrdersMock'
 import { buildSubmittedOrder } from '../mocks/newOrderMock'
 import { orderDetailsMock, progress } from '../mocks/orderDetailsMock'
@@ -243,3 +244,48 @@ export async function declineQuotation(orderId: string, reason?: string): Promis
   }))
   return toQuotation(quotation)
 }
+
+/* ───────────── Mock store shared with features/payments ───────────── */
+
+// Lets the payments mock read and update these in-memory orders without importing this feature.
+// Remove together with services/mockOrderStore.ts once the API exists.
+registerMockOrderStore({
+  now: currentTime,
+
+  getOrderForPayment(orderId) {
+    const detail = orderDetailsMock.find((o) => o.orderId === orderId)
+    if (!detail) return null
+    const quotation = quotationsMock.find((q) => q.orderId === orderId)
+    return {
+      orderId,
+      orderStatus: detail.status,
+      route: detail.route,
+      pickupLabel: quotation?.order.pickup.when ?? detail.pickup.when,
+      paymentStatus: detail.payment?.status ?? null,
+      quotation: quotation ? { status: quotation.status, total: quotation.total, validUntil: quotation.validUntil } : null,
+    }
+  },
+
+  markOrderPaid(orderId, payment) {
+    // The order stays "accepted" (there is no separate paid status); Order details shows it as paid
+    // and the Trip scheduled step becomes the current one.
+    updateOrder(orderId, 'accepted', (detail) => ({
+      progress: progress(
+        [detail.progress[0].caption, formatLKR(payment.amount), payment.paidOnLabel, 'Being scheduled'],
+        3,
+        'current',
+      ),
+      updates: [
+        { title: 'Payment received', detail: `${formatLKR(payment.amount)} · online`, when: payment.paidOnLabel, tone: 'success' },
+        ...detail.updates,
+      ],
+      payment: {
+        quotationAmount: payment.amount,
+        paidOn: payment.paidOnLabel,
+        method: `Online · Card ending ${payment.cardLast4}`,
+        reference: payment.reference,
+        status: 'paid',
+      },
+    }))
+  },
+})

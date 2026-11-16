@@ -37,7 +37,7 @@ export function PaymentCard({ orderId, payment }: { orderId: string; payment: Or
         )}
         {awaiting && (
           <Button asChild size="sm" className="w-full">
-            <Link to={`/customer/orders/${orderId}/pay`}>Pay now</Link>
+            <Link to={`/customer/quotations/${orderId}/pay`}>Pay now</Link>
           </Button>
         )}
         {payment.status === 'paid' && (

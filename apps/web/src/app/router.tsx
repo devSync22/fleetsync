@@ -60,7 +60,7 @@ export const router = createBrowserRouter([
       { path: 'orders', element: <MyOrdersPage /> },
       { path: 'new-order', element: <NewOrderPage /> },
       { path: 'orders/:orderId', element: <CustomerOrderDetailsPage /> },
-      { path: 'orders/:orderId/pay', element: <PaymentPage /> },
+      { path: 'quotations/:orderId/pay', element: <PaymentPage /> },
       { path: 'quotations/:orderId', element: <FareQuotationPage /> },
       { path: 'payments', element: <PaymentHistoryPage /> },
       { path: 'payments/:paymentId', element: <PaymentResultPage /> },
