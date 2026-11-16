@@ -9,6 +9,8 @@
 **/bin/
 **/obj/
 **/TestResults/
+# Uploaded files stored locally by the API (staff application documents)
+**/App_Data/
 .vs/
 *.user
 *.suo
@@ -35,9 +37,5 @@ Thumbs.db
 apps/mobile/android/
 apps/mobile/ios/
 
-# API runtime data written while running locally: dev emails (contain
-# verify/reset tokens) and uploaded staff documents. Never commit these.
-apps/api/src/FleetSync.Api/App_Data/
-
-# Personal local notes with database hosts and dev credentials.
+# Config files
 database.txt
