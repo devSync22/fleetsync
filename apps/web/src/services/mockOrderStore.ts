@@ -26,6 +26,8 @@ export interface MockOrderForPayment {
     total: number
     /** ISO date-time */
     validUntil: string
+    /** The price lines, for the invoice. */
+    lines: { label: string; amount: number }[]
   } | null
 }
 
@@ -35,6 +37,8 @@ export interface MockPaymentRecord {
   paidOnLabel: string
   cardLast4: string
   reference: string
+  /** "INV-2026-1049" — lets the order link to its invoice. */
+  invoiceId: string
 }
 
 export interface MockOrderStore {

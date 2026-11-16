@@ -132,6 +132,8 @@ export interface OrderPayment {
   /** "PAY-58213"; null while awaiting payment. */
   reference: string | null
   status: 'awaiting-payment' | 'paid' | 'refunded'
+  /** "INV-2026-1040" once paid; opens the invoice on the Payments page. */
+  invoiceId?: string
 }
 
 /** Everything "Customer — Order details" (158:5805) shows for one order. */

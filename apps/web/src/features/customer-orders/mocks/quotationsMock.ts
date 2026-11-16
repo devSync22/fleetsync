@@ -124,7 +124,7 @@ const ord1049: QuotationRecord = {
 
 const specs: Spec[] = [
   { orderId: 'ORD-1040', km: 94, sent: '15 Oct, 12:40', validUntil: '2026-10-16T18:00:00', status: 'accepted', decided: '15 Oct, 14:20' },
-  { orderId: 'ORD-1035', km: 126, sent: '9 Oct, 17:05', validUntil: '2026-10-10T18:00:00', status: 'accepted', decided: '10 Oct, 09:12' },
+  { orderId: 'ORD-1035', km: 126, sent: '7 Oct, 17:05', validUntil: '2026-10-08T18:00:00', status: 'accepted', decided: '8 Oct, 10:05' },
   { orderId: 'ORD-1031', km: 115, sent: '2 Oct, 16:10', validUntil: '2026-10-03T18:00:00', status: 'accepted', decided: '3 Oct, 08:50' },
   { orderId: 'ORD-1027', km: 38, sent: '26 Sep, 13:40', validUntil: '2026-09-27T18:00:00', status: 'accepted', decided: '26 Sep, 15:02' },
   { orderId: 'ORD-1018', km: 101, sent: '12 Sep, 14:15', validUntil: '2026-09-13T18:00:00', status: 'accepted', decided: '13 Sep, 10:00' },
@@ -143,7 +143,7 @@ const specs: Spec[] = [
   },
   // Orders that are only in orderDetailsMock (see there).
   { orderId: 'ORD-1050', km: 27, sent: '18 Oct, 15:40', validUntil: '2026-10-21T18:00:00', status: 'accepted', decided: '19 Oct, 09:10' },
-  { orderId: 'ORD-1055', km: 78, sent: '16 Oct, 17:10', validUntil: '2026-10-17T18:00:00', status: 'accepted', decided: '17 Oct, 08:40' },
+  { orderId: 'ORD-1055', km: 78, sent: '23 Sep, 17:10', validUntil: '2026-09-24T18:00:00', status: 'accepted', decided: '24 Sep, 08:40' },
   { orderId: 'ORD-1020', km: 238, sent: '16 Sep, 15:20', validUntil: '2026-09-17T18:00:00', status: 'accepted', decided: '17 Sep, 09:00' },
   // Still "awaiting" in storage but past its validUntil: the page must show it as expired.
   { orderId: 'ORD-1012', km: 257, sent: '1 Sep, 17:45', validUntil: '2026-09-03T17:45:00', status: 'awaiting' },

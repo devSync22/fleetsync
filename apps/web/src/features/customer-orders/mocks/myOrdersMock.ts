@@ -31,7 +31,7 @@ const rows: Row[] = [
   ['ORD-1051', '2026-10-20', 'Today, 09:12', 'Colombo 15 → Matara', 'Tiles · 8 t', '23 Oct, 08:00', null, 'pending-review'],
   ['ORD-1049', '2026-10-17', '17 Oct', 'Nugegoda → Kurunegala', 'Tiles · 6.2 t', '21 Oct, 08:00', 31410, 'quoted'],
   ['ORD-1040', '2026-10-15', '15 Oct', 'Colombo → Kurunegala', 'Tiles · 9 t', 'Today, 08:00', 27900, 'in-progress'],
-  ['ORD-1035', '2026-10-09', '9 Oct', 'Colombo → Galle', 'Tiles · 5.5 t', '12 Oct, 07:30', 19600, 'completed'],
+  ['ORD-1035', '2026-10-07', '7 Oct', 'Colombo → Galle', 'Tiles · 5.5 t', '12 Oct, 07:30', 19600, 'completed'],
   ['ORD-1031', '2026-10-02', '2 Oct', 'Colombo 15 → Kandy', 'Tiles · 7 t', '4 Oct, 06:30', 24300, 'completed'],
   ['ORD-1027', '2026-09-26', '26 Sep', 'Colombo 15 → Negombo', 'Tiles · 3 t', '28 Sep, 09:00', 11800, 'completed'],
   ['ORD-1022', '2026-09-20', '20 Sep', 'Colombo 15 → Jaffna', 'Tiles · 9 t', '—', 68500, 'declined'],

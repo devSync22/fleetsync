@@ -32,7 +32,7 @@ function HeaderActions({ order }: { order: CustomerOrderDetail }) {
 
   return (
     <>
-      {order.payment?.status === 'paid' && <DownloadInvoiceButton />}
+      {order.payment?.status === 'paid' && order.payment.invoiceId && <DownloadInvoiceButton invoiceId={order.payment.invoiceId} />}
       <Button asChild variant={next ? 'outline' : 'default'}>
         <Link to={chat}>Open chat</Link>
       </Button>

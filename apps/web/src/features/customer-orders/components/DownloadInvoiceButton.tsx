@@ -1,13 +1,13 @@
+import { Link } from 'react-router'
 import { Button } from '@/components/ui/button'
 
-type DownloadInvoiceButtonProps = { size?: 'default' | 'sm'; className?: string }
+type DownloadInvoiceButtonProps = { invoiceId: string; size?: 'default' | 'sm'; className?: string }
 
-/** Shown only for paid orders. */
-export function DownloadInvoiceButton({ size = 'default', className }: DownloadInvoiceButtonProps) {
-  // TODO(payments step): download the invoice PDF once the payments module provides it.
+/** Shown only for paid orders: opens the invoice on the Payments page, where it can be downloaded. */
+export function DownloadInvoiceButton({ invoiceId, size = 'default', className }: DownloadInvoiceButtonProps) {
   return (
-    <Button type="button" variant="outline" size={size} className={className}>
-      Download invoice
+    <Button asChild variant="outline" size={size} className={className}>
+      <Link to={`/customer/payments?invoice=${invoiceId}`}>Download invoice</Link>
     </Button>
   )
 }

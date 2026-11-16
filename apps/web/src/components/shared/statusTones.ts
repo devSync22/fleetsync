@@ -52,6 +52,7 @@ export const statusMeta = {
   // danger — overdue / failed / suspended / cancelled
   overdue: { label: 'Overdue', tone: 'danger' },
   'payment-failed': { label: 'Payment failed', tone: 'danger' },
+  failed: { label: 'Failed', tone: 'danger' },
   suspended: { label: 'Suspended', tone: 'danger' },
   cancelled: { label: 'Cancelled', tone: 'danger' },
   'trip-cancelled': { label: 'Trip cancelled', tone: 'danger' },

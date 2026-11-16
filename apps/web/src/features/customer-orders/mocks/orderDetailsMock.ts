@@ -135,7 +135,7 @@ function completedOrder(spec: CompletedSpec): CustomerOrderDetail {
     pickup: spec.pickup,
     destination: spec.destination,
     cargo: spec.cargo,
-    payment: { quotationAmount: spec.amount, paidOn: spec.paid, method: spec.method, reference: spec.reference, status: 'paid' },
+    payment: { quotationAmount: spec.amount, paidOn: spec.paid, method: spec.method, reference: spec.reference, status: 'paid', invoiceId: `INV-2026-${spec.orderId.slice(4)}` },
   }
 }
 
@@ -169,7 +169,7 @@ const ord1040: CustomerOrderDetail = {
   pickup: { address: COLOMBO_15, when: 'Today, 08:00', contact: CUSTOMER_CONTACT },
   destination: { address: 'Lanka Tiles showroom, Negombo Road, Kurunegala', when: 'Before 13:00', contact: 'Chamara Bandara' },
   cargo: tiles(9000, 18),
-  payment: { quotationAmount: 27900, paidOn: '15 Oct, 15:02', method: VISA, reference: 'PAY-58213', status: 'paid' },
+  payment: { quotationAmount: 27900, paidOn: '15 Oct, 15:02', method: VISA, reference: 'PAY-58213', status: 'paid', invoiceId: 'INV-2026-1040' },
 }
 
 /* ───────────── Rows of My orders ───────────── */
@@ -236,17 +236,17 @@ const completedOrders: CustomerOrderDetail[] = [
     pickup: { address: COLOMBO_15, when: '12 Oct, 07:30', contact: CUSTOMER_CONTACT },
     destination: { address: 'Lanka Tiles showroom, Wakwella Road, Galle', when: 'Before 12:00', contact: 'Nadeesha Fernando' },
     cargo: tiles(5500, 11),
-    placed: '9 Oct, 14:22',
-    accepted: '10 Oct, 09:12',
-    paid: '10 Oct, 09:30',
-    scheduled: '10 Oct, 15:45',
+    placed: '7 Oct, 14:22',
+    accepted: '8 Oct, 10:05',
+    paid: '8 Oct, 10:21',
+    scheduled: '8 Oct, 15:45',
     tripDay: '12 Oct',
     windowTimes: '07:30 – 12:00',
     started: '07:34',
     delivered: '12 Oct, 11:20',
     trip: { tripId: 'TRP-2176', vehicle: 'WP LK-8803', driver: 'Janaka Wickramasinghe' },
     method: VISA,
-    reference: 'PAY-57904',
+    reference: 'PAY-57790',
   }),
   completedOrder({
     orderId: 'ORD-1031',
@@ -258,7 +258,7 @@ const completedOrders: CustomerOrderDetail[] = [
     cargo: tiles(7000, 14),
     placed: '2 Oct, 11:40',
     accepted: '3 Oct, 08:50',
-    paid: '3 Oct, 09:05',
+    paid: '3 Oct, 09:47',
     scheduled: '3 Oct, 14:30',
     tripDay: '4 Oct',
     windowTimes: '06:30 – 12:30',
@@ -266,7 +266,7 @@ const completedOrders: CustomerOrderDetail[] = [
     delivered: '4 Oct, 11:55',
     trip: { tripId: 'TRP-2168', vehicle: 'WP LB-9145', driver: 'Roshan Gunawardena' },
     method: MASTERCARD,
-    reference: 'PAY-57411',
+    reference: 'PAY-57512',
   }),
   completedOrder({
     orderId: 'ORD-1027',
@@ -278,15 +278,15 @@ const completedOrders: CustomerOrderDetail[] = [
     cargo: tiles(3000, 6),
     placed: '26 Sep, 10:15',
     accepted: '26 Sep, 15:02',
-    paid: '26 Sep, 15:10',
-    scheduled: '27 Sep, 09:20',
+    paid: '27 Sep, 16:05',
+    scheduled: '27 Sep, 17:10',
     tripDay: '28 Sep',
     windowTimes: '09:00 – 11:30',
     started: '09:06',
     delivered: '28 Sep, 10:45',
     trip: { tripId: 'TRP-2161', vehicle: 'WP LE-6120', driver: 'Isuru Karunaratne' },
     method: VISA,
-    reference: 'PAY-56980',
+    reference: 'PAY-57201',
   }),
   completedOrder({
     orderId: 'ORD-1018',
@@ -426,22 +426,22 @@ const ord1055Trip: CustomerOrderTrip = {
 const ord1055: CustomerOrderDetail = {
   orderId: 'ORD-1055',
   status: 'trip-scheduled',
-  placedLabel: '16 Oct, 13:30',
+  placedLabel: '23 Sep, 13:30',
   route: 'Colombo 15 → Kegalle',
   cargoSummary: '5 t ceramic tiles',
   amount: 21400,
-  progress: progress(['16 Oct, 13:30', 'LKR 21,400', '17 Oct, 08:52', '17 Oct, 14:25', 'Starts 22 Oct, 07:00'], 4, 'upcoming'),
+  progress: progress(['23 Sep, 13:30', 'LKR 21,400', '24 Sep, 08:52', '24 Sep, 14:25', 'Starts 22 Oct, 07:00'], 4, 'upcoming'),
   trip: ord1055Trip,
   updates: [
-    tripScheduled('17 Oct, 14:25'),
-    paymentReceived(21400, '17 Oct, 08:52'),
-    quoteAccepted(21400, '17 Oct, 08:40'),
-    submitted('16 Oct, 13:30'),
+    tripScheduled('24 Sep, 14:25'),
+    paymentReceived(21400, '24 Sep, 08:52'),
+    quoteAccepted(21400, '24 Sep, 08:40'),
+    submitted('23 Sep, 13:30'),
   ],
   pickup: { address: COLOMBO_15, when: '22 Oct, 07:00', contact: CUSTOMER_CONTACT },
   destination: { address: 'Kegalle Tile Mart, Kandy Road, Kegalle', when: 'Before 11:30', contact: 'Asela Dissanayake' },
   cargo: tiles(5000, 10),
-  payment: { quotationAmount: 21400, paidOn: '17 Oct, 08:52', method: VISA, reference: 'PAY-58190', status: 'paid' },
+  payment: { quotationAmount: 21400, paidOn: '24 Sep, 08:52', method: VISA, reference: 'PAY-57150', status: 'paid', invoiceId: 'INV-2026-1055' },
 }
 
 const ord1020Trip: CustomerOrderTrip = {
@@ -473,7 +473,7 @@ const ord1020: CustomerOrderDetail = {
   pickup: { address: COLOMBO_15, when: '19 Sep, 05:30', contact: CUSTOMER_CONTACT },
   destination: { address: 'Lanka Tiles showroom, Tissa Road, Hambantota', when: 'Before 13:00', contact: 'Malith Wickramaratne' },
   cargo: tiles(10000, 20),
-  payment: { quotationAmount: 45600, paidOn: '17 Sep, 09:11', method: VISA, reference: 'PAY-56120', status: 'refunded' },
+  payment: { quotationAmount: 45600, paidOn: '17 Sep, 09:11', method: VISA, reference: 'PAY-56120', status: 'refunded', invoiceId: 'INV-2026-1020' },
 }
 
 const ord1012: CustomerOrderDetail = {

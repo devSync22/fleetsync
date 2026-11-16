@@ -262,7 +262,14 @@ registerMockOrderStore({
       route: detail.route,
       pickupLabel: quotation?.order.pickup.when ?? detail.pickup.when,
       paymentStatus: detail.payment?.status ?? null,
-      quotation: quotation ? { status: quotation.status, total: quotation.total, validUntil: quotation.validUntil } : null,
+      quotation: quotation
+        ? {
+            status: quotation.status,
+            total: quotation.total,
+            validUntil: quotation.validUntil,
+            lines: quotation.lines.map((line) => ({ label: line.label, amount: line.amount })),
+          }
+        : null,
     }
   },
 
@@ -285,6 +292,7 @@ registerMockOrderStore({
         method: `Online · Card ending ${payment.cardLast4}`,
         reference: payment.reference,
         status: 'paid',
+        invoiceId: payment.invoiceId,
       },
     }))
   },

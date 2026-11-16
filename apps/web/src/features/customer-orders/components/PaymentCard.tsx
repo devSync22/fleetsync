@@ -40,10 +40,10 @@ export function PaymentCard({ orderId, payment }: { orderId: string; payment: Or
             <Link to={`/customer/quotations/${orderId}/pay`}>Pay now</Link>
           </Button>
         )}
-        {payment.status === 'paid' && (
+        {payment.status === 'paid' && payment.invoiceId && (
           <>
             <hr className="border-border" />
-            <DownloadInvoiceButton size="sm" className="w-full" />
+            <DownloadInvoiceButton invoiceId={payment.invoiceId} size="sm" className="w-full" />
           </>
         )}
       </div>

@@ -29,10 +29,11 @@ export function PaymentSuccessCard({ result }: { result: PaymentResult }) {
         <KeyValueRow label="Date">{result.dateLabel}</KeyValueRow>
       </dl>
       <div className="flex w-full flex-wrap gap-2.5">
-        {/* TODO(payments): download the invoice PDF once the endpoint exists. */}
-        <Button type="button" variant="outline" className="min-w-[160px] flex-1">
-          Download invoice
-        </Button>
+        {result.invoiceId && (
+          <Button asChild variant="outline" className="min-w-[160px] flex-1">
+            <Link to={`/customer/payments?invoice=${result.invoiceId}`}>Download invoice</Link>
+          </Button>
+        )}
         <Button asChild className="min-w-[160px] flex-1">
           <Link to={`/customer/orders/${result.orderId}`}>View order</Link>
         </Button>
