@@ -252,6 +252,39 @@ export async function declineQuotation(orderId: string, reason?: string): Promis
 registerMockOrderStore({
   now: currentTime,
 
+  // Read-only view for the customer dashboard. Copies, so its React state never shares these objects.
+  listOrders() {
+    const listed = new Set(myOrdersMock.map((o) => o.orderId))
+    const rows = [
+      ...myOrdersMock,
+      ...orderDetailsMock.filter((d) => !listed.has(d.orderId)).map((d) => ({ ...d, cargo: d.cargoSummary })),
+    ]
+    return rows.map((row) => {
+      const detail = orderDetailsMock.find((d) => d.orderId === row.orderId)
+      const quotation = quotationsMock.find((q) => q.orderId === row.orderId)
+      const payment = detail?.payment
+      return structuredClone({
+        orderId: row.orderId,
+        inMyOrders: listed.has(row.orderId),
+        placedLabel: row.placedLabel,
+        route: row.route,
+        cargo: row.cargo,
+        status: row.status,
+        quotation: quotation ? { status: quotation.status, total: quotation.total, validUntil: quotation.validUntil } : null,
+        trip: detail?.trip ?? null,
+        steps: detail?.progress.map((step) => ({ id: step.id, caption: step.caption })) ?? [],
+        payment: payment
+          ? {
+              status: payment.status,
+              amount: payment.quotationAmount,
+              paidOnLabel: payment.paidOn,
+              invoiceId: payment.invoiceId ?? null,
+            }
+          : null,
+      })
+    })
+  },
+
   getOrderForPayment(orderId) {
     const detail = orderDetailsMock.find((o) => o.orderId === orderId)
     if (!detail) return null
