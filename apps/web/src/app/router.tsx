@@ -4,6 +4,7 @@ import { ChatPage } from '@/features/chat/pages/ChatPage'
 import { CoordinatorDashboardPage } from '@/features/coordinator-dashboard/pages/CoordinatorDashboardPage'
 import { CustomerDashboardPage } from '@/features/customer-dashboard/pages/CustomerDashboardPage'
 import { CustomerOrderDetailsPage } from '@/features/customer-orders/pages/CustomerOrderDetailsPage'
+import { CustomerQuotationsPage } from '@/features/customer-orders/pages/CustomerQuotationsPage'
 import { FareQuotationPage } from '@/features/customer-orders/pages/FareQuotationPage'
 import { MyOrdersPage } from '@/features/customer-orders/pages/MyOrdersPage'
 import { NewOrderPage } from '@/features/customer-orders/pages/NewOrderPage'
@@ -60,6 +61,7 @@ export const router = createBrowserRouter([
       { path: 'orders', element: <MyOrdersPage /> },
       { path: 'new-order', element: <NewOrderPage /> },
       { path: 'orders/:orderId', element: <CustomerOrderDetailsPage /> },
+      { path: 'quotations', element: <CustomerQuotationsPage /> },
       { path: 'quotations/:orderId/pay', element: <PaymentPage /> },
       { path: 'quotations/:orderId', element: <FareQuotationPage /> },
       { path: 'payments', element: <PaymentHistoryPage /> },

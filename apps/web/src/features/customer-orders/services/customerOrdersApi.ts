@@ -7,6 +7,7 @@ import { orderDetailsMock, progress } from '../mocks/orderDetailsMock'
 import { quotationsMock, type QuotationRecord } from '../mocks/quotationsMock'
 import { myOrdersTabs } from '../myOrdersTabs'
 import { DECLINE_REASON_MAX, effectiveStatus } from '../quotationStatus'
+import { quotationTabs } from '../quotationTabs'
 import type {
   CreatedOrder,
   CustomerOrderDetail,
@@ -18,6 +19,10 @@ import type {
   MyOrdersResult,
   MyOrdersTab,
   NewOrderDraft,
+  QuotationListQuery,
+  QuotationListResult,
+  QuotationListRow,
+  QuotationListTab,
 } from '../types'
 
 /*
@@ -28,6 +33,7 @@ import type {
  *   getQuotation     → apiClient.get<CustomerQuotation>(`/customer/quotations/${orderId}`)
  *   acceptQuotation  → apiClient.post<CustomerQuotation>(`/customer/quotations/${orderId}/accept`)
  *   declineQuotation → apiClient.post<CustomerQuotation>(`/customer/quotations/${orderId}/decline`, { reason })
+ *   getMyQuotations  → apiClient.get<QuotationListResult>('/customer/quotations', { params: query })
  *
  * The mock filters, counts and paginates the way the endpoint will, so the page only reads
  * the result. In dev, add `mock=empty` or `mock=error` to the URL query.
@@ -243,6 +249,65 @@ export async function declineQuotation(orderId: string, reason?: string): Promis
     payment: null,
   }))
   return toQuotation(quotation)
+}
+
+export const QUOTATIONS_PAGE_SIZE = 7
+
+const QUOTE_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+/** "2026-10-20T18:00:00" → "20 Oct, 18:00" */
+function shortDateTime(iso: string) {
+  const d = new Date(iso)
+  return `${d.getDate()} ${QUOTE_MONTHS[d.getMonth()]}, ${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+/**
+ * The Quotations list, read from the same in-memory quotations as the Fare quotation page, so accepting
+ * or declining there moves the row to its new tab. Awaiting quotations past validUntil count as expired.
+ * Awaiting: soonest to expire first. Other tabs: newest first.
+ */
+export async function getMyQuotations(query: QuotationListQuery): Promise<QuotationListResult> {
+  const scenario = await mockRequest()
+  // Future call: apiClient.get<QuotationListResult>('/customer/quotations', { params: query })
+  const now = currentTime()
+  const source = scenario === 'empty' ? [] : quotationsMock
+
+  const all = source.map((q) => {
+    const detail = orderDetailsMock.find((o) => o.orderId === q.orderId)
+    const row: QuotationListRow = {
+      orderId: q.orderId,
+      route: detail?.route ?? '—',
+      sentAtLabel: q.sentAtLabel,
+      validUntilLabel: shortDateTime(q.validUntil),
+      amount: q.total,
+      status: effectiveStatus(q, now),
+      paid: detail?.payment?.status === 'paid',
+    }
+    return { row, sentAt: q.sentAt, validUntil: q.validUntil }
+  })
+
+  const inTabOf = (tab: QuotationListTab) => {
+    const config = quotationTabs.find((t) => t.id === tab) ?? quotationTabs[0]
+    return all.filter(({ row }) => config.statuses === 'any' || config.statuses.includes(row.status))
+  }
+  const tabCounts = Object.fromEntries(quotationTabs.map((t) => [t.id, inTabOf(t.id).length])) as Record<QuotationListTab, number>
+
+  const awaiting = inTabOf('awaiting').sort((a, b) => a.validUntil.localeCompare(b.validUntil))
+  const inTab =
+    query.tab === 'awaiting' ? awaiting : inTabOf(query.tab).sort((a, b) => b.sentAt.localeCompare(a.sentAt))
+
+  const pageCount = Math.max(1, Math.ceil(inTab.length / QUOTATIONS_PAGE_SIZE))
+  const page = Math.min(Math.max(1, Math.trunc(query.page) || 1), pageCount)
+  const items = inTab.slice((page - 1) * QUOTATIONS_PAGE_SIZE, page * QUOTATIONS_PAGE_SIZE).map(({ row }) => row)
+  const soonest = awaiting[0]?.row ?? null
+
+  return {
+    items,
+    total: inTab.length,
+    page,
+    pageCount,
+    tabCounts,
+    soonestAwaiting: soonest && { orderId: soonest.orderId, validUntilLabel: soonest.validUntilLabel },
+  }
 }
 
 /* ───────────── Mock store shared with features/payments ───────────── */

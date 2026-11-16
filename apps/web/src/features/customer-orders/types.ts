@@ -242,6 +242,8 @@ export interface CustomerQuotation {
   sentBy: string
   /** "Operational Coordinator" */
   sentByRole: string
+  /** ISO date-time the coordinator sent it (for sorting). */
+  sentAt: string
   /** "today at 11:20" */
   sentAtLabel: string
   /** ISO date-time the quotation stops being valid. */
@@ -268,4 +270,45 @@ export interface CustomerQuotation {
   declineReason?: string
   /** True while an accepted quotation still has to be paid (shows "Go to payment"). */
   paymentDue: boolean
+}
+
+/* ───────────── Quotations list (/customer/quotations) ───────────── */
+
+/** Tabs of the Quotations page; also the `?tab=` URL value. */
+export type QuotationListTab = 'awaiting' | 'accepted' | 'declined' | 'expired' | 'all'
+
+/** One row of the Quotations table. */
+export interface QuotationListRow {
+  orderId: string
+  /** "Nugegoda → Kurunegala" */
+  route: string
+  /** "today at 11:20", shown as "Sent today at 11:20". */
+  sentAtLabel: string
+  /** "20 Oct, 18:00" */
+  validUntilLabel: string
+  /** LKR */
+  amount: number
+  /** As shown: an "awaiting" quotation past its validUntil is "expired". */
+  status: QuotationStatus
+  /** The order has been paid (accepted quotations show "Paid"). */
+  paid: boolean
+}
+
+export interface QuotationListQuery {
+  tab: QuotationListTab
+  /** 1-based. */
+  page: number
+}
+
+export interface QuotationListResult {
+  /** The rows on the requested page. */
+  items: QuotationListRow[]
+  /** Quotations in the active tab. */
+  total: number
+  /** The page actually returned (clamped to 1…pageCount). */
+  page: number
+  pageCount: number
+  tabCounts: Record<QuotationListTab, number>
+  /** The awaiting quotation that expires first, for the banner; null when none are awaiting. */
+  soonestAwaiting: { orderId: string; validUntilLabel: string } | null
 }

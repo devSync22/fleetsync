@@ -18,8 +18,7 @@ import { RouteCargoCard } from '../components/RouteCargoCard'
 import { useQuotation } from '../hooks/useQuotation'
 import { quotationBadge } from '../quotationStatus'
 
-// TODO: point at the Quotations list once it exists — there is no Quotations list screen in Figma yet.
-const QUOTATIONS_CRUMB = { label: 'Quotations', to: '/customer/orders?tab=quoted' }
+const QUOTATIONS_CRUMB = { label: 'Quotations', to: '/customer/quotations' }
 
 /** "Customer — Fare quotation" (160:5892), plus accepted / declined / expired states. */
 export function FareQuotationPage() {

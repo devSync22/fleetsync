@@ -24,6 +24,13 @@ function validLabel(iso: string) {
   return `${WEEKDAYS[date.getDay()]}, ${date.getDate()} ${MONTHS[date.getMonth()]} ${date.getFullYear()} at ${iso.slice(11, 16)}`
 }
 
+/** "15 Oct, 12:40" → "2026-10-15T12:40:00" (all mock quotations are from 2026). */
+function sentIso(sent: string) {
+  const [, day, month, time] = /^(\d{1,2}) (\w{3}), (\d{2}:\d{2})$/.exec(sent) ?? []
+  const monthNumber = String(MONTHS.indexOf(month) + 1).padStart(2, '0')
+  return `2026-${monthNumber}-${day.padStart(2, '0')}T${time}:00`
+}
+
 const roundTo50 = (n: number) => Math.round(n / 50) * 50
 
 function vehicleFor(weightKg: number) {
@@ -77,6 +84,7 @@ function fromOrder(spec: Spec): QuotationRecord {
     status: spec.status,
     sentBy: COORDINATOR,
     sentByRole: ROLE,
+    sentAt: sentIso(spec.sent),
     sentAtLabel: spec.sent.replace(', ', ' at '),
     validUntil: spec.validUntil,
     validUntilLabel: validLabel(spec.validUntil),
@@ -101,6 +109,7 @@ const ord1049: QuotationRecord = {
   status: 'awaiting',
   sentBy: COORDINATOR,
   sentByRole: ROLE,
+  sentAt: '2026-10-20T11:20:00',
   sentAtLabel: 'today at 11:20',
   validUntil: '2026-10-20T18:00:00',
   validUntilLabel: 'Mon, 20 Oct 2026 at 18:00',
