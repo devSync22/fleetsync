@@ -61,6 +61,7 @@ export const router = createBrowserRouter([
       { path: 'new-order', element: <NewOrderPage /> },
       { path: 'orders/:orderId', element: <CustomerOrderDetailsPage /> },
       { path: 'quotations/:orderId/pay', element: <PaymentPage /> },
+      { path: 'quotations', element: <Navigate to="/customer/orders?tab=quoted" replace /> },
       { path: 'quotations/:orderId', element: <FareQuotationPage /> },
       { path: 'payments', element: <PaymentHistoryPage /> },
       { path: 'payments/:paymentId', element: <PaymentResultPage /> },
