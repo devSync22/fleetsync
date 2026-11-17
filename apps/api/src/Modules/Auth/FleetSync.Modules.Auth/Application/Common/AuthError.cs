@@ -65,6 +65,13 @@ internal static class AuthErrors
         "Choose a new password",
         "Your new password must be different from your previous passwords.");
 
+    /// <summary>Change password: the current password entered is wrong. 400, not 401, so clients don't treat it as an expired session.</summary>
+    public static readonly AuthError WrongCurrentPassword = new(
+        "auth.wrong_current_password",
+        StatusCodes.Status400BadRequest,
+        "Current password is incorrect",
+        "Check your current password and try again.");
+
     /// <summary>Identity rejected the password (policy rules); the messages are listed per rule.</summary>
     public static AuthError PasswordRejected(IEnumerable<string> reasons) => new(
         "auth.password_rejected",
