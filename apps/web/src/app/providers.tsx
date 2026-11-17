@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
+import { AuthProvider } from '@/contexts/AuthContext'
 
-/** App-wide providers. AuthContext and similar global providers go here. */
+/** App-wide providers, wrapped around the router in main.tsx. */
 export function Providers({ children }: { children: ReactNode }) {
-  return <>{children}</>
+  return <AuthProvider>{children}</AuthProvider>
 }

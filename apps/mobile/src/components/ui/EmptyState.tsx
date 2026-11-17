@@ -38,7 +38,6 @@ export function EmptyState({ title, description, icon: Icon = Inbox, tone = 'neu
             label={action.label}
             onPress={action.onPress}
             variant={action.variant ?? 'primary'}
-            fullWidth={false}
           />
         </View>
       ) : null}
