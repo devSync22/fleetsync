@@ -35,7 +35,6 @@ export const statusMeta = {
   'in-progress': { label: 'In progress', tone: 'info' },
   'trip-in-progress': { label: 'Trip in progress', tone: 'info' },
   'on-trip': { label: 'On trip', tone: 'info' },
-  'trip-in-progress': { label: 'Trip in progress', tone: 'info' },
   delivered: { label: 'Delivered', tone: 'info' },
   'password-changed': { label: 'Password changed', tone: 'info' },
   accepted: { label: 'Accepted', tone: 'info' },
