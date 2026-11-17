@@ -9,7 +9,8 @@ export default function DriverTabsLayout() {
 
   return (
     <Tabs screenOptions={screenOptions}>
-      <Tabs.Screen name="home" options={{ title: 'Home', tabBarIcon: tabIcon(House) }} />
+      {/* Home tab is a stack: Home + trip screens, so the tab bar stays visible on them. */}
+      <Tabs.Screen name="(home)" options={{ title: 'Home', tabBarIcon: tabIcon(House) }} />
       <Tabs.Screen name="trips" options={{ title: 'Trips', tabBarIcon: tabIcon(Activity) }} />
       <Tabs.Screen name="chat" options={{ title: 'Chat', tabBarIcon: tabIcon(MessageCircle) }} />
       <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarIcon: tabIcon(User) }} />

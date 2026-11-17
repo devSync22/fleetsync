@@ -19,6 +19,11 @@ function groupThousands(value: number, fractionDigits = 0): string {
   return `${value < 0 ? '-' : ''}${grouped}${fraction ? `.${fraction}` : ''}`;
 }
 
+/** Plain number with thousands separators: 84274 → "84,274". */
+export function formatNumber(value: number): string {
+  return groupThousands(value, Number.isInteger(value) ? 0 : 1);
+}
+
 /** Sri Lankan rupees: 12500 → "LKR 12,500"; 12500.5 → "LKR 12,500.50". */
 export function formatLKR(amount: number): string {
   const hasCents = !Number.isInteger(amount);

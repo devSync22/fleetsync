@@ -8,3 +8,13 @@ export function tripHref(tripId: string) {
 export function tripStartHref(tripId: string) {
   return { pathname: '/driver/trip/[tripId]/start', params: { tripId } } as const;
 }
+
+/** Driver — Proof of delivery: photos, receiver, cargo condition, signature, notes. */
+export function proofOfDeliveryHref(tripId: string) {
+  return { pathname: '/driver/trip/[tripId]/proof-of-delivery', params: { tripId } } as const;
+}
+
+/** Driver — Complete trip: ending odometer, then submit with the proof of delivery. */
+export function completeTripHref(tripId: string) {
+  return { pathname: '/driver/trip/[tripId]/complete', params: { tripId } } as const;
+}

@@ -9,6 +9,8 @@ type TextFieldProps = Omit<TextInputProps, 'style'> & {
   invalid?: boolean
   /** Small text under the input; shown in red when `invalid`. */
   helperText?: string
+  /** Hide the visible label when a section title above already names the field; screen readers still read it. */
+  hideLabel?: boolean
 }
 
 /**
@@ -19,6 +21,7 @@ export function TextField({
   label,
   invalid = false,
   helperText,
+  hideLabel = false,
   onFocus,
   onBlur,
   ...inputProps
@@ -27,7 +30,7 @@ export function TextField({
 
   return (
     <View style={styles.field}>
-      <Text style={styles.label}>{label}</Text>
+      {!hideLabel && <Text style={styles.label}>{label}</Text>}
       {/* The outer view draws the 3px focus ring; it has no visible border when not focused. */}
       <View style={[styles.ring, focused && !invalid && styles.ringFocused]}>
         <TextInput
@@ -37,6 +40,7 @@ export function TextField({
             styles.input,
             focused && styles.inputFocused,
             invalid && styles.inputInvalid,
+            inputProps.multiline && styles.inputMultiline,
           ]}
           placeholderTextColor={Colors.textFaint}
           onFocus={(event) => {
@@ -98,6 +102,11 @@ const styles = StyleSheet.create({
   },
   inputInvalid: {
     borderColor: Colors.danger,
+  },
+  inputMultiline: {
+    height: 88,
+    paddingVertical: 10,
+    textAlignVertical: 'top',
   },
   helper: {
     fontFamily: Fonts.regular,

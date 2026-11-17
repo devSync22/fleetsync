@@ -1,18 +1,24 @@
-import { useEffect, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { TripNotFoundError, getTrip } from '../services/tripsApi';
 import type { Trip } from '../types';
 
-type TripState =
+export type TripState =
   | { kind: 'loading' }
   | { kind: 'loaded'; trip: Trip; checkedAt: Date }
   | { kind: 'notFound' }
   | { kind: 'error'; message: string };
 
-/** Loads one trip for Trip details, with retry. `checkedAt` is the time used for "Today" / can-start checks. */
+/**
+ * Loads one trip, with retry. `checkedAt` is the time used for "Today" / can-start checks.
+ * When the screen comes back into focus (e.g. after completing the trip) it reloads quietly:
+ * the current trip stays on screen and a failed quiet reload is ignored.
+ */
 export function useTrip(tripId: string | undefined) {
   const [state, setState] = useState<TripState>({ kind: 'loading' });
-  const [reloadKey, setReloadKey] = useState(0);
+  // A new object starts a load; `quiet` loads keep the current state on failure.
+  const [request, setRequest] = useState({ quiet: false });
 
   useEffect(() => {
     let cancelled = false;
@@ -22,7 +28,7 @@ export function useTrip(tripId: string | undefined) {
         if (!cancelled) setState({ kind: 'loaded', trip, checkedAt: new Date() });
       })
       .catch((error: unknown) => {
-        if (cancelled) return;
+        if (cancelled || request.quiet) return;
         if (error instanceof TripNotFoundError) {
           setState({ kind: 'notFound' });
         } else {
@@ -32,11 +38,22 @@ export function useTrip(tripId: string | undefined) {
     return () => {
       cancelled = true;
     };
-  }, [tripId, reloadKey]);
+  }, [tripId, request]);
+
+  const isFirstFocus = useRef(true);
+  useFocusEffect(
+    useCallback(() => {
+      if (isFirstFocus.current) {
+        isFirstFocus.current = false;
+        return;
+      }
+      setRequest({ quiet: true });
+    }, []),
+  );
 
   function retry() {
     setState({ kind: 'loading' });
-    setReloadKey((key) => key + 1);
+    setRequest({ quiet: false });
   }
 
   return { state, retry };

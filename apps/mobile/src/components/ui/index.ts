@@ -1,3 +1,4 @@
+export { ActionBar } from './ActionBar';
 export { Avatar, getInitials } from './Avatar';
 export { Button } from './Button';
 export { Card } from './Card';
@@ -7,6 +8,7 @@ export { EmptyState } from './EmptyState';
 export { IconButton } from './IconButton';
 export { InfoBanner, type BannerTone } from './InfoBanner';
 export { InfoTile } from './InfoTile';
+export { KeyboardAwareScroll } from './KeyboardAwareScroll';
 export { PasswordRules } from './PasswordRules';
 export { PasswordStrengthMeter } from './PasswordStrengthMeter';
 export { RouteTimeline, type RouteTimelineStop } from './RouteTimeline';

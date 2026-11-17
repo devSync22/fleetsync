@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { getTodayTrip, getUpcomingTrips, getWeeklyStats, type Trip, type WeeklyStats } from '@/features/trips';
 
@@ -25,6 +26,7 @@ function errorMessage(error: unknown) {
  * Data for Driver — Home: today's trip, upcoming trips and this week's stats.
  * - `retry()` after a failed first load shows the skeleton again.
  * - `refresh()` (pull-to-refresh) keeps the current data on screen; if it fails, `refreshError` is set.
+ * - Coming back to Home (e.g. after completing a trip) reloads quietly, like a refresh without the spinner.
  */
 export function useDriverHome() {
   const [data, setData] = useState<DriverHomeData | null>(null);
@@ -58,6 +60,22 @@ export function useDriverHome() {
       cancelled = true;
     };
   }, [request]);
+
+  const isFirstFocus = useRef(true);
+  // Read in the focus callback; a ref keeps the callback stable so it only runs on focus.
+  const hasData = useRef(false);
+  useEffect(() => {
+    hasData.current = data !== null;
+  }, [data]);
+  useFocusEffect(
+    useCallback(() => {
+      if (isFirstFocus.current) {
+        isFirstFocus.current = false;
+        return;
+      }
+      setRequest({ kind: hasData.current ? 'refresh' : 'load' });
+    }, []),
+  );
 
   function retry() {
     setLoadError(null);
