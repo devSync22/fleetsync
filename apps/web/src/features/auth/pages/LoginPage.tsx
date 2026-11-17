@@ -16,7 +16,8 @@ type LoginLocationState = {
 
 /**
  * `/auth/login`: signs the user in, then returns them to the page they wanted
- * (or the home page). Already signed-in users skip straight there.
+ * (or "/", which sends each role to its own area). Already signed-in users skip
+ * straight there. A `from` page the role may not open is caught by RequireAuth.
  */
 export function LoginPage() {
   const { status, signIn } = useAuth()
