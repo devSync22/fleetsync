@@ -4,4 +4,6 @@ export { ChatRoomsScreen } from './screens/ChatRoomsScreen';
 export { ChatRoomScreen } from './screens/ChatRoomScreen';
 export { canMessage, isRoomReadOnly } from './permissions';
 export { chatListHref, chatRoomHref } from './routes';
+export { isThreadVisible } from './visibleThread';
+export { chatService } from './services/chatService';
 export type { ChatRole, ChatRoom, ChatService, Message, MessageStatus, Participant } from './types';
