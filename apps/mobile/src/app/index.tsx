@@ -1,9 +1,13 @@
-import { Redirect } from 'expo-router'
+import { Redirect } from 'expo-router';
 
-/**
- * App entry. Only auth screens exist so far, so everyone starts at sign-in.
- * TODO: once sign-in works, send signed-in drivers/mechanics to their home screen instead.
- */
+import { useAuth } from '@/contexts/AuthContext';
+
+/** Entry point: sends each user to their own area. The root layout's guards keep them there. */
 export default function Index() {
-  return <Redirect href="/sign-in" />
+  const { user } = useAuth();
+
+  if (!user) {
+    return <Redirect href="/sign-in" />;
+  }
+  return <Redirect href={user.role === 'driver' ? '/driver/home' : '/mechanic/queue'} />;
 }

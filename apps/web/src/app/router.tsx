@@ -76,7 +76,7 @@ export const router = createBrowserRouter([
       { path: 'trips/:tripId/cancelled', element: <TripCancelledPage /> },
       { path: 'trips/:tripId/created', element: <TripCreatedPage /> },
       { path: 'availability', element: <AvailabilityPage /> },
-      { path: 'chat', element: <ChatPage /> },
+      { path: 'chat/:orderId?', element: <ChatPage /> },
       { path: 'mail', element: <MailPage /> },
       { path: 'reports', element: <ReportsPage /> },
       // One route for both tabs so switching between them keeps the loaded profile.

@@ -49,8 +49,10 @@ Never resolve a conflict quietly in code. When the task touches something the so
 
 - **ASP.NET Core 10** Web API on .NET 10, the current LTS release (`global.json`; team decision, DI-28), OpenAPI via `Microsoft.AspNetCore.OpenApi`
   (browsable with Scalar at `/scalar` in Development)
-- Entity Framework Core 10 with Npgsql, **PostgreSQL 18** (local: `compose.yaml` or a native install; hosted: Supabase,
-  see `docs/runbooks/supabase-database.md`)
+- Entity Framework Core 10 with Npgsql, **PostgreSQL 18** (ADR-0003: development on the team's shared **Supabase**
+  database, see `docs/runbooks/supabase-database.md`; production on **Azure Database for PostgreSQL**; tests on the CI
+  PostgreSQL service or an optional local `compose.yaml` / native install). Never apply migrations to Supabase from a
+  feature branch (only Thamod, Senuth or Prasad apply them, from `main`), and never point integration tests at it.
 - Health checks: `/health`, `/health/live`, `/health/ready` (database)
 - Tests: xUnit — unit tests per module plus `tests/FleetSync.UnitTests`; `tests/FleetSync.IntegrationTests` (real PostgreSQL)
 - Auth (per the Authentication API Contract): ASP.NET Core Identity + JWT Bearer, HS256, access token 15 min,
@@ -187,12 +189,12 @@ reading or editing another module's tables.
 ## Commands
 
 ```
-docker compose up -d                                   # local PostgreSQL (from the repo root), or use a native install
+docker compose up -d                                   # optional local PostgreSQL, only for local integration tests
 dotnet build apps/api/FleetSync.slnx
 dotnet test apps/api/tests/FleetSync.UnitTests
 dotnet test apps/api/tests/FleetSync.Modules.Auth.UnitTests
 dotnet test apps/api/tests/FleetSync.Modules.Orders.UnitTests
-dotnet test apps/api/tests/FleetSync.IntegrationTests  # needs the database (fleetsync_test)
+dotnet test apps/api/tests/FleetSync.IntegrationTests  # needs a local fleetsync_test database; otherwise runs in CI
 dotnet run --project apps/api/src/FleetSync.Api
 ```
 
