@@ -6,6 +6,11 @@ export function tripHref(tripId: string) {
   return { pathname: '/driver/trip/[tripId]', params: { tripId } } as const;
 }
 
+/** Trip details opened from the Trips tab, so the driver stays on that tab. */
+export function tripsTabTripHref(tripId: string) {
+  return { pathname: '/driver/trips/[tripId]', params: { tripId } } as const;
+}
+
 /** Driver — Start trip: starting odometer. */
 export function tripStartHref(tripId: string) {
   return { pathname: '/driver/trip/[tripId]/start', params: { tripId } } as const;
@@ -21,7 +26,7 @@ export function pickedUpHref(tripId: string) {
   return { pathname: '/driver/trip/[tripId]/picked-up', params: { tripId } } as const;
 }
 
-/** Report a vehicle issue — placeholder until the vehicle-issues branch. */
+/** Driver — Report vehicle issue (vehicle-issues feature), during an active trip. */
 export function reportIssueHref(tripId: string) {
   return { pathname: '/driver/trip/[tripId]/report-issue', params: { tripId } } as const;
 }

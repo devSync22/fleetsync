@@ -142,9 +142,8 @@ export type TripPickup = {
   photos: PickedPhoto[];
 };
 
-/** "This week" tiles on Driver — Home. */
+/** "This week" trip tiles on Driver — Home ("Issues reported" comes from the vehicle-issues feature). */
 export type WeeklyStats = {
   tripCount: number;
   distanceKm: number;
-  issuesReported: number;
 };
