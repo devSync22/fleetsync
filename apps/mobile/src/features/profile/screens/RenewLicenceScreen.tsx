@@ -106,8 +106,8 @@ function RenewLicenceForm({ profile }: { profile: DriverProfile }) {
           placeholder="DD/MM/YYYY"
           value={form.expiry}
           onChangeText={form.setExpiry}
-          error={form.errors.expiry}
-          helper="As printed on your new licence"
+          invalid={Boolean(form.errors.expiry)}
+          helperText={form.errors.expiry ?? 'As printed on your new licence'}
           keyboardType="numbers-and-punctuation"
           maxLength={10}
           returnKeyType="done"

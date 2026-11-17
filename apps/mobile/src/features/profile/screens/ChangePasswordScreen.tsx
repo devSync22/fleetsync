@@ -32,7 +32,8 @@ export function ChangePasswordScreen({ onUpdated }: ChangePasswordScreenProps) {
           label="Current password"
           value={form.values.current}
           onChangeText={(text) => form.setField('current', text)}
-          error={form.errors.current}
+          invalid={Boolean(form.errors.current)}
+          helperText={form.errors.current}
           secureTextEntry
           autoCapitalize="none"
           autoComplete="current-password"
@@ -43,7 +44,8 @@ export function ChangePasswordScreen({ onUpdated }: ChangePasswordScreenProps) {
             label="New password"
             value={form.values.password}
             onChangeText={(text) => form.setField('password', text)}
-            error={form.errors.password}
+            invalid={Boolean(form.errors.password)}
+            helperText={form.errors.password}
             secureTextEntry
             autoCapitalize="none"
             autoComplete="new-password"
@@ -55,7 +57,8 @@ export function ChangePasswordScreen({ onUpdated }: ChangePasswordScreenProps) {
           label="Confirm new password"
           value={form.values.confirmPassword}
           onChangeText={(text) => form.setField('confirmPassword', text)}
-          error={form.errors.confirmPassword}
+          invalid={Boolean(form.errors.confirmPassword)}
+          helperText={form.errors.confirmPassword}
           secureTextEntry
           autoCapitalize="none"
           autoComplete="new-password"

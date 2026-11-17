@@ -1,156 +1,158 @@
-import { CircleCheck, CircleX, Eye, EyeOff } from 'lucide-react-native';
-import { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
+import { Eye, EyeOff } from 'lucide-react-native'
+import { useState } from 'react'
+import { Pressable, StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native'
 
-import { colors, radii, sizes, spacing, typography } from '@/theme';
+import { Colors, Fonts, Radius } from '@/constants/theme'
 
-type TextFieldProps = Omit<TextInputProps, 'style' | 'placeholderTextColor'> & {
-  label: string;
-  /** Hint shown under the field when there is no error or success message. */
-  helper?: string;
-  /** Validation error: colours the border and shows the message with an icon. */
-  error?: string;
-  /** Validation success: colours the border and shows the message with an icon. */
-  success?: string;
-  /** Use JetBrains Mono for data values (odometer, references, plates). */
-  mono?: boolean;
-  /**
-   * Hide the visible label when the screen already shows a section title above the field
-   * (Proof of delivery → "Received by"). The label is still read by screen readers.
-   */
-  hideLabel?: boolean;
-};
+type TextFieldProps = Omit<TextInputProps, 'style'> & {
+  label: string
+  /** Error state: red border. Pair with `helperText` to say what's wrong. */
+  invalid?: boolean
+  /** Small text under the input; shown in red when `invalid`. */
+  helperText?: string
+  /** Hide the visible label when a section title above already names the field; screen readers still read it. */
+  hideLabel?: boolean
+  /** JetBrains Mono for data values such as seal numbers and references. */
+  mono?: boolean
+}
 
 /**
- * Label above, field, then helper or validation message below (Style Guide → Form fields).
+ * Labelled text input (Figma component "Input"). When focused it shows the
+ * design's accent border with a soft accent ring around it.
  * Password fields (`secureTextEntry`) get a show/hide eye button.
  */
 export function TextField({
   label,
-  helper,
-  error,
-  success,
-  mono = false,
+  invalid = false,
+  helperText,
   hideLabel = false,
+  mono = false,
   onFocus,
   onBlur,
   secureTextEntry,
   ...inputProps
 }: TextFieldProps) {
-  const [focused, setFocused] = useState(false);
-  const [passwordVisible, setPasswordVisible] = useState(false);
-  const EyeIcon = passwordVisible ? EyeOff : Eye;
-
-  const message = error ?? success ?? helper;
-  const MessageIcon = error ? CircleX : success ? CircleCheck : null;
-  const iconColor = error ? colors.danger : colors.success;
+  const [focused, setFocused] = useState(false)
+  const [passwordVisible, setPasswordVisible] = useState(false)
+  const EyeIcon = passwordVisible ? EyeOff : Eye
 
   return (
-    <View style={styles.container}>
-      {hideLabel ? null : <Text style={typography.label}>{label}</Text>}
-      <View
-        style={[
-          styles.field,
-          focused && styles.focused,
-          !focused && error ? styles.error : null,
-          !focused && !error && success ? styles.success : null,
-          secureTextEntry ? styles.withToggle : null,
-        ]}>
+    <View style={styles.field}>
+      {!hideLabel && <Text style={styles.label}>{label}</Text>}
+      {/* The outer view draws the 3px focus ring; it has no visible border when not focused. */}
+      <View style={[styles.ring, focused && !invalid && styles.ringFocused]}>
         <TextInput
           {...inputProps}
           secureTextEntry={secureTextEntry && !passwordVisible}
-          accessibilityLabel={inputProps.accessibilityLabel ?? label}
-          placeholderTextColor={colors.muted}
-          onFocus={(event) => {
-            setFocused(true);
-            onFocus?.(event);
-          }}
-          onBlur={(event) => {
-            setFocused(false);
-            onBlur?.(event);
-          }}
+          accessibilityLabel={label}
           style={[
             styles.input,
-            secureTextEntry ? styles.flex : null,
-            mono ? typography.monoInput : typography.body,
-            inputProps.multiline ? styles.multiline : null,
+            focused && styles.inputFocused,
+            invalid && styles.inputInvalid,
+            inputProps.multiline && styles.inputMultiline,
+            mono && styles.inputMono,
+            secureTextEntry && styles.inputWithToggle,
           ]}
+          placeholderTextColor={Colors.textFaint}
+          onFocus={(event) => {
+            setFocused(true)
+            onFocus?.(event)
+          }}
+          onBlur={(event) => {
+            setFocused(false)
+            onBlur?.(event)
+          }}
         />
-        {secureTextEntry ? (
+        {secureTextEntry && (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={passwordVisible ? 'Hide password' : 'Show password'}
             onPress={() => setPasswordVisible((visible) => !visible)}
-            style={styles.toggle}>
-            <EyeIcon size={sizes.iconMd} color={colors.muted} />
+            style={styles.toggle}
+          >
+            <EyeIcon size={18} color={Colors.textMuted} />
           </Pressable>
-        ) : null}
+        )}
       </View>
-      {message ? (
-        <View style={styles.message}>
-          {MessageIcon ? <MessageIcon size={sizes.iconXs} color={iconColor} /> : null}
-          <Text style={[typography.caption, styles.messageText]}>{message}</Text>
-        </View>
-      ) : null}
+      {helperText && (
+        <Text style={[styles.helper, invalid && styles.helperInvalid]}>{helperText}</Text>
+      )}
     </View>
-  );
+  )
 }
 
+const RING_WIDTH = 3
+const TOGGLE_SIZE = 44
+
 const styles = StyleSheet.create({
-  container: {
-    gap: spacing.sm,
-    alignSelf: 'stretch',
-  },
   field: {
-    minHeight: sizes.touchTarget,
-    justifyContent: 'center',
-    backgroundColor: colors.surface,
-    borderWidth: sizes.hairline,
-    borderColor: colors.border,
-    borderRadius: radii.control,
-    paddingHorizontal: spacing.lg,
+    gap: 6,
+    width: '100%',
   },
-  focused: {
-    borderWidth: sizes.focusBorder,
-    borderColor: colors.accent,
-    paddingHorizontal: spacing.lg - 1,
-    boxShadow: `0px 0px 0px 3px ${colors.accentSoft}`,
+  label: {
+    fontFamily: Fonts.medium,
+    fontSize: 13,
+    lineHeight: 20,
+    color: Colors.textDefault,
   },
-  error: {
-    borderColor: colors.danger,
+  // Negative margin keeps the ring outside the input so the layout doesn't move on focus.
+  ring: {
+    margin: -RING_WIDTH,
+    borderWidth: RING_WIDTH,
+    borderColor: 'transparent',
+    borderRadius: Radius.md + RING_WIDTH,
   },
-  success: {
-    borderColor: colors.success,
-  },
-  withToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingRight: 0,
-  },
-  flex: {
-    flex: 1,
-  },
-  toggle: {
-    width: sizes.touchTarget,
-    height: sizes.touchTarget,
-    alignItems: 'center',
-    justifyContent: 'center',
+  ringFocused: {
+    borderColor: Colors.accentSoft,
   },
   input: {
-    paddingVertical: spacing.ml,
-    // Line height on a single-line TextInput clips text on Android; padding sets the height instead.
-    lineHeight: undefined,
+    // Fixed height so the 1px → 2px border change on focus doesn't change the size.
+    height: 42,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.surface,
+    fontFamily: Fonts.regular,
+    fontSize: 14,
+    color: Colors.textDefault,
   },
-  multiline: {
-    minHeight: sizes.textArea - 2 * sizes.hairline,
+  inputFocused: {
+    borderWidth: 2,
+    borderColor: Colors.accent,
+    paddingHorizontal: 11,
+  },
+  inputInvalid: {
+    borderColor: Colors.danger,
+  },
+  inputWithToggle: {
+    paddingRight: TOGGLE_SIZE,
+  },
+  // 44px touch target over the right end of the input, centred on its 42px height.
+  toggle: {
+    position: 'absolute',
+    right: 0,
+    top: -1,
+    width: TOGGLE_SIZE,
+    height: TOGGLE_SIZE,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  inputMono: {
+    fontFamily: Fonts.mono,
+  },
+  inputMultiline: {
+    height: 88,
+    paddingVertical: 10,
     textAlignVertical: 'top',
   },
-  message: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
+  helper: {
+    fontFamily: Fonts.regular,
+    fontSize: 12,
+    lineHeight: 16,
+    color: Colors.textMuted,
   },
-  messageText: {
-    flexShrink: 1,
+  helperInvalid: {
+    color: Colors.danger,
   },
-});
+})

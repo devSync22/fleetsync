@@ -1,5 +1,8 @@
 ## ASP.NET Core Database Configuration
 
+> To use a hosted Supabase database instead of local PostgreSQL, see
+> [supabase-database.md](supabase-database.md).
+
 FleetSync uses Entity Framework Core with the Npgsql PostgreSQL provider.
 
 ### Local connection settings

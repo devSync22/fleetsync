@@ -115,7 +115,8 @@ export function ReportIssueForm({ trip, onSent, onCancelled }: ReportIssueFormPr
             onChangeText={setDescription}
             placeholder="What happened, and where? e.g. Rear left tyre looks low."
             maxLength={DESCRIPTION_MAX_LENGTH}
-            error={showErrors ? errors.description : undefined}
+            invalid={showErrors && Boolean(errors.description)}
+            helperText={showErrors ? errors.description : undefined}
           />
           {trip.startOdometerKm !== undefined ? (
             <View style={styles.odometer}>

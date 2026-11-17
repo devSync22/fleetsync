@@ -93,7 +93,8 @@ export function CargoPickupForm({ trip, onCancelled }: CargoPickupFormProps) {
             autoCorrect={false}
             maxLength={HANDED_OVER_BY_MAX_LENGTH}
             returnKeyType="done"
-            error={touched.handedOverBy ? handedOverError : undefined}
+            invalid={touched.handedOverBy && Boolean(handedOverError)}
+            helperText={touched.handedOverBy ? handedOverError : undefined}
           />
         </FormSection>
 
@@ -124,7 +125,8 @@ export function CargoPickupForm({ trip, onCancelled }: CargoPickupFormProps) {
             autoCorrect={false}
             maxLength={SEAL_NUMBER_MAX_LENGTH}
             returnKeyType="done"
-            error={touched.sealNumber ? sealError : undefined}
+            invalid={touched.sealNumber && Boolean(sealError)}
+            helperText={touched.sealNumber ? sealError : undefined}
           />
         </FormSection>
 
