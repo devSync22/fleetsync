@@ -39,7 +39,7 @@ const STEPS: { id: OrderProgressStepId; label: string }[] = [
  * Steps before `at` are done; step `at` gets `atState`; the rest are upcoming.
  * `captions` lists one caption per step from the start; missing captions show "—".
  */
-function progress(captions: string[], at: number, atState: OrderProgressState): OrderProgressStep[] {
+export function progress(captions: string[], at: number, atState: OrderProgressState): OrderProgressStep[] {
   return STEPS.map((step, i) => ({
     ...step,
     state: i < at ? 'done' : i === at ? atState : 'upcoming',
@@ -190,6 +190,7 @@ const ord1051: CustomerOrderDetail = {
   payment: null,
 }
 
+// Matches "Customer — Fare quotation" (160:5892): quoted today at 11:20.
 const ord1049: CustomerOrderDetail = {
   orderId: 'ORD-1049',
   status: 'quoted',
@@ -199,9 +200,9 @@ const ord1049: CustomerOrderDetail = {
   amount: 31410,
   progress: progress(['17 Oct, 10:42', 'LKR 31,410', 'Awaiting your reply'], 2, 'current'),
   trip: null,
-  updates: [quoteReceived(31410, '17 Oct, 15:20', 'LKR 31,410 · accept it to continue to payment'), submitted('17 Oct, 10:42')],
-  pickup: { address: NUGEGODA, when: '21 Oct, 08:00', contact: CUSTOMER_CONTACT },
-  destination: { address: 'Lanka Tiles showroom, Negombo Road, Kurunegala', when: 'Before 12:30', contact: 'Chamara Bandara' },
+  updates: [quoteReceived(31410, 'Today, 11:20', 'LKR 31,410 · accept it to continue to payment'), submitted('17 Oct, 10:42')],
+  pickup: { address: 'No. 215, Nawala Road, Nugegoda', when: '21 Oct, 08:00', contact: CUSTOMER_CONTACT },
+  destination: { address: 'Kurunegala Distribution Yard, Dambulla Road', when: 'Before 15:00', contact: 'Chamara Bandara' },
   cargo: tiles(6200, 12),
   payment: null,
 }

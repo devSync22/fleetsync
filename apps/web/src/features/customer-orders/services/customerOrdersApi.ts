@@ -1,15 +1,32 @@
+import { formatLKR } from '@/lib/utils'
 import { ApiError } from '@/services/apiClient'
-import { MOCK_TODAY, myOrdersMock, type MyOrderRecord } from '../mocks/myOrdersMock'
+import { MOCK_NOW, MOCK_TODAY, myOrdersMock, type MyOrderRecord } from '../mocks/myOrdersMock'
 import { buildSubmittedOrder } from '../mocks/newOrderMock'
-import { orderDetailsMock } from '../mocks/orderDetailsMock'
+import { orderDetailsMock, progress } from '../mocks/orderDetailsMock'
+import { quotationsMock, type QuotationRecord } from '../mocks/quotationsMock'
 import { myOrdersTabs } from '../myOrdersTabs'
-import type { CreatedOrder, CustomerOrderDetail, CustomerOrderRow, MyOrdersPeriod, MyOrdersQuery, MyOrdersResult, MyOrdersTab, NewOrderDraft } from '../types'
+import { DECLINE_REASON_MAX, effectiveStatus } from '../quotationStatus'
+import type {
+  CreatedOrder,
+  CustomerOrderDetail,
+  CustomerOrderRow,
+  CustomerOrderStatus,
+  CustomerQuotation,
+  MyOrdersPeriod,
+  MyOrdersQuery,
+  MyOrdersResult,
+  MyOrdersTab,
+  NewOrderDraft,
+} from '../types'
 
 /*
  * Mocked until the customer order endpoints exist:
  *   getMyOrders    → apiClient.get<MyOrdersResult>('/customer/orders', { params: query })
- *   getOrderDetail → apiClient.get<CustomerOrderDetail>(`/customer/orders/${orderId}`)
- *   createOrder    → apiClient.post<CreatedOrder>('/customer/orders', draft)
+ *   getOrderDetail   → apiClient.get<CustomerOrderDetail>(`/customer/orders/${orderId}`)
+ *   createOrder      → apiClient.post<CreatedOrder>('/customer/orders', draft)
+ *   getQuotation     → apiClient.get<CustomerQuotation>(`/customer/quotations/${orderId}`)
+ *   acceptQuotation  → apiClient.post<CustomerQuotation>(`/customer/quotations/${orderId}/accept`)
+ *   declineQuotation → apiClient.post<CustomerQuotation>(`/customer/quotations/${orderId}/decline`, { reason })
  *
  * The mock filters, counts and paginates the way the endpoint will, so the page only reads
  * the result. In dev, add `mock=empty` or `mock=error` to the URL query.
@@ -113,4 +130,116 @@ export async function createOrder(draft: NewOrderDraft): Promise<CreatedOrder> {
   myOrdersMock.unshift(row)
   orderDetailsMock.push(detail)
   return { orderId }
+}
+
+/* ───────────── Fare quotations ───────────── */
+
+/**
+ * "Now" for deciding whether a quotation has expired.
+ * TODO: use the real clock (or server time) once the API exists; the mock uses the mock calendar's "today".
+ */
+export function currentTime() {
+  return new Date(MOCK_NOW)
+}
+
+const pad = (n: number) => String(n).padStart(2, '0')
+/** "Today, 12:00" — on the same clock as the expiry check, so a decision never looks later than validUntil. */
+function todayLabel() {
+  const now = currentTime()
+  return `Today, ${pad(now.getHours())}:${pad(now.getMinutes())}`
+}
+
+function findQuotation(orderId: string): QuotationRecord {
+  const quotation = quotationsMock.find((q) => q.orderId === orderId)
+  if (quotation) return quotation
+  const known = myOrdersMock.some((o) => o.orderId === orderId) || orderDetailsMock.some((o) => o.orderId === orderId)
+  throw new ApiError(
+    known
+      ? `There is no quotation for ${orderId} yet. A coordinator reviews new orders and sends a fare quotation, usually within a working day.`
+      : `We couldn’t find order ${orderId} in your account.`,
+    404,
+  )
+}
+
+/** Adds `paymentDue` from the order and returns a copy, so later mock changes never touch React state. */
+function toQuotation(record: QuotationRecord): CustomerQuotation {
+  const detail = orderDetailsMock.find((o) => o.orderId === record.orderId)
+  return structuredClone({ ...record, paymentDue: detail?.payment?.status === 'awaiting-payment' })
+}
+
+/** 409 unless the quotation is still awaiting a reply and within its validity. */
+function assertDecidable(quotation: QuotationRecord) {
+  const status = effectiveStatus(quotation, currentTime())
+  if (status === 'accepted') throw new ApiError('You have already accepted this quotation.', 409)
+  if (status === 'declined') {
+    throw new ApiError('You declined this quotation, so it can’t be changed. Ask the coordinator in chat for a new one.', 409)
+  }
+  if (status === 'expired') {
+    throw new ApiError(
+      `This quotation expired on ${quotation.validUntilLabel}. The coordinator will price your order again and send a new quotation.`,
+      409,
+    )
+  }
+}
+
+/** Moves the order to `status` in both the My orders list and the Order details mock. */
+function updateOrder(orderId: string, status: CustomerOrderStatus, change: (detail: CustomerOrderDetail) => Partial<CustomerOrderDetail>) {
+  const row = myOrdersMock.find((o) => o.orderId === orderId)
+  if (row) row.status = status
+  const index = orderDetailsMock.findIndex((o) => o.orderId === orderId)
+  if (index >= 0) {
+    const detail = orderDetailsMock[index]
+    orderDetailsMock[index] = { ...detail, status, ...change(detail) }
+  }
+}
+
+/** The quotation for one order. 404 when the order has not been quoted yet (or isn't the customer's). */
+export async function getQuotation(orderId: string): Promise<CustomerQuotation> {
+  await mockRequest()
+  // Future call: apiClient.get<CustomerQuotation>(`/customer/quotations/${orderId}`)
+  return toQuotation(findQuotation(orderId))
+}
+
+/** Accepts an awaiting, still-valid quotation; the order becomes "Accepted" and waits for payment. */
+export async function acceptQuotation(orderId: string): Promise<CustomerQuotation> {
+  await mockRequest()
+  // Future call: apiClient.post<CustomerQuotation>(`/customer/quotations/${orderId}/accept`)
+  const quotation = findQuotation(orderId)
+  assertDecidable(quotation)
+  const when = todayLabel()
+  quotation.status = 'accepted'
+  quotation.decidedAtLabel = when
+
+  updateOrder(orderId, 'accepted', (detail) => ({
+    progress: progress([detail.progress[0].caption, formatLKR(quotation.total), 'Awaiting payment'], 2, 'current'),
+    updates: [{ title: 'Fare quotation accepted', detail: formatLKR(quotation.total), when, tone: 'success' }, ...detail.updates],
+    payment: { quotationAmount: quotation.total, paidOn: null, method: null, reference: null, status: 'awaiting-payment' },
+  }))
+  return toQuotation(quotation)
+}
+
+/** Declines an awaiting, still-valid quotation, with an optional reason (max 500 characters). */
+export async function declineQuotation(orderId: string, reason?: string): Promise<CustomerQuotation> {
+  await mockRequest()
+  // Future call: apiClient.post<CustomerQuotation>(`/customer/quotations/${orderId}/decline`, { reason })
+  const quotation = findQuotation(orderId)
+  assertDecidable(quotation)
+  const trimmed = reason?.trim() ?? ''
+  if (trimmed.length > DECLINE_REASON_MAX) {
+    throw new ApiError(`Keep the reason to ${DECLINE_REASON_MAX} characters.`, 400)
+  }
+  const when = todayLabel()
+  quotation.status = 'declined'
+  quotation.decidedAtLabel = when
+  quotation.declineReason = trimmed || undefined
+
+  updateOrder(orderId, 'declined', (detail) => ({
+    progress: progress([detail.progress[0].caption, 'Declined today'], 1, 'stopped'),
+    updates: [
+      { title: 'You declined the quotation', detail: trimmed || formatLKR(quotation.total), when, tone: 'neutral' },
+      ...detail.updates,
+    ],
+    payment: null,
+  }))
+  return toQuotation(quotation)
 }

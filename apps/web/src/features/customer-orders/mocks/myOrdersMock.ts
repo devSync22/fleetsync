@@ -6,6 +6,12 @@ export type MyOrderRecord = CustomerOrderRow & { placedOn: string }
 /** "Today" in the mock data (the Figma frames are set on 20 Oct 2026). */
 export const MOCK_TODAY = '2026-10-20'
 
+/**
+ * "Now" in the mock data: midday on MOCK_TODAY. Quotation expiry is checked against this so the
+ * Figma frames (sent today 11:20, valid until 18:00) stay valid whatever the real date is.
+ */
+export const MOCK_NOW = new Date(`${MOCK_TODAY}T12:00:00`)
+
 type Row = [
   orderId: string,
   placedOn: string,
