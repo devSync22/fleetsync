@@ -52,7 +52,8 @@ export function ResetPasswordScreen() {
                 label="New password"
                 value={form.values.password}
                 onChangeText={(text) => form.setField('password', text)}
-                error={form.errors.password}
+                invalid={Boolean(form.errors.password)}
+                helperText={form.errors.password}
                 secureTextEntry
                 autoCapitalize="none"
                 autoComplete="new-password"
@@ -66,7 +67,8 @@ export function ResetPasswordScreen() {
               label="Confirm new password"
               value={form.values.confirmPassword}
               onChangeText={(text) => form.setField('confirmPassword', text)}
-              error={form.errors.confirmPassword}
+              invalid={Boolean(form.errors.confirmPassword)}
+              helperText={form.errors.confirmPassword}
               secureTextEntry
               autoCapitalize="none"
               autoComplete="new-password"

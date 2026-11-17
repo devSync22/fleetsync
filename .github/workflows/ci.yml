@@ -66,6 +66,11 @@ jobs:
       - name: Check TypeScript
         run: npm run check:mobile
 
+      # expo lint: import rules resolve "@/..." paths via eslint-import-resolver-typescript
+      # (a direct devDependency of apps/mobile so npm hoists it next to eslint-plugin-import).
+      - name: Run ESLint
+        run: npm run lint --workspace=apps/mobile
+
   # ====================================
   # ASP.NET Core API
   # ====================================
@@ -92,6 +97,9 @@ jobs:
 
       - name: Run unit tests
         run: dotnet test apps/api/tests/FleetSync.UnitTests/FleetSync.UnitTests.csproj --configuration Release --no-build
+
+      - name: Run Auth module unit tests
+        run: dotnet test apps/api/tests/FleetSync.Modules.Auth.UnitTests/FleetSync.Modules.Auth.UnitTests.csproj --configuration Release --no-build
 
 
   database:
@@ -140,4 +148,7 @@ jobs:
 
       - name: Check for missing EF Core migrations
         run: dotnet ef migrations has-pending-model-changes --project apps/api/src/FleetSync.Infrastructure --startup-project apps/api/src/FleetSync.Api --context FleetSyncDbContext
+
+      - name: Check for missing Auth module migrations
+        run: dotnet ef migrations has-pending-model-changes --project apps/api/src/Modules/Auth/FleetSync.Modules.Auth --startup-project apps/api/src/FleetSync.Api --context AuthDbContext
 

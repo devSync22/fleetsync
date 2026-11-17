@@ -12,6 +12,19 @@ FleetSync uses Entity Framework Core migrations to manage PostgreSQL database sc
 - Migration directory: `Persistence/Migrations`
 - Database provider: Npgsql / PostgreSQL
 
+### Module contexts
+
+Each backend module has its own DbContext, schema and migrations history table.
+
+| Module | DbContext        | Migration project                           | Schema | Migration directory                     |
+| ------ | ---------------- | ------------------------------------------- | ------ | --------------------------------------- |
+| Auth   | `AuthDbContext`  | `src/Modules/Auth/FleetSync.Modules.Auth`   | `identity` | `Infrastructure/Persistence/Migrations` |
+
+Always pass `--context` and the module's `--project` when running `dotnet ef`
+for a module. Example:
+
+`dotnet ef migrations add <Name> --project apps/api/src/Modules/Auth/FleetSync.Modules.Auth --startup-project apps/api/src/FleetSync.Api --context AuthDbContext --output-dir Infrastructure/Persistence/Migrations`
+
 ## Local prerequisites
 
 - .NET 10 SDK

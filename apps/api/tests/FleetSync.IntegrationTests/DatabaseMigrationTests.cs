@@ -5,6 +5,8 @@ using Npgsql;
 
 namespace FleetSync.IntegrationTests;
 
+// Same collection as the API tests: migrations must not run in parallel.
+[Collection(DatabaseCollection.Name)]
 public sealed class DatabaseMigrationTests
 {
     [Fact]

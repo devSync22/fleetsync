@@ -40,7 +40,8 @@ export function ForgotPasswordScreen() {
           label="Email address"
           value={form.email}
           onChangeText={form.setEmail}
-          error={form.emailError}
+          invalid={Boolean(form.emailError)}
+          helperText={form.emailError}
           placeholder="name@fleetms.lk"
           keyboardType="email-address"
           autoCapitalize="none"
