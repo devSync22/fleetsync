@@ -112,6 +112,13 @@ vendor SDK directly. Everything except `<Name>Module` is `internal`.
 (`Modules/Auth/FleetSync.Modules.Auth`, schema `identity`, routes under `/api/auth`). It also holds
 `CustomerCompanies`, which the table assigns to `Customers`. Whether to rename or split it is an open decision.
 
+`Orders` (`Modules/Orders/FleetSync.Modules.Orders`, schema `orders`, routes under `/api/orders`) is being built from
+`docs/design/orders-module-plan.md` (agreed by the team): coordinator side by Thamod, customer side by Dissanayake.
+
+Shared policy and role **names** live in the shared kernel (`FleetSync.Application/Security`: `FleetSyncPolicies`,
+`FleetSyncRoles`); the host registers their role lists once (`FleetSync.Api/Security/SharedPolicies.cs`). Add a policy
+there only when the team has agreed its role list. Today: `RequireOperations` = `coordinator`.
+
 Per ADR-0002, each module owns its own `DbContext`, PostgreSQL schema and migrations history table. Schema names must
 not clash with the schemas Supabase reserves (`auth`, `storage`, `realtime`, `extensions`, `graphql`, `vault`, …).
 Modules talk to each other through a published `FleetSync.Modules.<Name>.Contracts` project or domain events, never by
@@ -184,6 +191,7 @@ docker compose up -d                                   # local PostgreSQL (from 
 dotnet build apps/api/FleetSync.slnx
 dotnet test apps/api/tests/FleetSync.UnitTests
 dotnet test apps/api/tests/FleetSync.Modules.Auth.UnitTests
+dotnet test apps/api/tests/FleetSync.Modules.Orders.UnitTests
 dotnet test apps/api/tests/FleetSync.IntegrationTests  # needs the database (fleetsync_test)
 dotnet run --project apps/api/src/FleetSync.Api
 ```

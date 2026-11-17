@@ -7,10 +7,12 @@
   </Folder>
   <Folder Name="/src/Modules/">
     <Project Path="src/Modules/Auth/FleetSync.Modules.Auth/FleetSync.Modules.Auth.csproj" />
+    <Project Path="src/Modules/Orders/FleetSync.Modules.Orders/FleetSync.Modules.Orders.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/FleetSync.IntegrationTests/FleetSync.IntegrationTests.csproj" />
     <Project Path="tests/FleetSync.Modules.Auth.UnitTests/FleetSync.Modules.Auth.UnitTests.csproj" />
+    <Project Path="tests/FleetSync.Modules.Orders.UnitTests/FleetSync.Modules.Orders.UnitTests.csproj" />
     <Project Path="tests/FleetSync.UnitTests/FleetSync.UnitTests.csproj" />
   </Folder>
 </Solution>

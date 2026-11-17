@@ -2,9 +2,11 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using FleetSync.Api.OpenApi;
+using FleetSync.Api.Security;
 using FleetSync.Infrastructure;
 using FleetSync.Infrastructure.Persistence;
 using FleetSync.Modules.Auth;
+using FleetSync.Modules.Orders;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -34,12 +36,15 @@ builder.Services.AddInfrastructure(connectionString);
 // Modules (modular monolith): each module registers its own
 // database context, services and endpoints.
 builder.Services.AddAuthModule(builder.Configuration, connectionString);
+builder.Services.AddOrdersModule(builder.Configuration, connectionString);
 
 // Deny by default: any endpoint that doesn't declare a policy or
 // AllowAnonymous() requires a signed-in user, so a forgotten
 // RequireAuthorization() in a new module never leaves data public.
+// The shared policies (RequireOperations, …) are registered here once for every module.
 builder.Services.AddAuthorizationBuilder()
-    .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
+    .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build())
+    .AddFleetSyncPolicies();
 
 // Errors are returned as RFC 9457 ProblemDetails with a trace id,
 // so clients can show a message and support can find the log entry.
@@ -121,6 +126,7 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
 
 // Module endpoints
 app.MapAuthEndpoints();
+app.MapOrdersEndpoints();
 
 app.Run();
 
