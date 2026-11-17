@@ -49,9 +49,10 @@ export function useChangePassword(onUpdated: (changedAt: string) => void) {
       await changePassword(values.current, values.password);
       onUpdated(new Date().toISOString());
     } catch (error) {
-      if (error instanceof ApiError && error.status === 401) {
+      // Matched on the API's stable error codes (see /api/auth/change-password).
+      if (error instanceof ApiError && error.code === 'auth.wrong_current_password') {
         setWrongCurrent(error.message);
-      } else if (error instanceof ApiError && error.status === 422) {
+      } else if (error instanceof ApiError && error.code === 'auth.password_reused') {
         setRejected((previous) => [...previous, values.password]);
       } else {
         setSubmitError(error instanceof Error ? error.message : 'Something went wrong. Please try again.');

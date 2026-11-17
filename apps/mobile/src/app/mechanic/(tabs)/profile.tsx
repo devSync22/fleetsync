@@ -10,7 +10,7 @@ export default function MechanicProfileRoute() {
   return (
     <PlaceholderScreen
       title="Profile"
-      subtitle={user ? `${user.name} · ${user.staffId}` : undefined}
+      subtitle={user ? [user.name, user.staffId].filter(Boolean).join(' · ') : undefined}
       headerRight={<StatusBadge label="Active" />}
       icon={User}
       emptyTitle="Profile coming soon"

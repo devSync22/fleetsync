@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 
 import { Button } from '@/components/ui/Button'
@@ -14,6 +14,7 @@ import { roleLabels } from '@/features/auth/shared/constants'
 import type { AccountApproval } from '@/features/auth/activation/types'
 import { formatDate } from '@/features/auth/shared/utils/format'
 import { meetsMobilePasswordRules } from '@/features/auth/activation/utils/passwordRules'
+import { activateAccount, getAccountApproval } from '@/features/auth/services/authApi'
 
 /** Hours the approval email link stays valid. Keep in sync with the backend. */
 const ACTIVATION_LINK_VALID_HOURS = 48
@@ -28,11 +29,29 @@ export default function ActivateAccountScreen() {
   // One-time token from the approval email link; identifies the approved request.
   const { token } = useLocalSearchParams<{ token?: string }>()
 
-  // TODO: once the backend exists, load the approval details with `token` in an
-  // effect and store them with the setter (show an "expired or invalid link"
-  // message if it fails). Until then the progress strip and account card are
-  // hidden; password creation still renders.
-  const [approval] = useState<AccountApproval>()
+  // The approved account behind the link (POST /api/auth/activation/lookup).
+  const [approval, setApproval] = useState<AccountApproval>()
+  /** Shown instead of the form when the link is missing, expired or already used. */
+  const [linkError, setLinkError] = useState<string | undefined>(
+    token ? undefined : 'This activation link is incomplete. Open it again from your approval email.',
+  )
+  const [activating, setActivating] = useState(false)
+  const [activateError, setActivateError] = useState<string>()
+
+  useEffect(() => {
+    if (!token) return
+    let cancelled = false
+    getAccountApproval(token)
+      .then((details) => {
+        if (!cancelled) setApproval(details)
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) setLinkError(error instanceof Error ? error.message : 'This link has expired or was already used.')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [token])
 
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -46,14 +65,20 @@ export default function ActivateAccountScreen() {
   const confirmError =
     submitted && password !== confirmPassword ? 'Passwords don’t match' : undefined
 
-  function handleActivate() {
+  async function handleActivate() {
     setSubmitted(true)
-    if (!meetsMobilePasswordRules(password) || password !== confirmPassword) return
+    if (!token || activating || !meetsMobilePasswordRules(password) || password !== confirmPassword) return
 
-    // TODO: call the "activate account" API with { token, password } once it exists,
-    // then sign the user in and open their home screen. Until then, go to sign-in.
-    void token
-    router.replace('/sign-in')
+    setActivating(true)
+    setActivateError(undefined)
+    try {
+      // POST /api/auth/activation creates the account; the user then signs in with the new password.
+      await activateAccount(token, password)
+      router.replace('/sign-in')
+    } catch (error) {
+      setActivateError(error instanceof Error ? error.message : 'Something went wrong. Please try again.')
+      setActivating(false)
+    }
   }
 
   return (
@@ -86,12 +111,15 @@ export default function ActivateAccountScreen() {
           <View style={styles.accountCard}>
             <Text style={styles.cardLabel}>YOUR ACCOUNT</Text>
             <DetailRow label="Role" value={roleLabels[approval.role]} />
-            <DetailRow
-              label={approval.role === 'driver' ? 'Driver ID' : 'Mechanic ID'}
-              value={approval.staffId}
-              monospace
-            />
-            <DetailRow label="Depot (assigned)" value={approval.depot} />
+            {/* Staff ID and depot appear once staff management assigns them. */}
+            {approval.staffId ? (
+              <DetailRow
+                label={approval.role === 'driver' ? 'Driver ID' : 'Mechanic ID'}
+                value={approval.staffId}
+                monospace
+              />
+            ) : null}
+            {approval.depot ? <DetailRow label="Depot (assigned)" value={approval.depot} /> : null}
             <DetailRow label="Sign-in email" value={approval.signInEmail} />
             <DetailRow label="Approved by" value={approval.approvedBy} />
           </View>
@@ -123,7 +151,7 @@ export default function ActivateAccountScreen() {
         autoComplete="new-password"
         textContentType="newPassword"
         returnKeyType="go"
-        onSubmitEditing={handleActivate}
+        onSubmitEditing={() => void handleActivate()}
         invalid={Boolean(confirmError)}
         helperText={confirmError}
       />
@@ -133,7 +161,13 @@ export default function ActivateAccountScreen() {
       {/* Pushes the button to the bottom on tall phones. */}
       <View style={styles.spacer} />
 
-      <Button label="Activate account and sign in" onPress={handleActivate} />
+      {linkError || activateError ? <Text style={styles.errorText}>{linkError ?? activateError}</Text> : null}
+      <Button
+        label="Activate account and sign in"
+        onPress={() => void handleActivate()}
+        loading={activating}
+        disabled={Boolean(linkError)}
+      />
       <Text style={styles.footnote}>
         This link from your approval email works for {ACTIVATION_LINK_VALID_HOURS} hours.
       </Text>
@@ -142,6 +176,11 @@ export default function ActivateAccountScreen() {
 }
 
 const styles = StyleSheet.create({
+  errorText: {
+    color: Colors.danger,
+    fontFamily: Fonts.regular,
+    fontSize: 14,
+  },
   content: {
     gap: 16,
   },

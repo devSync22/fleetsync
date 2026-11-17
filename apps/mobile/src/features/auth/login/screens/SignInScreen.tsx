@@ -53,8 +53,9 @@ export default function SignInScreen() {
     } catch (error) {
       setSignInError(error instanceof Error ? error.message : 'Something went wrong. Please try again.')
       if (error instanceof InvalidCredentialsError) {
+        // The API only knows the count for an existing account (unknown emails get no hint).
         const left = error.attemptsLeft
-        setAttemptsHint(`${left} ${left === 1 ? 'attempt' : 'attempts'} left`)
+        if (left !== null) setAttemptsHint(`${left} ${left === 1 ? 'attempt' : 'attempts'} left`)
       }
       setSigningIn(false)
     }

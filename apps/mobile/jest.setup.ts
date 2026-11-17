@@ -3,6 +3,10 @@
  * Call history is cleared between tests by `clearMocks` in package.json.
  */
 
+// Tests never call the real API: the auth service is swapped for its in-memory test double
+// (mock accounts such as Kasun and Ishara, password MOCK_PASSWORD).
+jest.mock('@/features/auth/services/authApi', () => jest.requireActual('@/features/auth/mocks/authApiMock'));
+
 // In-memory secure storage, emptied before each test.
 const mockSecureStore = new Map<string, string>();
 beforeEach(() => mockSecureStore.clear());
