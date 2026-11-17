@@ -45,7 +45,7 @@ export function CoordinatorLayout() {
           userRole={currentUser.role}
           initials={currentUser.initials}
           searchPlaceholder="Search orders, trips, vehicles…"
-          notifications={<NotificationsBell />}
+          notifications={<NotificationsBell role="coordinator" />}
         />
         <main className="flex-1 px-8 pt-7 pb-10">
           <Outlet />
