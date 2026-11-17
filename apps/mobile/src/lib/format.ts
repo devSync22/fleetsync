@@ -62,10 +62,29 @@ export function formatWeight(tonnes: number): string {
   return `${groupThousands(tonnes, fractionDigits)} t`;
 }
 
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+/** Full month name: "October". */
+export function formatMonth(value: DateInput): string {
+  return MONTH_NAMES[toDate(value).getMonth()];
+}
+
 /** Day and month: "17 Oct". */
 export function formatDayMonth(value: DateInput): string {
   const date = toDate(value);
   return `${date.getDate()} ${MONTHS[date.getMonth()]}`;
+}
+
+/** Day, month and year: "14 Aug 2028". */
+export function formatFullDate(value: DateInput): string {
+  const date = toDate(value);
+  return `${formatDayMonth(date)} ${date.getFullYear()}`;
+}
+
+/** Short month and year: "Mar 2023". */
+export function formatMonthYear(value: DateInput): string {
+  const date = toDate(value);
+  return `${MONTHS[date.getMonth()]} ${date.getFullYear()}`;
 }
 
 /** Date and time: "17 Oct 2026, 10:12", or "17 Oct, 10:12" without the year. */

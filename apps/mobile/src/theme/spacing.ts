@@ -37,6 +37,8 @@ export const sizes = {
   touchTarget: 44,
   /** Avatar / round icon button. */
   avatar: 40,
+  /** Large avatar on the profile header (Driver — Profile). */
+  avatarLarge: 60,
   /** Small avatar / round icon button inside cards (call, chat). */
   iconButton: 36,
   /** Empty-state icon circle. */
