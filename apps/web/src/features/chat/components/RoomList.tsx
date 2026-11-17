@@ -2,18 +2,20 @@ import { useState } from 'react'
 import { Search } from 'lucide-react'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { cn } from '@/lib/utils'
-import { matchesRoom, previewOf } from '../chatRooms'
-import type { ChatRoom } from '../types'
+import { activityLabel, matchesRoom, previewOf } from '../chatRooms'
+import type { ChatRoom, ChatViewer } from '../types'
 
 type RoomListProps = {
   rooms: ChatRoom[]
   selectedId: string
   onSelect: (orderId: string) => void
+  viewer: ChatViewer
 }
 
-/** "Order rooms" column: one row per order, newest activity first. */
-export function RoomList({ rooms, selectedId, onSelect }: RoomListProps) {
+/** "Order rooms" column: one row per order, newest activity first. Customers see the route as the title. */
+export function RoomList({ rooms, selectedId, onSelect, viewer }: RoomListProps) {
   const [query, setQuery] = useState('')
+  const isCustomer = viewer.role === 'customer'
   const visible = rooms.filter((room) => matchesRoom(room, query))
 
   return (
@@ -21,7 +23,7 @@ export function RoomList({ rooms, selectedId, onSelect }: RoomListProps) {
       <div className="flex flex-col gap-2.5 border-b px-4 pt-4 pb-3">
         <div className="flex items-baseline">
           <h2 className="flex-1 text-[15px] font-semibold">Order rooms</h2>
-          <span className="text-xs text-muted-foreground">{rooms.length} open</span>
+          <span className="text-xs text-muted-foreground">{rooms.length} {isCustomer ? 'orders' : 'open'}</span>
         </div>
         <label className="flex items-center gap-2 rounded-lg bg-background px-2.5 py-2">
           <Search className="size-3.5 shrink-0 text-faint" aria-hidden />
@@ -29,7 +31,7 @@ export function RoomList({ rooms, selectedId, onSelect }: RoomListProps) {
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search order, customer or trip"
+            placeholder={isCustomer ? 'Search order number' : 'Search order, customer or trip'}
             aria-label="Search order rooms"
             className="min-w-0 flex-1 bg-transparent text-[13px] outline-none placeholder:text-faint"
           />
@@ -60,10 +62,10 @@ export function RoomList({ rooms, selectedId, onSelect }: RoomListProps) {
                   ) : (
                     <span className="text-xs text-muted-foreground">No trip yet</span>
                   )}
-                  <span className="ml-auto text-[11px] text-faint">{room.lastActivity}</span>
+                  <span className="ml-auto text-[11px] text-faint">{room.lastMessage && activityLabel(room.lastMessage.sentAt)}</span>
                 </span>
                 <span className="flex w-full items-center gap-2">
-                  <span className="min-w-0 flex-1 truncate text-sm font-semibold">{room.customerName}</span>
+                  <span className="min-w-0 flex-1 truncate text-sm font-semibold">{isCustomer ? room.route : room.customerName}</span>
                   <StatusBadge status={room.status} />
                 </span>
                 <span className="flex w-full items-center gap-2">
@@ -73,7 +75,7 @@ export function RoomList({ rooms, selectedId, onSelect }: RoomListProps) {
                       room.unread > 0 ? 'font-medium text-foreground' : selected ? 'text-foreground' : 'text-muted-foreground',
                     )}
                   >
-                    {previewOf(room)}
+                    {previewOf(room, viewer.id)}
                   </span>
                   {room.unread > 0 && (
                     <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1.5 text-[11px] font-semibold text-primary-foreground">

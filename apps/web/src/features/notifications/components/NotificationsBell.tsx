@@ -1,19 +1,59 @@
 import { useState } from 'react'
-import { Bell, CreditCard, FileText, Mail, Package, TriangleAlert, type LucideIcon } from 'lucide-react'
+import {
+  Bell,
+  ChartLine,
+  CircleCheck,
+  CircleX,
+  CreditCard,
+  FileText,
+  Lock,
+  Mail,
+  MessageSquare,
+  Package,
+  Pencil,
+  TriangleAlert,
+  Truck,
+  UserPlus,
+  Wrench,
+  type LucideIcon,
+} from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { useNotifications } from '../hooks/useNotifications'
-import type { AppNotification, NotificationKind } from '../types'
+import type { AppNotification, NotificationKind, NotificationRole } from '../types'
 
+const tone = {
+  brand: 'bg-brand-soft text-brand',
+  info: 'bg-info-soft text-info',
+  success: 'bg-success-soft text-success',
+  pending: 'bg-pending-soft text-pending',
+  danger: 'bg-danger-soft text-danger',
+  neutral: 'bg-secondary text-muted-foreground',
+}
+
+/** One icon and tone per kind, covering every notification in the four role frames. */
 const kindStyles: Record<NotificationKind, { icon: LucideIcon; chip: string }> = {
-  'new-order': { icon: FileText, chip: 'bg-brand-soft text-brand' },
-  payment: { icon: CreditCard, chip: 'bg-success-soft text-success' },
-  'vehicle-issue': { icon: TriangleAlert, chip: 'bg-pending-soft text-pending' },
-  'trip-update': { icon: Package, chip: 'bg-info-soft text-info' },
-  mail: { icon: Mail, chip: 'bg-secondary text-muted-foreground' },
+  'new-order': { icon: FileText, chip: tone.brand },
+  payment: { icon: CreditCard, chip: tone.success },
+  'vehicle-issue': { icon: TriangleAlert, chip: tone.pending },
+  'trip-update': { icon: Package, chip: tone.info },
+  mail: { icon: Mail, chip: tone.neutral },
+  quotation: { icon: FileText, chip: tone.brand },
+  'trip-started': { icon: Truck, chip: tone.info },
+  message: { icon: MessageSquare, chip: tone.neutral },
+  'payment-received': { icon: CircleCheck, chip: tone.success },
+  'account-application': { icon: UserPlus, chip: tone.brand },
+  'profile-change': { icon: Pencil, chip: tone.info },
+  'licence-expiring': { icon: TriangleAlert, chip: tone.pending },
+  'document-uploaded': { icon: FileText, chip: tone.info },
+  security: { icon: Lock, chip: tone.danger },
+  'service-overdue': { icon: Wrench, chip: tone.danger },
+  'payment-overdue': { icon: CreditCard, chip: tone.pending },
+  'trip-cancelled': { icon: CircleX, chip: tone.danger },
+  utilisation: { icon: ChartLine, chip: tone.success },
 }
 
 const groups = [
@@ -53,10 +93,10 @@ function NotificationRow({ item, onOpen }: { item: AppNotification; onOpen: (ite
   )
 }
 
-/** Top-bar bell with the Notifications panel (457:11263). */
-export function NotificationsBell() {
+/** Top-bar bell with the Notifications panel (457:11263, 457:11636, 457:10753, 457:11995). */
+export function NotificationsBell({ role = 'coordinator' }: { role?: NotificationRole }) {
   const navigate = useNavigate()
-  const { state, retry, items, unreadCount, markAsRead, markAllAsRead } = useNotifications()
+  const { state, retry, items, unreadCount, markAsRead, markAllAsRead } = useNotifications(role)
   const [open, setOpen] = useState(false)
   const [filter, setFilter] = useState<'all' | 'unread'>('all')
 

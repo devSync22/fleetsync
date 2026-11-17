@@ -14,7 +14,8 @@ const toneStyles: Record<BannerTone, { box: string; title: string; icon: LucideI
 type BannerProps = {
   tone: BannerTone
   title: string
-  message: string
+  /** Plain text, or inline content such as links. */
+  message: ReactNode
   action?: ReactNode
   className?: string
 }
