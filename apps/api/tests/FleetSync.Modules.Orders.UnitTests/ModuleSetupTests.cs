@@ -29,7 +29,7 @@ public sealed class ModuleSetupTests
     [InlineData("extensions")]
     [InlineData("public")]
     public void Schema_IsNotReservedBySupabaseOrShared(string reserved) =>
-        Assert.NotEqual(reserved, OrdersDbContext.Schema);
+        Assert.NotEqual(OrdersDbContext.Schema, reserved);
 
     [Fact]
     public void Errors_HaveStableCodesAndStatuses()
