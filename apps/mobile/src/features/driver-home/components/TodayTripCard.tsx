@@ -1,20 +1,19 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Button, Card, InfoTile, RouteTimeline, StatusBadge } from '@/components/ui';
-import type { Trip } from '@/features/trips';
+import { tripBadgeLabel, type Trip } from '@/features/trips';
 import { formatDistance, formatTime, formatWeight } from '@/lib/format';
 import { spacing, typography } from '@/theme';
 
 type TodayTripCardProps = {
   trip: Trip;
-  /** Hidden once the trip has been started (it then continues in the trip flow). */
-  canStart: boolean;
-  onStart: () => void;
+  /** "Start trip" or "Continue trip"; none once the trip is completed (view only). */
+  primaryAction?: { label: string; onPress: () => void };
   onViewDetails: () => void;
 };
 
 /** TODAY: the driver's current trip with route, vehicle, cargo and actions (Driver — Home). */
-export function TodayTripCard({ trip, canStart, onStart, onViewDetails }: TodayTripCardProps) {
+export function TodayTripCard({ trip, primaryAction, onViewDetails }: TodayTripCardProps) {
   return (
     <Card>
       <View style={styles.header}>
@@ -24,7 +23,7 @@ export function TodayTripCard({ trip, canStart, onStart, onViewDetails }: TodayT
             {trip.customerName} · {trip.orderId}
           </Text>
         </View>
-        <StatusBadge label={trip.status} />
+        <StatusBadge label={tripBadgeLabel(trip.status)} />
       </View>
 
       <RouteTimeline
@@ -49,7 +48,7 @@ export function TodayTripCard({ trip, canStart, onStart, onViewDetails }: TodayT
         <InfoTile label="Distance" value={formatDistance(trip.distanceKm)} />
       </View>
 
-      {canStart ? <Button label="Start trip" onPress={onStart} /> : null}
+      {primaryAction ? <Button label={primaryAction.label} onPress={primaryAction.onPress} /> : null}
       <Button label="View trip details" variant="secondary" onPress={onViewDetails} />
     </Card>
   );

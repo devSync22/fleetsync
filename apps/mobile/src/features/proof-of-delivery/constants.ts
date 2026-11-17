@@ -7,6 +7,3 @@ export const CARGO_CONDITIONS: readonly CargoCondition[] = ['All received', 'Som
 
 export const RECIPIENT_NAME_MAX_LENGTH = 80;
 export const POD_NOTES_MAX_LENGTH = 500;
-
-/** Odometers show up to 7 digits (9,999,999 km). */
-export const ODOMETER_MAX_DIGITS = 7;

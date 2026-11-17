@@ -1,17 +1,24 @@
 import { useLocalSearchParams } from 'expo-router';
 
-import { canCompleteTrip, useTrip } from '@/features/trips';
+import { isHeadingToDestination, TripGate, useTrip } from '@/features/trips';
 
-import { PodTripGate } from '../components/PodTripGate';
+import { PodSkeleton } from '../components/PodSkeleton';
 import { ProofOfDeliveryForm } from '../components/ProofOfDeliveryForm';
 
-/** Driver — Proof of delivery (Figma 298:7417). Opened with "Complete trip" on an In-progress trip. */
+/** Driver — Proof of delivery (Figma 298:7417). Opened with "Complete trip" on Active trip after pickup. */
 export function ProofOfDeliveryScreen() {
   const { tripId } = useLocalSearchParams<{ tripId: string }>();
-  const { state, retry } = useTrip(tripId);
+  const { state, retry, reload } = useTrip(tripId);
 
-  if (state.kind !== 'loaded' || !canCompleteTrip(state.trip)) {
-    return <PodTripGate title="Proof of delivery" tripId={tripId} state={state} retry={retry} />;
-  }
-  return <ProofOfDeliveryForm trip={state.trip} />;
+  return (
+    <TripGate
+      title="Proof of delivery"
+      tripId={tripId}
+      state={state}
+      retry={retry}
+      allows={isHeadingToDestination}
+      skeleton={<PodSkeleton />}>
+      {(trip) => <ProofOfDeliveryForm trip={trip} onCancelled={reload} />}
+    </TripGate>
+  );
 }

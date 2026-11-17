@@ -16,7 +16,7 @@ export function TripSummaryTiles({ trip, now }: TripSummaryTilesProps) {
     <View style={styles.row}>
       <InfoTile variant="outlined" mono label="Started" value={trip.startedAt ? formatTime(trip.startedAt) : '—'} />
       <InfoTile variant="outlined" mono label="Now" value={formatTime(now)} />
-      <InfoTile variant="outlined" mono label="Notes" value={String(trip.noteCount)} />
+      <InfoTile variant="outlined" mono label="Notes" value={String(trip.notes.length)} />
       <InfoTile variant="outlined" mono label="Issues" value={String(trip.issueCount)} />
     </View>
   );

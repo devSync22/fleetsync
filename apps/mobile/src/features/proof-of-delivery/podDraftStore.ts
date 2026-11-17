@@ -1,8 +1,8 @@
 import type { PodDraft } from './types';
 
 /**
- * In-memory drafts, one per trip, shared by Proof of delivery and Complete trip so the driver can go
- * back and edit without losing anything. Cleared after a successful submission.
+ * In-memory drafts, one per trip, so the driver can leave Proof of delivery and come back
+ * without losing anything. Cleared after a successful submission.
  */
 const drafts = new Map<string, PodDraft>();
 const listeners = new Set<() => void>();
@@ -14,7 +14,6 @@ export function createPodDraft(recipientName: string): PodDraft {
     photos: [],
     signature: null,
     notes: '',
-    endOdometerDigits: '',
   };
 }
 

@@ -4,20 +4,22 @@ import { Pressable, StyleSheet, Text } from 'react-native';
 import { colors, radii, sizes, spacing, typography } from '@/theme';
 
 type AddPhotoTileProps = {
+  /** "Add photo", "Take photo". */
+  label: string;
   size: number;
   onPress: () => void;
 };
 
 /** Dashed tile after the photos — opens the camera / gallery choice. */
-export function AddPhotoTile({ size, onPress }: AddPhotoTileProps) {
+export function AddPhotoTile({ label, size, onPress }: AddPhotoTileProps) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel="Add a delivery photo"
+      accessibilityLabel={label}
       onPress={onPress}
       style={({ pressed }) => [styles.tile, { width: size, height: size }, pressed && styles.pressed]}>
       <Camera size={sizes.iconLg} color={colors.accent} />
-      <Text style={typography.linkSmall}>Add photo</Text>
+      <Text style={typography.linkSmall}>{label}</Text>
     </Pressable>
   );
 }

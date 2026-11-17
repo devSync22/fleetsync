@@ -11,6 +11,8 @@ type TextFieldProps = Omit<TextInputProps, 'style'> & {
   helperText?: string
   /** Hide the visible label when a section title above already names the field; screen readers still read it. */
   hideLabel?: boolean
+  /** JetBrains Mono for data values such as seal numbers and references. */
+  mono?: boolean
 }
 
 /**
@@ -22,6 +24,7 @@ export function TextField({
   invalid = false,
   helperText,
   hideLabel = false,
+  mono = false,
   onFocus,
   onBlur,
   ...inputProps
@@ -41,6 +44,7 @@ export function TextField({
             focused && styles.inputFocused,
             invalid && styles.inputInvalid,
             inputProps.multiline && styles.inputMultiline,
+            mono && styles.inputMono,
           ]}
           placeholderTextColor={Colors.textFaint}
           onFocus={(event) => {
@@ -102,6 +106,9 @@ const styles = StyleSheet.create({
   },
   inputInvalid: {
     borderColor: Colors.danger,
+  },
+  inputMono: {
+    fontFamily: Fonts.mono,
   },
   inputMultiline: {
     height: 88,

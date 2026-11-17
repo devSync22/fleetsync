@@ -15,7 +15,7 @@ export function isPodDetailsValid(draft: PodDraft): boolean {
   return validateRecipientName(draft.recipientName) === undefined;
 }
 
-/** Ending odometer: required, whole km, more than the reading entered on Start trip. */
+/** Ending odometer (Complete trip): required, whole km, more than the reading entered on Start trip. */
 export function validateEndOdometer(digits: string, startOdometerKm: number | undefined): string | undefined {
   if (!digits) return 'Enter the ending odometer reading.';
   const km = Number(digits);

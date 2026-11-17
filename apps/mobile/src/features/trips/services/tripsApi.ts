@@ -1,14 +1,28 @@
-import { ApiError } from '@/services/apiClient';
 import { formatDistance } from '@/lib/format';
+import { ApiError } from '@/services/apiClient';
 
-import { MOCK_SCENARIO, applyMockTripUpdates, createMockTrips, mockWeeklyStats, saveMockTripUpdate } from '../mocks/tripMocks';
-import { isSameDay } from '../tripTime';
-import type { Trip, TripCompletion, WeeklyStats } from '../types';
+import {
+  MOCK_CANCEL_AFTER_MS,
+  MOCK_SCENARIO,
+  applyMockTripUpdates,
+  createMockTrips,
+  mockWeeklyStats,
+  saveMockTripUpdate,
+} from '../mocks/tripMocks';
+import { canStartTrip, isActiveTrip, isHeadingToDestination, isSameDay } from '../tripStatus';
+import type { Trip, TripCompletion, TripLogNote, TripPickup, TripStart, TripStatus, WeeklyStats } from '../types';
+import { validateHandedOverBy, validateSealNumber, validateStartOdometer, validateTripNote } from '../validation';
 
 /**
  * Trips service for the signed-in driver. Every function returns mock data behind the async
- * signature the real API will use (GET /driver/trips/today, /driver/trips/upcoming,
- * /driver/stats/week, /trips/{id}), so switching to the backend only changes this file.
+ * signature the real API will use, so switching to the backend only changes this file:
+ * - GET  /driver/trips/today, /driver/trips/upcoming, /driver/stats/week, /trips/{id}
+ * - POST /trips/{id}/start        { startOdometerKm, startedAt }               → Started
+ * - POST /trips/{id}/pickup       multipart: fields + loading photos           → Picked up
+ * - POST /trips/{id}/notes        { text }
+ * - POST /trips/{id}/complete     { endOdometerKm, completedAt }               → Completed
+ * (Delivered is set by POST /trips/{id}/proof-of-delivery in the proof-of-delivery feature.)
+ * Every status change is rejected with 409 once the coordinator has cancelled the trip.
  */
 
 /** The trip ID doesn't exist or isn't assigned to this driver. */
@@ -16,6 +30,14 @@ export class TripNotFoundError extends ApiError {
   constructor() {
     super('This trip doesn’t exist or isn’t assigned to you.', 404);
     this.name = 'TripNotFoundError';
+  }
+}
+
+/** The coordinator cancelled the trip; no further actions are allowed. */
+export class TripCancelledError extends ApiError {
+  constructor() {
+    super('The coordinator cancelled this trip.', 409);
+    this.name = 'TripCancelledError';
   }
 }
 
@@ -36,14 +58,31 @@ function driverTrips(now: Date): Trip[] {
   return trips;
 }
 
-const isOpen = (trip: Trip) => trip.status === 'Assigned' || trip.status === 'In progress';
+function findTrip(tripId: string): Trip {
+  const trip = driverTrips(new Date()).find((candidate) => candidate.id === tripId);
+  if (!trip) throw new TripNotFoundError();
+  return trip;
+}
+
+/** Server-side status check for a change: cancelled → 409 TripCancelledError, wrong step → 409. */
+function requireStatus(trip: Trip, allowed: (trip: Trip) => boolean, message: string) {
+  if (trip.status === 'Cancelled') throw new TripCancelledError();
+  if (!allowed(trip)) throw new ApiError(message, 409);
+}
+
+function saveAndReturn(trip: Trip, update: Partial<Trip>): Trip {
+  saveMockTripUpdate(trip.id, update);
+  return { ...trip, ...update };
+}
+
+const isOpen = (trip: Trip) => trip.status === 'Assigned' || isActiveTrip(trip);
 const byStart = (a: Trip, b: Trip) => a.scheduledStart.localeCompare(b.scheduledStart);
 /** Open trips first, then by start time — so a trip completed earlier today doesn't hide the next one. */
 const openFirst = (a: Trip, b: Trip) => Number(isOpen(b)) - Number(isOpen(a)) || byStart(a, b);
 
 /**
- * Today's trip: the open one (Assigned or In progress) if there is one, otherwise the trip completed
- * today (shown with its Completed badge). Null when there is none.
+ * Today's trip: the open one (Assigned or mid-trip) if there is one, otherwise the trip completed
+ * today (shown with its Completed badge). Cancelled trips are left out. Null when there is none.
  */
 export async function getTodayTrip(): Promise<Trip | null> {
   await mockRequest();
@@ -73,31 +112,66 @@ export async function getWeeklyStats(): Promise<WeeklyStats> {
 
 export async function getTrip(tripId: string): Promise<Trip> {
   await mockRequest();
-  const trip = driverTrips(new Date()).find((candidate) => candidate.id === tripId);
-  if (!trip) {
-    throw new TripNotFoundError();
+  return findTrip(tripId);
+}
+
+/** Start trip: Assigned (today) → Started, with the starting odometer. */
+export async function startTrip(tripId: string, start: TripStart): Promise<Trip> {
+  await mockRequest();
+  const trip = findTrip(tripId);
+  requireStatus(trip, (t) => canStartTrip(t, new Date()), 'This trip can’t be started now.');
+  const odometerError = validateStartOdometer(String(start.startOdometerKm), trip.vehicle.lastOdometerKm);
+  if (odometerError) throw new ApiError(odometerError, 422);
+
+  if (MOCK_SCENARIO === 'cancelMidTrip') {
+    // Mock only: stands in for the coordinator cancelling from the web app.
+    setTimeout(
+      () => saveMockTripUpdate(tripId, { status: 'Cancelled', cancelledAt: new Date().toISOString() }),
+      MOCK_CANCEL_AFTER_MS,
+    );
   }
-  return trip;
+  return saveAndReturn(trip, { status: 'Started', ...start });
+}
+
+/** Cargo picked up: Started → Picked up. */
+export async function confirmPickup(tripId: string, pickup: TripPickup): Promise<Trip> {
+  await mockRequest();
+  const trip = findTrip(tripId);
+  requireStatus(trip, (t) => t.status === 'Started', 'The cargo has already been picked up.');
+  const fieldError = validateHandedOverBy(pickup.handedOverBy) ?? validateSealNumber(pickup.sealNumber ?? '');
+  if (fieldError) throw new ApiError(fieldError, 422);
+  return saveAndReturn(trip, { status: 'Picked up', pickedUpAt: pickup.pickedUpAt });
+}
+
+/** Adds a trip note (seen by the coordinator) while the trip is active. */
+export async function addTripNote(tripId: string, text: string): Promise<TripLogNote> {
+  await mockRequest();
+  const trip = findTrip(tripId);
+  requireStatus(trip, isActiveTrip, 'Notes can only be added during the trip.');
+  const error = validateTripNote(text);
+  if (error) throw new ApiError(error, 422);
+  const note: TripLogNote = { id: `note-${Date.now()}`, text: text.trim(), createdAt: new Date().toISOString() };
+  saveMockTripUpdate(tripId, { notes: [...trip.notes, note] });
+  return note;
 }
 
 /**
- * Marks an In-progress trip Completed. Mock only: the proof-of-delivery service calls it after a
- * successful submission. With the real API (KAN-315 / KAN-317) the backend completes the trip when it
- * accepts the proof of delivery, so this function is removed and screens simply reload the trip.
- * Runs the same checks the server will: the trip is In progress and the ending odometer is higher
- * than the starting one.
+ * Mock only: marks the trip Delivered when the proof-of-delivery service accepts a submission. With the
+ * real API the backend does this itself, so this function is removed and screens just reload the trip.
  */
-export async function recordTripCompleted(tripId: string, completion: TripCompletion): Promise<Trip> {
-  const trip = driverTrips(new Date()).find((candidate) => candidate.id === tripId);
-  if (!trip) {
-    throw new TripNotFoundError();
-  }
-  if (trip.status !== 'In progress') {
-    throw new ApiError('This trip isn’t in progress any more, so it can’t be completed.', 409);
-  }
+export async function recordTripDelivered(tripId: string, deliveredAt: string): Promise<TripStatus> {
+  const trip = findTrip(tripId);
+  requireStatus(trip, isHeadingToDestination, 'Proof of delivery can only be sent after the cargo is picked up.');
+  return saveAndReturn(trip, { status: 'Delivered', deliveredAt }).status;
+}
+
+/** Complete trip: Delivered → Completed, with an ending odometer above the starting one. */
+export async function completeTrip(tripId: string, completion: TripCompletion): Promise<Trip> {
+  await mockRequest();
+  const trip = findTrip(tripId);
+  requireStatus(trip, (t) => t.status === 'Delivered', 'Send the proof of delivery before completing the trip.');
   if (trip.startOdometerKm !== undefined && completion.endOdometerKm <= trip.startOdometerKm) {
     throw new ApiError(`The ending odometer must be more than ${formatDistance(trip.startOdometerKm)}.`, 422);
   }
-  saveMockTripUpdate(tripId, { status: 'Completed', ...completion });
-  return { ...trip, status: 'Completed', ...completion };
+  return saveAndReturn(trip, { status: 'Completed', ...completion });
 }

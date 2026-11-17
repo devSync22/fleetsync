@@ -19,7 +19,7 @@ const ROWS = [
   ['7', '8', '9'],
 ] as const;
 
-/** On-screen number pad for the ending odometer (Driver — Complete trip). */
+/** On-screen number pad for odometer readings (Driver — Start trip, Complete trip). */
 export function NumericKeypad({ onDigit, onBackspace, onClear, disabled }: NumericKeypadProps) {
   return (
     <View style={styles.pad}>

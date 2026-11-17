@@ -1,29 +1,33 @@
 import type { Trip, WeeklyStats } from '../types';
 
 /**
- * Mock data copied from the Figma frames "Driver — Home" and "Driver — Trip details":
- * TRP-2208 (Colombo Pharma, ORD-1053, WP LB-7702) and TRP-2207 (Hayleys Freight, WP LB-4521).
+ * Mock data copied from the Figma frames "Driver — Home", "Trip details", "Start trip", "Active trip",
+ * "Cargo picked up" and "Complete trip": TRP-2208 (Colombo Pharma, ORD-1053, WP LB-7702, last reading
+ * 84,210 km) and TRP-2207 (Hayleys Freight, WP LB-4521).
  *
  * Dates are built relative to the current day so "today", "upcoming" and the late-start banner
  * work whenever the app is opened: TRP-2208 starts today at 09:30, TRP-2207 in three days at 07:00
  * (Monday 19 Oct → Wed 22 Oct in the frames).
- *
- * TRP-2208 is In progress by default, as on "Driver — Active trip" and "Driver — Complete trip":
- * started 09:41 at 84,236 km, with 2 trip notes and 1 reported issue.
  *
  * Not in the frames (filled in to match): contact phone numbers, and TRP-2207's order ID,
  * addresses, contacts and cargo.
  */
 
 /**
- * Switch to see the other Home / Trip details states in Expo Go:
- * - 'default'      — the frames' data; TRP-2208 is In progress (Complete trip is available)
- * - 'notStarted'   — TRP-2208 is still Assigned (Start trip / late-start banner)
- * - 'noTripToday'  — no trip today (empty state); upcoming trips and stats still load
- * - 'error'        — every request fails (error state with Retry)
+ * Switch to see each trip state in Expo Go (e.g. to test resuming mid-trip):
+ * - 'default'        — TRP-2208 is Assigned: the full journey from Start trip
+ * - 'started'        — started 09:41 at 84,236 km, heading to the pickup
+ * - 'inProgress'     — cargo picked up 09:56, heading to the destination
+ * - 'delivered'      — proof of delivery sent; only the ending odometer is left
+ * - 'cancelMidTrip'  — like 'default', but the coordinator cancels the trip 20 s after it is started
+ * - 'noTripToday'    — no trip today (empty state); upcoming trips and stats still load
+ * - 'error'          — every request fails (error state with Retry)
  */
-export type MockScenario = 'default' | 'notStarted' | 'noTripToday' | 'error';
+export type MockScenario = 'default' | 'started' | 'inProgress' | 'delivered' | 'cancelMidTrip' | 'noTripToday' | 'error';
 export const MOCK_SCENARIO: MockScenario = 'default';
+
+/** 'cancelMidTrip': how long after Start trip the coordinator cancels. */
+export const MOCK_CANCEL_AFTER_MS = 20_000;
 
 /** `daysFromToday` days from now at hh:mm local time, as an ISO string. */
 function atDay(now: Date, daysFromToday: number, hours: number, minutes: number): string {
@@ -37,8 +41,8 @@ const coordinator = { id: 'usr-crd-003', name: 'Nimal Perera', role: 'Coordinato
 const mechanic = { id: 'usr-mec-012', name: 'Ishara Bandara', role: 'Mechanic', detail: 'MEC-012' } as const;
 
 /**
- * Changes made while the app is running (e.g. a trip completed with proof of delivery), applied on top
- * of the generated trips. In memory only: reloading the app resets the mocks.
+ * Changes made while the app is running (trip started, cargo picked up, notes, completed…), applied on
+ * top of the generated trips. In memory only: reloading the app resets the mocks.
  */
 const tripUpdates = new Map<string, Partial<Trip>>();
 
@@ -50,12 +54,33 @@ export function applyMockTripUpdates(trips: Trip[]): Trip[] {
   return trips.map((trip) => ({ ...trip, ...tripUpdates.get(trip.id) }));
 }
 
-/** TRP-2208's progress so far ("Started 09:41 · 84,236 km"), unless the scenario is 'notStarted'. */
-function todayTripProgress(now: Date): Pick<Trip, 'status' | 'startedAt' | 'startOdometerKm'> {
-  if (MOCK_SCENARIO === 'notStarted') {
-    return { status: 'Assigned' };
+type TodayProgress = Pick<Trip, 'status' | 'startedAt' | 'startOdometerKm' | 'pickedUpAt' | 'deliveredAt' | 'notes'>;
+
+/** TRP-2208's progress for the chosen scenario, with the times and notes from the frames. */
+function todayTripProgress(now: Date): TodayProgress {
+  const started = { startedAt: atDay(now, 0, 9, 41), startOdometerKm: 84_236 };
+  const gateNote = { id: 'note-1', text: 'At the warehouse gate. Waiting for the loading bay.', createdAt: atDay(now, 0, 9, 42) };
+  const pickedUpNotes = [
+    gateNote,
+    { id: 'note-2', text: 'Loaded all 40 cool boxes. Seal number 22871.', createdAt: atDay(now, 0, 9, 55) },
+    { id: 'note-3', text: 'Heavy traffic at Peliyagoda bridge. Moving slowly.', createdAt: atDay(now, 0, 10, 6) },
+  ];
+  switch (MOCK_SCENARIO) {
+    case 'started':
+      return { status: 'Started', ...started, notes: [gateNote] };
+    case 'inProgress':
+      return { status: 'In progress', ...started, pickedUpAt: atDay(now, 0, 9, 56), notes: pickedUpNotes };
+    case 'delivered':
+      return {
+        status: 'Delivered',
+        ...started,
+        pickedUpAt: atDay(now, 0, 9, 56),
+        deliveredAt: atDay(now, 0, 11, 16),
+        notes: pickedUpNotes,
+      };
+    default:
+      return { status: 'Assigned', notes: [] };
   }
-  return { status: 'In progress', startedAt: atDay(now, 0, 9, 41), startOdometerKm: 84_236 };
 }
 
 /** All trips assigned to the signed-in driver (Kasun, DRV-014). */
@@ -87,10 +112,12 @@ export function createMockTrips(now: Date): Trip[] {
         contactName: 'Pradeep Kumara',
         contactPhone: '+94712345678',
       },
-      vehicle: { id: 'veh-7702', plate: 'WP LB-7702', model: 'Isuzu Elf', capacityTonnes: 3.5 },
+      vehicle: { id: 'veh-7702', plate: 'WP LB-7702', model: 'Isuzu Elf', capacityTonnes: 3.5, lastOdometerKm: 84_210 },
       cargo: {
         description: 'Medicines in 40 cool boxes',
         weightTonnes: 2.1,
+        packageCount: 40,
+        packageLabel: 'cool boxes',
         handling: ['Keep cool', 'Keep upright', 'Fragile'],
       },
       coordinatorNote: {
@@ -103,7 +130,6 @@ export function createMockTrips(now: Date): Trip[] {
         mechanic,
         coordinator,
       ],
-      noteCount: 2,
       issueCount: 1,
     },
     {
@@ -132,10 +158,12 @@ export function createMockTrips(now: Date): Trip[] {
         contactName: 'Dilani Perera',
         contactPhone: '+94784567890',
       },
-      vehicle: { id: 'veh-4521', plate: 'WP LB-4521', model: 'Isuzu Forward', capacityTonnes: 7 },
+      vehicle: { id: 'veh-4521', plate: 'WP LB-4521', model: 'Isuzu Forward', capacityTonnes: 7, lastOdometerKm: 126_540 },
       cargo: {
         description: 'Packaged goods in 60 cartons',
         weightTonnes: 4.8,
+        packageCount: 60,
+        packageLabel: 'cartons',
         handling: ['Keep dry'],
       },
       people: [
@@ -143,7 +171,7 @@ export function createMockTrips(now: Date): Trip[] {
         mechanic,
         coordinator,
       ],
-      noteCount: 0,
+      notes: [],
       issueCount: 0,
     },
   ];

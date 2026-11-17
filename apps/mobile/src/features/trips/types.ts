@@ -1,5 +1,12 @@
-/** Trip lifecycle as the driver sees it. Tones live in `components/ui/statusTones.ts`. */
-export type TripStatus = 'Assigned' | 'In progress' | 'Completed' | 'Cancelled';
+import type { PickedPhoto } from '@/hooks/usePhotoPicker';
+
+/**
+ * Trip lifecycle: Assigned → Started (heading to pickup) → Picked up → In progress → Delivered (proof of
+ * delivery sent) → Completed. The coordinator can set Cancelled at any point before Completed.
+ * The app treats Picked up and In progress the same (heading to the destination); the backend may use either.
+ * Rules for each status live in `tripStatus.ts`; badge tones in `components/ui/statusTones.ts`.
+ */
+export type TripStatus = 'Assigned' | 'Started' | 'Picked up' | 'In progress' | 'Delivered' | 'Completed' | 'Cancelled';
 
 /** A pickup or destination stop. Stops and times only — no coordinates, map or ETA. */
 export type TripStop = {
@@ -27,12 +34,18 @@ export type TripVehicle = {
   model: string;
   /** Load capacity in tonnes. */
   capacityTonnes: number;
+  /** Last odometer reading recorded for this vehicle, in km — Start trip can't go below it. */
+  lastOdometerKm: number;
 };
 
 export type TripCargo = {
   /** "Medicines in 40 cool boxes". */
   description: string;
   weightTonnes: number;
+  /** Number of packages — 40 (cool boxes). */
+  packageCount: number;
+  /** What the packages are — "cool boxes". */
+  packageLabel: string;
   /** Handling instructions shown as badges — "Keep cool", "Fragile". */
   handling: string[];
 };
@@ -78,12 +91,18 @@ export type Trip = {
   startedAt?: string;
   /** Odometer reading entered on Start trip, in km. Trip progress uses odometer readings only — no GPS. */
   startOdometerKm?: number;
+  /** ISO date-time the driver confirmed the cargo was picked up. */
+  pickedUpAt?: string;
+  /** ISO date-time the proof of delivery was accepted (status Delivered). */
+  deliveredAt?: string;
+  /** ISO date-time the coordinator cancelled the trip. */
+  cancelledAt?: string;
   /** ISO date-time the trip was completed with proof of delivery. */
   completedAt?: string;
   /** Odometer reading entered on Complete trip, in km. */
   endOdometerKm?: number;
-  /** Trip notes the driver added on the way — "Notes 2" on Complete trip. */
-  noteCount: number;
+  /** Notes the driver added on the way, oldest first ("Trip notes", seen by the coordinator). */
+  notes: TripLogNote[];
   /** Vehicle issues the driver reported on this trip — "Issues 1" on Complete trip. */
   issueCount: number;
 };
@@ -92,6 +111,35 @@ export type Trip = {
 export type TripCompletion = {
   completedAt: string;
   endOdometerKm: number;
+};
+
+/** A note the driver adds during the trip — "09:42 At the warehouse gate." */
+export type TripLogNote = {
+  id: string;
+  text: string;
+  /** ISO date-time. */
+  createdAt: string;
+};
+
+/** What the driver enters on Start trip. */
+export type TripStart = {
+  startedAt: string;
+  startOdometerKm: number;
+};
+
+/** "Cargo loaded" answer on Cargo picked up. */
+export type PickupCargoCondition = 'All loaded' | 'Fewer than ordered' | 'Damaged';
+
+/** What the driver confirms on Cargo picked up. */
+export type TripPickup = {
+  pickedUpAt: string;
+  /** "Ruwini Fonseka · Warehouse". */
+  handedOverBy: string;
+  cargoCondition: PickupCargoCondition;
+  /** Optional seal number — "22871". */
+  sealNumber?: string;
+  /** Optional loading photos. */
+  photos: PickedPhoto[];
 };
 
 /** "This week" tiles on Driver — Home. */
