@@ -1,97 +1,86 @@
-import type { LucideIcon } from 'lucide-react-native';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native'
 
-import { colors, radii, sizes, spacing, typography } from '@/theme';
-
-type ButtonVariant = 'primary' | 'secondary';
+import { Colors, Fonts, Radius } from '@/constants/theme'
 
 type ButtonProps = {
-  label: string;
-  onPress?: () => void;
-  /** primary = dark, the one main action per view; secondary = white with border. */
-  variant?: ButtonVariant;
-  icon?: LucideIcon;
-  disabled?: boolean;
-  loading?: boolean;
-  /** Full width by default (mobile rule). Set false for inline buttons, e.g. inside EmptyState. */
-  fullWidth?: boolean;
-  style?: StyleProp<ViewStyle>;
-};
+  label: string
+  onPress: () => void
+  /** `primary` = dark filled (default), `secondary` = white with a grey border. */
+  variant?: 'primary' | 'secondary'
+  disabled?: boolean
+  /** Shows a spinner instead of the label and blocks presses. */
+  loading?: boolean
+}
 
+/** Full-width button (Figma component "Button", mobile size: 13px vertical padding). */
 export function Button({
   label,
   onPress,
   variant = 'primary',
-  icon: Icon,
   disabled = false,
   loading = false,
-  fullWidth = true,
-  style,
 }: ButtonProps) {
-  const isPrimary = variant === 'primary';
-  const inactive = disabled || loading;
-  const labelColor = disabled ? colors.faint : isPrimary ? colors.surface : colors.text;
+  const isPrimary = variant === 'primary'
+  const inactive = disabled || loading
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={label}
       accessibilityState={{ disabled: inactive, busy: loading }}
-      onPress={onPress}
       disabled={inactive}
+      onPress={onPress}
       style={({ pressed }) => [
         styles.base,
         isPrimary ? styles.primary : styles.secondary,
-        disabled && styles.disabled,
-        fullWidth ? styles.fullWidth : styles.inline,
+        // Visual feedback while pressed, and a faded look when disabled.
         pressed && styles.pressed,
-        style,
-      ]}>
+        inactive && styles.inactive,
+      ]}
+    >
       {loading ? (
-        <ActivityIndicator color={labelColor} />
+        <ActivityIndicator color={isPrimary ? Colors.surface : Colors.textDefault} />
       ) : (
-        <View style={styles.content}>
-          {Icon ? <Icon size={sizes.iconSm} color={labelColor} /> : null}
-          <Text style={[typography.button, { color: labelColor }]}>{label}</Text>
-        </View>
+        <Text style={[styles.label, isPrimary ? styles.labelPrimary : styles.labelSecondary]}>
+          {label}
+        </Text>
       )}
     </Pressable>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: sizes.button,
-    paddingHorizontal: spacing.xxl,
-    borderRadius: radii.control,
     alignItems: 'center',
     justifyContent: 'center',
+    width: '100%',
+    minHeight: 46,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    borderRadius: Radius.md,
   },
   primary: {
-    backgroundColor: colors.text,
+    backgroundColor: Colors.textDefault,
   },
   secondary: {
-    backgroundColor: colors.surface,
-    borderWidth: sizes.hairline,
-    borderColor: colors.line,
-  },
-  disabled: {
-    backgroundColor: colors.greySoft,
-    borderColor: colors.greySoft,
-  },
-  fullWidth: {
-    alignSelf: 'stretch',
-  },
-  inline: {
-    alignSelf: 'center',
-    minHeight: sizes.touchTarget,
+    borderWidth: 1,
+    borderColor: Colors.line,
+    backgroundColor: Colors.surface,
   },
   pressed: {
     opacity: 0.85,
   },
-  content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
+  inactive: {
+    opacity: 0.5,
   },
-});
+  label: {
+    fontFamily: Fonts.semibold,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  labelPrimary: {
+    color: Colors.surface,
+  },
+  labelSecondary: {
+    color: Colors.textDefault,
+  },
+})

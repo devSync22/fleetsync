@@ -50,7 +50,8 @@ export function ProofOfDeliveryForm({ trip }: { trip: Trip }) {
             autoCorrect={false}
             maxLength={RECIPIENT_NAME_MAX_LENGTH}
             returnKeyType="done"
-            error={nameError}
+            invalid={Boolean(nameError)}
+            helperText={nameError}
           />
         </FormSection>
 

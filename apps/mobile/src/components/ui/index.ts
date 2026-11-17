@@ -13,7 +13,6 @@ export { PasswordRules } from './PasswordRules';
 export { PasswordStrengthMeter } from './PasswordStrengthMeter';
 export { RouteTimeline, type RouteTimelineStop } from './RouteTimeline';
 export { ScreenHeader } from './ScreenHeader';
-export { Select, type SelectOption } from './Select';
 export { Skeleton } from './Skeleton';
 export { StatusBadge } from './StatusBadge';
 export { getStatusTone, statusTones, type Status } from './statusTones';

@@ -1,10 +1,12 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { getNotifications, markRead } from '../services/notificationsApi'
+import type { NotificationRole } from '../types'
 
-/** The signed-in user's notifications, with read state kept locally after marking. */
-export function useNotifications() {
-  const { state, retry } = useAsyncData(getNotifications)
+/** The signed-in user's notifications, marked read optimistically (rolled back if the call fails). */
+export function useNotifications(role: NotificationRole = 'coordinator') {
+  const load = useCallback(() => getNotifications(role), [role])
+  const { state, retry } = useAsyncData(load)
   const [readLocally, setReadLocally] = useState<Set<string>>(() => new Set())
 
   const items = useMemo(
@@ -15,7 +17,9 @@ export function useNotifications() {
 
   const markAsRead = useCallback((ids: string[]) => {
     setReadLocally((previous) => new Set([...previous, ...ids]))
-    void markRead(ids)
+    markRead(ids).catch(() =>
+      setReadLocally((previous) => new Set([...previous].filter((id) => !ids.includes(id)))),
+    )
   }, [])
 
   const markAllAsRead = useCallback(() => markAsRead(items.filter((n) => n.unread).map((n) => n.id)), [items, markAsRead])
