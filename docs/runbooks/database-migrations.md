@@ -29,7 +29,8 @@ for a module. Example:
 
 - .NET 10 SDK
 - Repository-local `dotnet-ef` tool
-- PostgreSQL running through Docker Compose
+- No database is needed to **create** a migration (`migrations add` works with the design-time factories)
+- To **apply** one: the team's Supabase database (only from `main`, ADR-0003) or an optional local PostgreSQL
 - Valid database connection configured in API User Secrets
 - `Development` environment configured
 
@@ -61,6 +62,9 @@ Review:
 Run `dotnet ef database update` with Infrastructure as the target project and API as the startup project.
 
 Never apply changes to a shared or production database without approval.
+
+The shared Supabase development database receives migrations **only from `main`**, applied by **Thamod, Senuth or
+Prasad** (ADR-0003). Production (Azure Database for PostgreSQL) follows its own approved deployment process.
 
 ## Check migration status
 
