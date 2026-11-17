@@ -1,5 +1,10 @@
 using FleetSync.Application.Security;
+using FleetSync.Modules.Orders.Application.Abstractions;
+using FleetSync.Modules.Orders.Application.Details;
+using FleetSync.Modules.Orders.Application.Listing;
+using FleetSync.Modules.Orders.Endpoints;
 using FleetSync.Modules.Orders.Infrastructure.Persistence;
+using FleetSync.Modules.Orders.Infrastructure.Seeding;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -21,13 +26,15 @@ public static class OrdersModule
     /// <summary>Route prefix for the coordinator's order endpoints.</summary>
     public const string RoutePrefix = "/api/orders";
 
-    /// <summary>Registers the module: database, validators and services.</summary>
+    /// <summary>Registers the module: database, validators, services and the development seed data.</summary>
     public static IServiceCollection AddOrdersModule(
         this IServiceCollection services,
         IConfiguration configuration,
         string connectionString)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(connectionString);
+
+        services.AddOptions<OrdersOptions>().Bind(configuration.GetSection(OrdersOptions.SectionName));
 
         services.AddDbContext<OrdersDbContext>(options => OrdersDbContextOptions.Configure(options, connectionString));
 
@@ -39,6 +46,14 @@ public static class OrdersModule
 
         services.TryAddSingleton(TimeProvider.System);
 
+        services.AddScoped<IOrderNumbers, OrderNumbers>();
+
+        // Use-case services, one per screen or flow.
+        services.AddScoped<OrderListService>();
+        services.AddScoped<OrderDetailService>();
+
+        services.AddHostedService<DevOrdersSeeder>();
+
         return services;
     }
 
@@ -48,10 +63,11 @@ public static class OrdersModule
     /// </summary>
     public static IEndpointRouteBuilder MapOrdersEndpoints(this IEndpointRouteBuilder endpoints)
     {
-        // Endpoints are added to this group per use case in the next slices (plan §9).
-        endpoints.MapGroup(RoutePrefix)
+        var group = endpoints.MapGroup(RoutePrefix)
             .WithTags("Orders")
             .RequireAuthorization(FleetSyncPolicies.RequireOperations);
+
+        group.MapOrderEndpoints();
 
         return endpoints;
     }

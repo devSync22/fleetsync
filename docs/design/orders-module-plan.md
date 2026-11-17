@@ -81,6 +81,20 @@ Rule (BR-32): a **sent quotation is never edited**. Re-quoting creates a new one
 Both web pages already show this timeline (coordinator "Order history", customer "Updates").
 **Needs a DI row** (proposed DI-30) because it is not in the EER.
 
+### As built (slice 2)
+
+Fields added while implementing, beyond the tables above:
+
+- TransportOrder: `TripNumber` (shown before the Trips module can be asked), `ClosedAt`, and a `Version` row
+  version (PostgreSQL `xmin`) so concurrent changes fail instead of overwriting.
+- FareQuotation: `ViewCount`, `FirstViewedAt`, `LastViewedAt` ("Opened 2 times" on the web).
+- OrderEvent: `Amount` (quotation and payment events).
+- Numbers: sequences `orders.order_number_seq` (starts at 1100, above the seeded ORD-10xx) and
+  `orders.quotation_number_seq` (`QT-yyyy-nnnn`).
+- Every status change is a method on `TransportOrder` (Submit, SendQuotation, AcceptQuotation, RecordPayment,
+  DeclineQuotation, ExpireQuotation, ScheduleTrip, StartTrip, Complete, Cancel). **The customer side should call these
+  same methods** so both sides follow one set of rules.
+
 ## 3. Status values (needs agreement — DI-14)
 
 The two frontends use slightly different names. Proposed single list, sent as kebab-case:

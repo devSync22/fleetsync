@@ -71,6 +71,23 @@ internal enum VehicleType
     Heavy14t,
 }
 
+/// <summary>Something that happened to an order; the history timeline both web apps show (plan §2, DI-30).</summary>
+internal enum OrderEventType
+{
+    Submitted,
+    QuotationSent,
+    QuotationOpened,
+    QuotationAccepted,
+    PaymentReceived,
+    PaymentFailed,
+    QuotationDeclined,
+    QuotationExpired,
+    TripScheduled,
+    TripStarted,
+    Delivered,
+    Cancelled,
+}
+
 /// <summary>What a quotation line charges for. Distance lines are km × the vehicle type's rate.</summary>
 internal enum QuotationLineKind
 {

@@ -71,6 +71,8 @@ public sealed class AuthApiFactory : WebApplicationFactory<Program>, IAsyncLifet
     {
         await using var scope = Services.CreateAsyncScope();
         await scope.ServiceProvider.GetRequiredService<AuthDbContext>().Database.MigrateAsync();
+        // Every module's tables, so module tests can share this one fixture.
+        await scope.ServiceProvider.GetRequiredService<Modules.Orders.Infrastructure.Persistence.OrdersDbContext>().Database.MigrateAsync();
     }
 
     async Task IAsyncLifetime.DisposeAsync()
