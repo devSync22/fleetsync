@@ -15,7 +15,9 @@ export const statusMeta = {
   'no-payment': { label: 'No payment', tone: 'neutral' },
   'quotation-expired': { label: 'Quotation expired', tone: 'neutral' },
   declined: { label: 'Declined by customer', tone: 'neutral' },
+  'quote-declined': { label: 'Quote declined', tone: 'neutral' },
   busy: { label: 'Busy', tone: 'neutral' },
+  refunded: { label: 'Refunded', tone: 'neutral' },
   // pending — pending / due soon
   pending: { label: 'Pending', tone: 'pending' },
   'pending-review': { label: 'Pending review', tone: 'pending' },
@@ -28,9 +30,11 @@ export const statusMeta = {
   quoted: { label: 'Quoted', tone: 'accent' },
   assigned: { label: 'Assigned', tone: 'accent' },
   scheduled: { label: 'Scheduled', tone: 'accent' },
+  'trip-scheduled': { label: 'Trip scheduled', tone: 'accent' },
   // info — on trip / in progress / accepted
   'in-progress': { label: 'In progress', tone: 'info' },
   'on-trip': { label: 'On trip', tone: 'info' },
+  'trip-in-progress': { label: 'Trip in progress', tone: 'info' },
   delivered: { label: 'Delivered', tone: 'info' },
   'password-changed': { label: 'Password changed', tone: 'info' },
   accepted: { label: 'Accepted', tone: 'info' },
