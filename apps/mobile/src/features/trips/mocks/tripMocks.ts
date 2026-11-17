@@ -50,6 +50,11 @@ export function saveMockTripUpdate(tripId: string, update: Partial<Trip>) {
   tripUpdates.set(tripId, { ...tripUpdates.get(tripId), ...update });
 }
 
+/** Tests only: forgets every change made while running. */
+export function resetTripMocks() {
+  tripUpdates.clear();
+}
+
 export function applyMockTripUpdates(trips: Trip[]): Trip[] {
   return trips.map((trip) => ({ ...trip, ...tripUpdates.get(trip.id) }));
 }

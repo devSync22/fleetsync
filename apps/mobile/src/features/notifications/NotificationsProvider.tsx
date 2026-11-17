@@ -44,7 +44,7 @@ async function readPrefs(userId: string): Promise<NotificationPrefs> {
   }
 }
 
-function openTap(tap: NotificationTap, user: AuthUser) {
+export function openTap(tap: NotificationTap, user: AuthUser) {
   // A tap on someone else's notification (another user signed in since) opens nothing.
   if (tap.userId !== user.id) return;
   const { tripId, roomId, participantId } = tap.data;

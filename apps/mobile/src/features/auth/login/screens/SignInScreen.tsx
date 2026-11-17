@@ -4,11 +4,13 @@ import { Pressable, StyleSheet, Text, View } from 'react-native'
 
 import { Button } from '@/components/ui/Button'
 import { Checkbox } from '@/components/ui/Checkbox'
+import { InfoBanner } from '@/components/ui/InfoBanner'
 import { Screen } from '@/components/ui/Screen'
 import { TextField } from '@/components/ui/TextField'
 import { Colors, Fonts, Radius } from '@/constants/theme'
 import { useAuth } from '@/contexts/AuthContext'
 import { Wordmark } from '@/features/auth/login/components/Wordmark'
+import { InvalidCredentialsError } from '@/features/auth/services/authApi'
 import { isValidEmail } from '@/features/auth/shared/utils/validation'
 
 /**
@@ -26,6 +28,8 @@ export default function SignInScreen() {
   const [signingIn, setSigningIn] = useState(false)
   // Message from the sign-in service, e.g. "Incorrect email or password".
   const [signInError, setSignInError] = useState<string>()
+  // "2 attempts left" under the password after a wrong password.
+  const [attemptsHint, setAttemptsHint] = useState<string>()
 
   const emailError = !submitted
     ? undefined
@@ -34,7 +38,7 @@ export default function SignInScreen() {
       : !isValidEmail(email)
         ? 'Enter a valid email address'
         : undefined
-  const passwordError = submitted && !password ? 'Enter your password' : signInError
+  const passwordError = submitted && !password ? 'Enter your password' : attemptsHint
 
   async function handleSignIn() {
     setSubmitted(true)
@@ -42,11 +46,16 @@ export default function SignInScreen() {
 
     setSigningIn(true)
     setSignInError(undefined)
+    setAttemptsHint(undefined)
     try {
       // On success the root layout's route guards open the driver/mechanic area.
       await signIn({ email: email.trim(), password }, { keepSignedIn })
     } catch (error) {
       setSignInError(error instanceof Error ? error.message : 'Something went wrong. Please try again.')
+      if (error instanceof InvalidCredentialsError) {
+        const left = error.attemptsLeft
+        setAttemptsHint(`${left} ${left === 1 ? 'attempt' : 'attempts'} left`)
+      }
       setSigningIn(false)
     }
   }
@@ -69,6 +78,8 @@ export default function SignInScreen() {
           open after you sign in.
         </Text>
       </View>
+
+      {signInError && <InfoBanner tone="danger" title={signInError} />}
 
       <TextField
         label="Email address"
