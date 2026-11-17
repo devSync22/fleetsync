@@ -1,51 +1,73 @@
-import {
-  Inter_400Regular,
-  Inter_500Medium,
-  Inter_600SemiBold,
-  Inter_700Bold,
-} from '@expo-google-fonts/inter'
-import { JetBrainsMono_500Medium } from '@expo-google-fonts/jetbrains-mono'
-import { useFonts } from 'expo-font'
-import { Stack } from 'expo-router'
-import * as SplashScreen from 'expo-splash-screen'
-import { StatusBar } from 'expo-status-bar'
-import { useEffect } from 'react'
+import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
+import { JetBrainsMono_400Regular, JetBrainsMono_500Medium } from '@expo-google-fonts/jetbrains-mono';
+import { useFonts } from 'expo-font';
+import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { Colors } from '@/constants/theme'
+import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { colors } from '@/theme';
 
-// Keep the splash screen visible until the fonts are ready (must run at module scope).
-SplashScreen.preventAutoHideAsync()
+// Keep the native splash screen up until fonts and the saved session are ready (module scope, don't await).
+SplashScreen.preventAutoHideAsync();
 
 /**
- * Root layout: loads fonts, then renders a header-less Stack. Each screen
- * draws its own top area (e.g. the "Request an account" app bar) as in Figma.
+ * Route protection: signed out → (auth), driver → driver tabs, mechanic → mechanic tabs.
+ * When the user signs in or out the guards change and Expo Router moves to the first allowed
+ * screen (`index`), which redirects to the right area.
  */
+function RootNavigator() {
+  const { user, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading) {
+      SplashScreen.hideAsync();
+    }
+  }, [isLoading]);
+
+  if (isLoading) {
+    return null;
+  }
+
+  return (
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
+      <Stack.Screen name="index" />
+      <Stack.Protected guard={!user}>
+        <Stack.Screen name="(auth)" />
+      </Stack.Protected>
+      <Stack.Protected guard={user?.role === 'driver'}>
+        <Stack.Screen name="driver" />
+      </Stack.Protected>
+      <Stack.Protected guard={user?.role === 'mechanic'}>
+        <Stack.Screen name="mechanic" />
+      </Stack.Protected>
+    </Stack>
+  );
+}
+
 export default function RootLayout() {
-  const [fontsLoaded, fontError] = useFonts({
+  // Keys become the fontFamily names used in `src/theme/typography.ts`.
+  const [loaded, error] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
     Inter_600SemiBold,
     Inter_700Bold,
+    JetBrainsMono_400Regular,
     JetBrainsMono_500Medium,
-  })
+  });
 
-  useEffect(() => {
-    // Hide the splash once fonts load — or fail, so the app still opens with system fonts.
-    if (fontsLoaded || fontError) SplashScreen.hideAsync()
-  }, [fontsLoaded, fontError])
-
-  if (!fontsLoaded && !fontError) return null
+  if (!loaded && !error) {
+    return null;
+  }
 
   return (
-    <>
-      {/* Dark status bar icons on the white screens. */}
+    <SafeAreaProvider>
       <StatusBar style="dark" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: Colors.surface },
-        }}
-      />
-    </>
-  )
+      <AuthProvider>
+        <RootNavigator />
+      </AuthProvider>
+    </SafeAreaProvider>
+  );
 }

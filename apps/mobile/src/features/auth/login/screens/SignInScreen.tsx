@@ -1,15 +1,14 @@
 import { useRouter } from 'expo-router'
-import * as WebBrowser from 'expo-web-browser'
 import { useState } from 'react'
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 
 import { Button } from '@/components/ui/Button'
 import { Checkbox } from '@/components/ui/Checkbox'
 import { Screen } from '@/components/ui/Screen'
 import { TextField } from '@/components/ui/TextField'
 import { Colors, Fonts, Radius } from '@/constants/theme'
+import { useAuth } from '@/contexts/AuthContext'
 import { Wordmark } from '@/features/auth/login/components/Wordmark'
-import { WEB_APP_URL } from '@/features/auth/login/constants'
 import { isValidEmail } from '@/features/auth/shared/utils/validation'
 
 /**
@@ -18,11 +17,15 @@ import { isValidEmail } from '@/features/auth/shared/utils/validation'
  */
 export default function SignInScreen() {
   const router = useRouter()
+  const { signIn } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [keepSignedIn, setKeepSignedIn] = useState(true)
   // Field errors only appear after the first submit attempt.
   const [submitted, setSubmitted] = useState(false)
+  const [signingIn, setSigningIn] = useState(false)
+  // Message from the sign-in service, e.g. "Incorrect email or password".
+  const [signInError, setSignInError] = useState<string>()
 
   const emailError = !submitted
     ? undefined
@@ -31,25 +34,26 @@ export default function SignInScreen() {
       : !isValidEmail(email)
         ? 'Enter a valid email address'
         : undefined
-  const passwordError = submitted && !password ? 'Enter your password' : undefined
+  const passwordError = submitted && !password ? 'Enter your password' : signInError
 
-  function handleSignIn() {
+  async function handleSignIn() {
     setSubmitted(true)
-    if (!email.trim() || !isValidEmail(email) || !password) return
+    if (signingIn || !email.trim() || !isValidEmail(email) || !password) return
 
-    // TODO: call the sign-in API once the backend exists, with
-    // { email: email.trim(), password, rememberMe: keepSignedIn }, then:
-    //  - store the session (secure storage) and open the driver/mechanic home screen
-    //  - show "Incorrect email or password" (see the web login error) on failure
+    setSigningIn(true)
+    setSignInError(undefined)
+    try {
+      // On success the root layout's route guards open the driver/mechanic area.
+      await signIn({ email: email.trim(), password }, { keepSignedIn })
+    } catch (error) {
+      setSignInError(error instanceof Error ? error.message : 'Something went wrong. Please try again.')
+      setSigningIn(false)
+    }
   }
 
-  async function handleForgotPassword() {
-    // There's no mobile "forgot password" design; password resets happen on the website.
-    if (!WEB_APP_URL) {
-      Alert.alert('Reset your password', 'Use “Forgot password?” on the FleetSync website.')
-      return
-    }
-    await WebBrowser.openBrowserAsync(`${WEB_APP_URL}/forgot-password`)
+  function handleForgotPassword() {
+    const trimmed = email.trim()
+    router.push({ pathname: '/forgot-password', params: trimmed ? { email: trimmed } : {} })
   }
 
   return (
@@ -104,7 +108,7 @@ export default function SignInScreen() {
         </Pressable>
       </View>
 
-      <Button label="Sign in" onPress={handleSignIn} />
+      <Button label="Sign in" onPress={handleSignIn} loading={signingIn} />
 
       {/* Pushes the sign-up card to the bottom of the screen on tall phones. */}
       <View style={styles.spacer} />
