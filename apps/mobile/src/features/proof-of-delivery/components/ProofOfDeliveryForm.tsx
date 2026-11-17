@@ -80,7 +80,8 @@ export function ProofOfDeliveryForm({ trip, onCancelled }: ProofOfDeliveryFormPr
             autoCorrect={false}
             maxLength={RECIPIENT_NAME_MAX_LENGTH}
             returnKeyType="done"
-            error={nameError}
+            invalid={Boolean(nameError)}
+            helperText={nameError}
           />
         </FormSection>
 
