@@ -26,7 +26,8 @@ export function getInitials(name: string): string {
 /** Round initials avatar (Driver — Home, Mechanic — Queue, Trip details people list). */
 export function Avatar({ name, initials, size = sizes.avatar, tone = 'accent' }: AvatarProps) {
   const isNeutral = tone === 'neutral';
-  const textStyle = size < sizes.avatar ? typography.avatarSmall : typography.avatar;
+  const textStyle =
+    size < sizes.avatar ? typography.avatarSmall : size >= sizes.avatarLarge ? typography.avatarLarge : typography.avatar;
 
   return (
     <View
