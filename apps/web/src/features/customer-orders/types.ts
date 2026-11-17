@@ -154,3 +154,69 @@ export interface CustomerOrderDetail {
   cargo: OrderCargo
   payment: OrderPayment | null
 }
+
+/* ───────────── New transport order (/customer/new-order) ───────────── */
+
+export type PackingType = 'pallets' | 'cartons' | 'bags' | 'loose-items'
+
+/** "Handling and transport needs" ticks. */
+export type HandlingFlag = 'fragile' | 'keep-upright' | 'covered-truck' | 'forklift-pickup' | 'forklift-destination' | 'loading-help'
+
+/** Form values are kept as typed (strings) so going Back never loses or reformats input. */
+export interface NewOrderPickup {
+  address: string
+  city: string
+  /** YYYY-MM-DD */
+  date: string
+  /** HH:MM */
+  time: string
+  contactName: string
+  contactPhone: string
+}
+
+export interface NewOrderDestination {
+  address: string
+  city: string
+  /** YYYY-MM-DD; optional. When only a time is set, it means the pickup day. */
+  deliverByDate: string
+  /** HH:MM; optional. */
+  deliverByTime: string
+  receiverName: string
+  receiverPhone: string
+}
+
+export interface NewOrderCargo {
+  cargoType: string
+  packing: PackingType | ''
+  /** Total weight in kg, as typed ("8000" or "8,000"). */
+  weightKg: string
+  /** Number of pallets / cartons / bags / items, as typed. */
+  quantity: string
+  /** Pallet size, carton size, weight per bag or largest item — free text. */
+  unitSize: string
+  description: string
+  handling: HandlingFlag[]
+  noteForCoordinator: string
+}
+
+export interface NewOrderDraft {
+  pickup: NewOrderPickup
+  destination: NewOrderDestination
+  cargo: NewOrderCargo
+}
+
+/** Every field the wizard can show an error for, e.g. "pickup.date". */
+export type NewOrderField =
+  | `pickup.${keyof NewOrderPickup}`
+  | `destination.${keyof NewOrderDestination}`
+  | `cargo.${Exclude<keyof NewOrderCargo, 'handling'>}`
+
+/** Field → message shown under that field. */
+export type NewOrderErrors = Partial<Record<NewOrderField, string>>
+
+/** 1 Route · 2 Cargo · 3 Review. */
+export type NewOrderStep = 1 | 2 | 3
+
+export interface CreatedOrder {
+  orderId: string
+}

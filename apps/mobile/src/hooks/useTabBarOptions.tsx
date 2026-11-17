@@ -15,6 +15,8 @@ export function useTabBarOptions(): BottomTabNavigationOptions {
 
   return {
     headerShown: false,
+    // Android: don't push the tab bar up on top of the keyboard while typing in a form.
+    tabBarHideOnKeyboard: true,
     tabBarActiveTintColor: colors.accent,
     tabBarInactiveTintColor: colors.muted,
     tabBarStyle: {
@@ -43,5 +45,16 @@ export function useTabBarOptions(): BottomTabNavigationOptions {
 export function tabIcon(Icon: LucideIcon): BottomTabNavigationOptions['tabBarIcon'] {
   return function TabIcon({ color }) {
     return <Icon size={sizes.iconLg} color={color} />;
+  };
+}
+
+/** Chat tab with the unread-messages badge (hidden at 0). */
+export function chatTabOptions(Icon: LucideIcon, unreadCount: number): BottomTabNavigationOptions {
+  return {
+    title: 'Chat',
+    tabBarIcon: tabIcon(Icon),
+    tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
+    tabBarBadgeStyle: { backgroundColor: colors.accent, color: colors.surface, fontFamily: fonts.semiBold },
+    tabBarAccessibilityLabel: unreadCount > 0 ? `Chat, ${unreadCount} unread` : 'Chat',
   };
 }

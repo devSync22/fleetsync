@@ -63,6 +63,14 @@ export class SamePasswordError extends ApiError {
   }
 }
 
+/** Change password: the current password is wrong. */
+export class WrongCurrentPasswordError extends ApiError {
+  constructor() {
+    super('Your current password is incorrect.', 401);
+    this.name = 'WrongCurrentPasswordError';
+  }
+}
+
 const MOCK_LATENCY_MS = 700;
 
 function delay(ms = MOCK_LATENCY_MS) {
@@ -78,6 +86,16 @@ const failedAttempts = new Map<string, number>();
 const lockedUntil = new Map<string, number>();
 const submittedRequests = new Map<string, AccountRequest>();
 let nextRequestNumber = FIRST_REQUEST_NUMBER;
+const initialAccounts = mockAccounts.map((account) => ({ ...account }));
+
+/** Tests only: puts the in-memory mock state back to how the app starts. */
+export function resetAuthMocks() {
+  failedAttempts.clear();
+  lockedUntil.clear();
+  submittedRequests.clear();
+  nextRequestNumber = FIRST_REQUEST_NUMBER;
+  mockAccounts.splice(0, mockAccounts.length, ...initialAccounts.map((account) => ({ ...account })));
+}
 
 export async function signIn(credentials: SignInCredentials): Promise<Session> {
   await delay();
@@ -205,4 +223,17 @@ export async function resetPassword(token: string, newPassword: string): Promise
   }
   account.password = newPassword;
   // Mock: the demo token stays valid so the flow can be tested again.
+}
+
+/** Change password while signed in. Mock: checks and updates the in-memory account. */
+export async function changePassword(email: string, currentPassword: string, newPassword: string): Promise<void> {
+  await delay();
+  const account = mockAccounts.find((candidate) => candidate.user.email === email);
+  if (!account || account.password !== currentPassword) {
+    throw new WrongCurrentPasswordError();
+  }
+  if (account.password === newPassword) {
+    throw new SamePasswordError();
+  }
+  account.password = newPassword;
 }

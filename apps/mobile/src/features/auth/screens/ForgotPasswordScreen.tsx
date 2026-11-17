@@ -3,12 +3,11 @@ import { KeyRound } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Button, InfoBanner, TextField } from '@/components/ui';
+import { Button, InfoBanner, KeyboardAwareScroll, TextField } from '@/components/ui';
 import { colors, spacing, typography } from '@/theme';
 
 import { AuthIcon } from '../components/AuthIcon';
 import { BackLink } from '../components/BackLink';
-import { KeyboardAwareScroll } from '../components/KeyboardAwareScroll';
 import { formatCountdown } from '../hooks/useCountdown';
 import { useForgotPassword } from '../hooks/useForgotPassword';
 

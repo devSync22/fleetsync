@@ -26,6 +26,8 @@ export const fontSizes = {
   base: 14,
   /** Option card titles ("Driver", "Mechanic"). */
   option: 15,
+  /** Name on the profile header ("Kasun Jayasinghe"). */
+  name: 17,
   lg: 16,
   xl: 18,
   xxl: 20,
@@ -33,6 +35,8 @@ export const fontSizes = {
   title: 24,
   headline: 26,
   hero: 28,
+  /** Big odometer value being entered (Driver — Complete trip). */
+  odometer: 32,
 } as const;
 
 /**
@@ -215,11 +219,43 @@ export const typography = {
     fontSize: fontSizes.base,
     color: colors.accent,
   },
+  /** Initials in the large (60 px) profile avatar — "KJ". */
+  avatarLarge: {
+    fontFamily: fonts.semiBold,
+    fontSize: fontSizes.xxl,
+    color: colors.accent,
+  },
+  /** Name on the profile header — "Kasun Jayasinghe". */
+  profileName: {
+    fontFamily: fonts.bold,
+    fontSize: fontSizes.name,
+    color: colors.text,
+  },
   /** Initials in a small (36 px) avatar — "People on this trip". */
   avatarSmall: {
     fontFamily: fonts.semiBold,
     fontSize: fontSizes.sm,
     color: colors.accent,
+  },
+  /** Initials in a chat participant chip — "NP". */
+  avatarTiny: {
+    fontFamily: fonts.semiBold,
+    fontSize: fontSizes.xxs,
+    color: colors.muted,
+  },
+  /** Chat message text (Driver — Chat). */
+  message: {
+    fontFamily: fonts.regular,
+    fontSize: fontSizes.base,
+    lineHeight: 20,
+    color: colors.text,
+  },
+  /** Chat system notice — "Issue reported 10:15 · Tyres". */
+  notice: {
+    fontFamily: fonts.medium,
+    fontSize: fontSizes.sm,
+    lineHeight: 17,
+    color: colors.pending,
   },
   /** Data / mono — "WP LB-7702", "09:30". */
   mono: {
@@ -238,6 +274,67 @@ export const typography = {
     fontFamily: fonts.monoMedium,
     fontSize: fontSizes.lg,
     color: colors.text,
+  },
+  /** Mono plate in a card header — "WP LB-7702" on Complete trip. */
+  monoPlate: {
+    fontFamily: fonts.monoMedium,
+    fontSize: fontSizes.option,
+    color: colors.text,
+  },
+  /** Odometer reading being entered on the keypad — "84,274". */
+  odometer: {
+    fontFamily: fonts.monoMedium,
+    fontSize: fontSizes.odometer,
+    lineHeight: 38,
+    color: colors.text,
+  },
+  /** Unit next to the odometer value — "km". */
+  odometerUnit: {
+    fontFamily: fonts.medium,
+    fontSize: fontSizes.lg,
+    color: colors.muted,
+  },
+  /** Digit on the on-screen number keypad. */
+  keypadKey: {
+    fontFamily: fonts.medium,
+    fontSize: fontSizes.xxl,
+    color: colors.text,
+  },
+  /** Small label on top of a photo — "Photo 1 · 11:14". */
+  photoLabel: {
+    fontFamily: fonts.medium,
+    fontSize: fontSizes.xs,
+    color: colors.text,
+  },
+  /** Small accent action — "Clear", "Add photo". */
+  linkSmall: {
+    fontFamily: fonts.semiBold,
+    fontSize: fontSizes.sm,
+    color: colors.accent,
+  },
+  /** Stop name on the active trip card — "City Hospital store, Negombo". */
+  stopTitle: {
+    fontFamily: fonts.semiBold,
+    fontSize: fontSizes.option,
+    color: colors.text,
+  },
+  /** Trip progress step label — "Cargo picked up" (colour set by the step state). */
+  stepLabel: {
+    fontFamily: fonts.semiBold,
+    fontSize: fontSizes.sm,
+    color: colors.text,
+  },
+  /** Time next to a trip note — "09:42". */
+  monoCaption: {
+    fontFamily: fonts.mono,
+    fontSize: fontSizes.sm,
+    color: colors.muted,
+  },
+  /** Time under a progress step — "09:41". */
+  monoMicro: {
+    fontFamily: fonts.mono,
+    fontSize: fontSizes.xs,
+    color: colors.muted,
   },
   /** Mono value typed into a text field. */
   monoInput: {

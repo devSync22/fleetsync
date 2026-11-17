@@ -13,6 +13,8 @@ type PlaceholderScreenProps = {
   emptyDescription: string;
   icon?: LucideIcon;
   action?: ComponentProps<typeof EmptyState>['action'];
+  /** Sections already built for this screen, shown under the placeholder. */
+  children?: ReactNode;
 };
 
 /**
@@ -27,12 +29,14 @@ export function PlaceholderScreen({
   emptyDescription,
   icon,
   action,
+  children,
 }: PlaceholderScreenProps) {
   return (
     <View style={styles.screen}>
       <ScreenHeader title={title} subtitle={subtitle} right={headerRight} />
       <ScrollView contentContainerStyle={styles.body}>
         <EmptyState title={emptyTitle} description={emptyDescription} icon={icon} action={action} />
+        {children}
       </ScrollView>
     </View>
   );
@@ -47,5 +51,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xxl,
     paddingTop: spacing.lg,
     paddingBottom: spacing.xxxl,
+    gap: spacing.lg,
   },
 });

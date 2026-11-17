@@ -1,7 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
 import { createContext, use, useEffect, useRef, useState, type ReactNode } from 'react';
 
-import { signIn as requestSignIn } from '@/features/auth/services/authApi';
+import { changePassword as requestPasswordChange, signIn as requestSignIn } from '@/features/auth/services/authApi';
 import type { AuthUser, Session, SignInCredentials, StaffRole } from '@/features/auth/types';
 import { setAccessTokenGetter } from '@/services/apiClient';
 
@@ -23,6 +23,11 @@ type AuthContextValue = {
   /** Starts a session the auth feature already has (e.g. after activating an account). */
   startSession: (session: Session, options: SessionOptions) => Promise<void>;
   signOut: () => Promise<void>;
+  /**
+   * Changes the signed-in user's password. Rejects with an `ApiError`: status 401 = wrong current
+   * password, 422 = same as the current one.
+   */
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -121,8 +126,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await clearStoredSession();
   }
 
+  async function changePassword(currentPassword: string, newPassword: string) {
+    if (!user) throw new Error('Sign in to change your password.');
+    await requestPasswordChange(user.email, currentPassword, newPassword);
+  }
+
   return (
-    <AuthContext value={{ user, isLoading, signIn, startSession, signOut }}>{children}</AuthContext>
+    <AuthContext value={{ user, isLoading, signIn, startSession, signOut, changePassword }}>
+      {children}
+    </AuthContext>
   );
 }
 

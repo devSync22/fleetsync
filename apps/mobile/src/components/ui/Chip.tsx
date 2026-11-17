@@ -1,27 +1,50 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
 
-import { colors, radii, sizes, spacing, typography } from '@/theme';
+import { colors, fonts, radii, sizes, spacing, typography } from '@/theme';
 
 type ChipProps = {
   label: string;
   selected?: boolean;
   onPress?: () => void;
+  /**
+   * filter = Mechanic — Queue filters: selected is dark with a white label.
+   * choice = pick one answer (Proof of delivery → Cargo received): selected is accent-soft with an accent border.
+   */
+  variant?: 'filter' | 'choice';
 };
 
-/** Filter chip (Mechanic — Queue): selected is dark with a white label, others are white with a border. */
-export function Chip({ label, selected = false, onPress }: ChipProps) {
+export function Chip({ label, selected = false, onPress, variant = 'filter' }: ChipProps) {
+  const isChoice = variant === 'choice';
+
   return (
     <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ selected }}
+      accessibilityRole={isChoice ? 'radio' : 'button'}
+      accessibilityState={isChoice ? { checked: selected } : { selected }}
       onPress={onPress}
       hitSlop={{ top: 6, bottom: 6 }}
       style={({ pressed }) => [
         styles.chip,
-        selected ? styles.selected : styles.unselected,
+        isChoice ? styles.choice : null,
+        isChoice
+          ? selected
+            ? styles.choiceSelected
+            : styles.unselected
+          : selected
+            ? styles.selected
+            : styles.unselected,
         pressed && styles.pressed,
       ]}>
-      <Text style={[typography.chip, { color: selected ? colors.surface : colors.text }]}>{label}</Text>
+      <Text
+        style={[
+          typography.chip,
+          isChoice
+            ? selected
+              ? styles.choiceSelectedLabel
+              : styles.choiceLabel
+            : { color: selected ? colors.surface : colors.text },
+        ]}>
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -33,6 +56,9 @@ const styles = StyleSheet.create({
     borderRadius: radii.pill,
     borderWidth: sizes.hairline,
   },
+  choice: {
+    paddingVertical: 9,
+  },
   selected: {
     backgroundColor: colors.text,
     borderColor: colors.text,
@@ -40,6 +66,19 @@ const styles = StyleSheet.create({
   unselected: {
     backgroundColor: colors.surface,
     borderColor: colors.line,
+  },
+  choiceSelected: {
+    backgroundColor: colors.accentSoft,
+    borderColor: colors.accent,
+    borderWidth: sizes.selectedBorder,
+  },
+  choiceLabel: {
+    fontFamily: fonts.regular,
+    color: colors.text,
+  },
+  choiceSelectedLabel: {
+    fontFamily: fonts.semiBold,
+    color: colors.accent,
   },
   pressed: {
     opacity: 0.85,
