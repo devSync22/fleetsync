@@ -2,7 +2,8 @@
 
 ## Purpose
 
-FleetSync can use a Supabase project as its hosted PostgreSQL database.
+**The team's development database is a shared Supabase project** (ADR-0003).
+Production uses Azure Database for PostgreSQL instead; Supabase is for development only.
 Supabase is used **only as PostgreSQL**. Sign-in, tokens and users are handled
 by the FleetSync Auth module, not by Supabase Auth.
 
@@ -82,9 +83,12 @@ unset ConnectionStrings__FleetSyncDatabase
 On Windows PowerShell, use `$env:ConnectionStrings__FleetSyncDatabase = "..."`
 and `Remove-Item Env:ConnectionStrings__FleetSyncDatabase` instead.
 
-A Supabase project used by the team is a **shared database**. As
-[database-migrations.md](database-migrations.md) says, agree on who applies
-migrations before running `database update` against it.
+The team's Supabase project is a **shared database** (ADR-0003):
+
+- Apply migrations to it **only from `main`**, after the pull request is merged.
+- Only **Thamod, Senuth or Prasad** run `database update` here.
+- Never apply a migration from a feature branch: if that branch changes before merging, everyone's database is left
+  with a migration `main` doesn't know about.
 
 ## 4. Verify
 
@@ -120,6 +124,6 @@ tests against local PostgreSQL (see
 
 - Never commit the database password or a Supabase connection string.
 - Each developer stores their own connection string in User Secrets.
-- Use a separate Supabase project for production, with its own password and
-  approved migration process.
+- Supabase is for development only. Production runs on Azure Database for
+  PostgreSQL, with its own credentials and approved migration process.
 - Don't create FleetSync tables in Supabase-reserved schemas.
