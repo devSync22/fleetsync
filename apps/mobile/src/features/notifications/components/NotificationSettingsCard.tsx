@@ -1,4 +1,3 @@
-import { Settings } from 'lucide-react-native';
 import { Linking, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { Button, Card, InfoBanner } from '@/components/ui';
@@ -33,7 +32,7 @@ export function NotificationSettingsCard() {
             title="Notifications are off"
             message="Turn them on in your phone’s settings to hear about new trips and messages."
           />
-          <Button label="Open settings" variant="secondary" icon={Settings} onPress={openSettings} />
+          <Button label="Open settings" variant="secondary" onPress={openSettings} />
         </View>
       ) : null}
       {ROWS.map((row) => (

@@ -1,34 +1,39 @@
-import type { ChatMessage, ChatRole, ChatRoom } from './types'
+import type { ChatRoom } from './types'
 
-function sortKey(message: ChatMessage) {
-  return `${message.day === 'Today' ? 1 : 0}-${message.time}`
+const startOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
+
+/** "Today", "Yesterday" or "12 Oct". */
+export function dayLabel(iso: string) {
+  const date = new Date(iso)
+  const days = Math.round((startOfDay(new Date()) - startOfDay(date)) / 86_400_000)
+  if (days === 0) return 'Today'
+  if (days === 1) return 'Yesterday'
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 }
 
-/** The most recent message in the room and who it was with. */
-export function latestMessage(room: ChatRoom): { role: ChatRole; message: ChatMessage } | null {
-  let latest: { role: ChatRole; message: ChatMessage } | null = null
-  for (const person of room.people) {
-    const last = room.messages[person.role]?.at(-1)
-    if (last && (!latest || sortKey(last) > sortKey(latest.message))) latest = { role: person.role, message: last }
-  }
-  return latest
+/** "08:44". */
+export function timeLabel(iso: string) {
+  return new Date(iso).toTimeString().slice(0, 5)
+}
+
+/** Room-list time: the time for today, otherwise the day. */
+export function activityLabel(iso: string) {
+  const day = dayLabel(iso)
+  return day === 'Today' ? timeLabel(iso) : day
 }
 
 /** "Nuwan: Small queue at the weighbridge…" / "You: Please keep the boxes upright." */
-export function previewOf(room: ChatRoom) {
-  const latest = latestMessage(room)
-  if (!latest) return 'No messages yet'
-  const person = room.people.find((p) => p.role === latest.role)
-  const sender = latest.message.from === 'me' ? 'You' : (person?.name.split(' ')[0] ?? '')
-  return `${sender}: ${latest.message.text}`
-}
-
-/** Who to open by default: the person the coordinator last talked to in this room. */
-export function defaultRole(room: ChatRoom): ChatRole {
-  return latestMessage(room)?.role ?? room.people[0]?.role ?? 'customer'
+export function previewOf(room: ChatRoom, viewerId: string) {
+  const last = room.lastMessage
+  if (!last) return 'No messages yet'
+  const sender = last.senderId === viewerId ? 'You' : last.senderName.split(' ')[0]
+  return `${sender}: ${last.text}`
 }
 
 export function matchesRoom(room: ChatRoom, query: string) {
   const needle = query.trim().toLowerCase()
-  return !needle || [room.orderId, room.tripId ?? '', room.customerName].some((f) => f.toLowerCase().includes(needle))
+  return (
+    !needle ||
+    [room.orderId, room.tripId ?? '', room.customerName, room.route].some((f) => f.toLowerCase().includes(needle))
+  )
 }
