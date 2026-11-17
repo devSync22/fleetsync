@@ -1,88 +1,70 @@
-import { Check, CircleX } from 'lucide-react-native';
-import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 
-import { colors, sizes, spacing, typography } from '@/theme';
+import { Colors, Fonts, Radius } from '@/constants/theme'
 
-const BOX_SIZE = 18;
-/** Extra vertical hit area so the 18 px box still meets the 44 px touch target. */
-const HIT_SLOP = (sizes.touchTarget - BOX_SIZE) / 2;
+import { Icon } from './Icon'
 
 type CheckboxProps = {
-  label: string;
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-  /** Validation error shown under the checkbox. */
-  error?: string;
-  /** `sm` = 13 px label (inline options), `md` = 14 px label (form confirmations). */
-  size?: 'sm' | 'md';
-  style?: StyleProp<ViewStyle>;
-};
+  label: string
+  checked: boolean
+  onChange: (checked: boolean) => void
+  /** Label size: 13px next to other controls (sign-in), 14px on its own (request form). */
+  size?: 'sm' | 'md'
+  /** Red border on the box, e.g. when a required confirmation is missing. */
+  invalid?: boolean
+}
 
-/** Checkbox with a label (Figma: "Keep me signed in", "The details I've given are correct"). */
-export function Checkbox({ label, checked, onChange, error, size = 'md', style }: CheckboxProps) {
+/** 18px checkbox with label; the whole row is tappable (Figma: accent fill + white check). */
+export function Checkbox({ label, checked, onChange, size = 'sm', invalid = false }: CheckboxProps) {
   return (
-    <View style={[styles.container, style]}>
-      <Pressable
-        accessibilityRole="checkbox"
-        accessibilityState={{ checked }}
-        accessibilityLabel={label}
-        onPress={() => onChange(!checked)}
-        hitSlop={{ top: HIT_SLOP, bottom: HIT_SLOP }}
-        style={styles.row}>
-        <View style={[styles.box, checked ? styles.checked : error ? styles.errorBox : styles.unchecked]}>
-          {checked ? <Check size={12} color={colors.surface} strokeWidth={3} /> : null}
-        </View>
-        <Text style={[size === 'sm' ? typography.bodySmall : typography.body, styles.label]}>{label}</Text>
-      </Pressable>
-      {error ? (
-        <View style={styles.message}>
-          <CircleX size={sizes.iconXs} color={colors.danger} />
-          <Text style={[typography.caption, styles.messageText]}>{error}</Text>
-        </View>
-      ) : null}
-    </View>
-  );
+    <Pressable
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked }}
+      accessibilityLabel={label}
+      onPress={() => onChange(!checked)}
+      style={styles.row}
+      // Makes the small box easier to hit.
+      hitSlop={6}
+    >
+      <View style={[styles.box, checked && styles.boxChecked, invalid && styles.boxInvalid]}>
+        {checked && <Icon source={require('@/assets/icons/check-white.svg')} size={12} />}
+      </View>
+      <Text style={[styles.label, size === 'md' && styles.labelMd]}>{label}</Text>
+    </Pressable>
+  )
 }
 
 const styles = StyleSheet.create({
-  container: {
-    gap: spacing.sm,
-  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.ml,
+    gap: 8,
+    flexShrink: 1,
   },
   box: {
-    width: BOX_SIZE,
-    height: BOX_SIZE,
-    borderRadius: 4,
     alignItems: 'center',
     justifyContent: 'center',
+    width: 18,
+    height: 18,
+    borderWidth: 1,
+    borderColor: Colors.line,
+    borderRadius: Radius.sm,
+    backgroundColor: Colors.surface,
   },
-  checked: {
-    backgroundColor: colors.accent,
+  boxChecked: {
+    borderColor: Colors.accent,
+    backgroundColor: Colors.accent,
   },
-  unchecked: {
-    backgroundColor: colors.surface,
-    borderWidth: sizes.hairline,
-    borderColor: colors.line,
-  },
-  errorBox: {
-    backgroundColor: colors.surface,
-    borderWidth: sizes.hairline,
-    borderColor: colors.danger,
+  boxInvalid: {
+    borderColor: Colors.danger,
   },
   label: {
     flexShrink: 1,
-    lineHeight: undefined,
+    fontFamily: Fonts.regular,
+    fontSize: 13,
+    color: Colors.textDefault,
   },
-  message: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
+  labelMd: {
+    fontSize: 14,
   },
-  messageText: {
-    flexShrink: 1,
-  },
-});
+})

@@ -1,5 +1,2 @@
-import { RequestAccountScreen } from '@/features/auth/screens/RequestAccountScreen';
-
-export default function RequestAccountRoute() {
-  return <RequestAccountScreen />;
-}
+// Route `/request-account`. The screen lives in src/features/auth/registration.
+export { default } from '@/features/auth/registration/screens/RequestAccountScreen'

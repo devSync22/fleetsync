@@ -8,7 +8,6 @@ export { InfoBanner, type BannerTone } from './InfoBanner';
 export { PasswordRules } from './PasswordRules';
 export { PasswordStrengthMeter } from './PasswordStrengthMeter';
 export { ScreenHeader } from './ScreenHeader';
-export { Select, type SelectOption } from './Select';
 export { StatusBadge } from './StatusBadge';
 export { getStatusTone, statusTones, type Status } from './statusTones';
 export { TextField } from './TextField';

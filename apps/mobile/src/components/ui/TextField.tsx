@@ -1,110 +1,111 @@
-import { CircleCheck, CircleX } from 'lucide-react-native';
-import { useState } from 'react';
-import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
+import { useState } from 'react'
+import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native'
 
-import { colors, radii, sizes, spacing, typography } from '@/theme';
+import { Colors, Fonts, Radius } from '@/constants/theme'
 
-type TextFieldProps = Omit<TextInputProps, 'style' | 'placeholderTextColor'> & {
-  label: string;
-  /** Hint shown under the field when there is no error or success message. */
-  helper?: string;
-  /** Validation error: colours the border and shows the message with an icon. */
-  error?: string;
-  /** Validation success: colours the border and shows the message with an icon. */
-  success?: string;
-  /** Use JetBrains Mono for data values (odometer, references, plates). */
-  mono?: boolean;
-};
+type TextFieldProps = Omit<TextInputProps, 'style'> & {
+  label: string
+  /** Error state: red border. Pair with `helperText` to say what's wrong. */
+  invalid?: boolean
+  /** Small text under the input; shown in red when `invalid`. */
+  helperText?: string
+}
 
-/** Label above, field, then helper or validation message below (Style Guide → Form fields). */
+/**
+ * Labelled text input (Figma component "Input"). When focused it shows the
+ * design's accent border with a soft accent ring around it.
+ */
 export function TextField({
   label,
-  helper,
-  error,
-  success,
-  mono = false,
+  invalid = false,
+  helperText,
   onFocus,
   onBlur,
   ...inputProps
 }: TextFieldProps) {
-  const [focused, setFocused] = useState(false);
-
-  const message = error ?? success ?? helper;
-  const MessageIcon = error ? CircleX : success ? CircleCheck : null;
-  const iconColor = error ? colors.danger : colors.success;
+  const [focused, setFocused] = useState(false)
 
   return (
-    <View style={styles.container}>
-      <Text style={typography.label}>{label}</Text>
-      <View
-        style={[
-          styles.field,
-          focused && styles.focused,
-          !focused && error ? styles.error : null,
-          !focused && !error && success ? styles.success : null,
-        ]}>
+    <View style={styles.field}>
+      <Text style={styles.label}>{label}</Text>
+      {/* The outer view draws the 3px focus ring; it has no visible border when not focused. */}
+      <View style={[styles.ring, focused && !invalid && styles.ringFocused]}>
         <TextInput
           {...inputProps}
-          accessibilityLabel={inputProps.accessibilityLabel ?? label}
-          placeholderTextColor={colors.muted}
+          accessibilityLabel={label}
+          style={[
+            styles.input,
+            focused && styles.inputFocused,
+            invalid && styles.inputInvalid,
+          ]}
+          placeholderTextColor={Colors.textFaint}
           onFocus={(event) => {
-            setFocused(true);
-            onFocus?.(event);
+            setFocused(true)
+            onFocus?.(event)
           }}
           onBlur={(event) => {
-            setFocused(false);
-            onBlur?.(event);
+            setFocused(false)
+            onBlur?.(event)
           }}
-          style={[styles.input, mono ? typography.monoInput : typography.body]}
         />
       </View>
-      {message ? (
-        <View style={styles.message}>
-          {MessageIcon ? <MessageIcon size={sizes.iconXs} color={iconColor} /> : null}
-          <Text style={[typography.caption, styles.messageText]}>{message}</Text>
-        </View>
-      ) : null}
+      {helperText && (
+        <Text style={[styles.helper, invalid && styles.helperInvalid]}>{helperText}</Text>
+      )}
     </View>
-  );
+  )
 }
 
+const RING_WIDTH = 3
+
 const styles = StyleSheet.create({
-  container: {
-    gap: spacing.sm,
-    alignSelf: 'stretch',
-  },
   field: {
-    minHeight: sizes.touchTarget,
-    justifyContent: 'center',
-    backgroundColor: colors.surface,
-    borderWidth: sizes.hairline,
-    borderColor: colors.border,
-    borderRadius: radii.control,
-    paddingHorizontal: spacing.lg,
+    gap: 6,
+    width: '100%',
   },
-  focused: {
-    borderWidth: sizes.focusBorder,
-    borderColor: colors.accent,
-    paddingHorizontal: spacing.lg - 1,
-    boxShadow: `0px 0px 0px 3px ${colors.accentSoft}`,
+  label: {
+    fontFamily: Fonts.medium,
+    fontSize: 13,
+    lineHeight: 20,
+    color: Colors.textDefault,
   },
-  error: {
-    borderColor: colors.danger,
+  // Negative margin keeps the ring outside the input so the layout doesn't move on focus.
+  ring: {
+    margin: -RING_WIDTH,
+    borderWidth: RING_WIDTH,
+    borderColor: 'transparent',
+    borderRadius: Radius.md + RING_WIDTH,
   },
-  success: {
-    borderColor: colors.success,
+  ringFocused: {
+    borderColor: Colors.accentSoft,
   },
   input: {
-    paddingVertical: spacing.ml,
-    // Line height on a single-line TextInput clips text on Android; padding sets the height instead.
-    lineHeight: undefined,
+    // Fixed height so the 1px → 2px border change on focus doesn't change the size.
+    height: 42,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.surface,
+    fontFamily: Fonts.regular,
+    fontSize: 14,
+    color: Colors.textDefault,
   },
-  message: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
+  inputFocused: {
+    borderWidth: 2,
+    borderColor: Colors.accent,
+    paddingHorizontal: 11,
   },
-  messageText: {
-    flexShrink: 1,
+  inputInvalid: {
+    borderColor: Colors.danger,
   },
-});
+  helper: {
+    fontFamily: Fonts.regular,
+    fontSize: 12,
+    lineHeight: 16,
+    color: Colors.textMuted,
+  },
+  helperInvalid: {
+    color: Colors.danger,
+  },
+})
