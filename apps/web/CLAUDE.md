@@ -106,73 +106,15 @@ Rules:
 
 The logo's greens and orange are used only inside the logo, never as UI colours.
 
-Put the tokens in `src/index.css` like this (after `shadcn init`, replace its generated colour values with these;
-light theme only — the design has no dark mode):
-
-```css
-@import "tailwindcss";
-
-:root {
-  --radius: 0.5rem;
-  /* shadcn semantic variables mapped to FMS tokens */
-  --background: #F4F5F7;
-  --foreground: #111827;
-  --card: #FFFFFF;
-  --card-foreground: #111827;
-  --popover: #FFFFFF;
-  --popover-foreground: #111827;
-  --primary: #111827;            /* primary buttons are dark in the design */
-  --primary-foreground: #FFFFFF;
-  --secondary: #F3F4F6;
-  --secondary-foreground: #111827;
-  --muted: #F3F4F6;
-  --muted-foreground: #6B7280;
-  --accent: #F3F4F6;             /* shadcn hover background */
-  --accent-foreground: #111827;
-  --destructive: #B91C1C;
-  --border: #E3E6EB;
-  --input: #E3E6EB;
-  --ring: #4F46E5;
-  /* FleetSync tokens */
-  --fs-line: #D1D5DB;
-  --fs-faint: #9CA3AF;
-  --fs-brand: #4F46E5;
-  --fs-brand-soft: #E0E7FF;
-  --fs-pending: #B45309;
-  --fs-pending-soft: #FEF3C7;
-  --fs-info: #1D4ED8;
-  --fs-info-soft: #DBEAFE;
-  --fs-success: #15803D;
-  --fs-success-soft: #DCFCE7;
-  --fs-danger: #B91C1C;
-  --fs-danger-soft: #FEE2E2;
-}
-
-@theme inline {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
-  /* keep shadcn's generated --color-* mappings here, then add: */
-  --color-line: var(--fs-line);
-  --color-faint: var(--fs-faint);
-  --color-brand: var(--fs-brand);
-  --color-brand-soft: var(--fs-brand-soft);
-  --color-pending: var(--fs-pending);
-  --color-pending-soft: var(--fs-pending-soft);
-  --color-info: var(--fs-info);
-  --color-info-soft: var(--fs-info-soft);
-  --color-success: var(--fs-success);
-  --color-success-soft: var(--fs-success-soft);
-  --color-danger: var(--fs-danger);
-  --color-danger-soft: var(--fs-danger-soft);
-}
-```
+The tokens are defined in `src/index.css` (shadcn's semantic variables mapped onto them, then the `--fs-*`
+FleetSync tokens exposed to Tailwind through `@theme inline`). Light theme only — the design has no dark mode.
 
 Use them as Tailwind classes: `bg-background`, `text-muted-foreground`, `text-brand`, `bg-success-soft text-success`, `border-border`…
 
 ## Typography
 
-Fonts: **Inter** (UI) and **JetBrains Mono** (IDs, plates, numbers in data). Load both (e.g. `@fontsource-variable/inter`
-and `@fontsource/jetbrains-mono`).
+Fonts: **Inter** (UI) and **JetBrains Mono** (IDs, plates, numbers in data), loaded from
+`@fontsource-variable/inter` and `@fontsource/jetbrains-mono`.
 
 | Style | Size / weight | Example |
 |---|---|---|
@@ -190,7 +132,7 @@ and `@fontsource/jetbrains-mono`).
 - **Status badges**: soft tinted background with the label in the strong colour, no dot. One colour per meaning:
   neutral = inactive/draft/off duty, pending = pending/due soon, accent = assigned/quoted/scheduled,
   info = on trip/in progress, success = active/completed/paid, danger = overdue/failed/suspended/cancelled.
-  Build one `StatusBadge` component and map each domain status to a tone in one place.
+  One `StatusBadge` component (`components/shared`); each domain status maps to a label and tone in `statusTones.ts`.
 - Never strike through or draw lines across field values. Old values show in grey with a "Current" or "Before" label.
 - Tables: small buttons in the Actions column (e.g. "View") plus a ⋯ menu for the rest.
 - Desktop frames are 1440px wide; layouts should also work down to about 1024px.

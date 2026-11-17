@@ -48,36 +48,47 @@ Never resolve a conflict quietly in code. When the task touches something the so
 ## Stack (in this repo — do not change without an ADR)
 
 - **ASP.NET Core 10** Web API on .NET 10, the current LTS release (`global.json`; team decision, DI-28), OpenAPI via `Microsoft.AspNetCore.OpenApi`
-- Entity Framework Core 10 with Npgsql, **PostgreSQL 18** (local: `compose.yaml`; password in the root `.env`)
+  (browsable with Scalar at `/scalar` in Development)
+- Entity Framework Core 10 with Npgsql, **PostgreSQL 18** (local: `compose.yaml` or a native install; hosted: Supabase,
+  see `docs/runbooks/supabase-database.md`)
 - Health checks: `/health`, `/health/live`, `/health/ready` (database)
-- Tests: xUnit — `tests/FleetSync.UnitTests`, `tests/FleetSync.IntegrationTests` (real PostgreSQL)
+- Tests: xUnit — unit tests per module plus `tests/FleetSync.UnitTests`; `tests/FleetSync.IntegrationTests` (real PostgreSQL)
 - Auth (per the Authentication API Contract): ASP.NET Core Identity + JWT Bearer, HS256, access token 15 min,
   refresh token 7 days in an HttpOnly cookie, rotated on use
 
 The requirements document and the auth contract still say ASP.NET Core 8. Ignore that: the team decided on ASP.NET Core 10 (DI-28).
 Never downgrade a package to an 8.x version because a document mentions 8.
 
-## Solution layout (Clean Architecture)
+## Solution layout (modular monolith — ADR-0002)
+
+> The first version of this guide described one shared Clean Architecture solution with a single `FleetSyncDbContext`.
+> **ADR-0002 (Accepted) replaced that**: each business module is its own project. Follow ADR-0002.
 
 ```
 apps/api/
 ├── FleetSync.slnx
 ├── src/
-│   ├── FleetSync.Domain/          entities, value objects, enums, domain rules — no dependencies
-│   ├── FleetSync.Application/     use cases (services / handlers), DTOs, validation, interfaces for outside systems → Domain
-│   ├── FleetSync.Infrastructure/  EF Core (Persistence/), PayHere, email, push, file storage implementations → Application, Domain
-│   └── FleetSync.Api/             endpoints, auth setup, ProblemDetails, OpenAPI, Program.cs → Application, Infrastructure
+│   ├── FleetSync.Api/                 host: composes modules; ProblemDetails, CORS, JSON, health checks,
+│   │                                  deny-by-default authorization, OpenAPI, middleware order
+│   ├── FleetSync.Domain/              shared kernel (currently empty)
+│   ├── FleetSync.Application/         shared kernel (currently empty)
+│   ├── FleetSync.Infrastructure/      FleetSyncDbContext for the shared baseline migration (schema public)
+│   └── Modules/<Name>/FleetSync.Modules.<Name>/
+│       ├── Domain/                    entities, enums, domain rules
+│       ├── Application/               one folder per use case: contracts, validators, service
+│       ├── Infrastructure/            <Name>DbContext (own schema + migrations), adapters (email, storage…)
+│       ├── Endpoints/                 Minimal API routes
+│       └── <Name>Module.cs            the only public entry points: Add<Name>Module() / Map<Name>Endpoints()
 └── tests/
     ├── FleetSync.UnitTests/
+    ├── FleetSync.Modules.<Name>.UnitTests/
     └── FleetSync.IntegrationTests/
 ```
 
-Dependencies point inward only: Domain knows nothing else; Application never references EF Core, HTTP or a vendor SDK.
+Inside a module, dependencies still point inward: Domain knows nothing else; Application never uses HTTP or a
+vendor SDK directly. Everything except `<Name>Module` is `internal`.
 
 ### Modules (modular monolith)
-
-Each module has a folder with the same name in every layer that needs it, e.g. `FleetSync.Domain/Trips/`,
-`FleetSync.Application/Trips/`, `FleetSync.Infrastructure/Persistence/Configurations/Trips/`, `FleetSync.Api/Trips/`.
 
 | Module folder | Covers | Requirements module | Owner |
 |---|---|---|---|
@@ -97,9 +108,14 @@ Each module has a folder with the same name in every layer that needs it, e.g. `
 | `Dashboards` | Role dashboards | M11 | Prasad and role owners |
 | `Reports` | Reports and exports | M12 | Idusara |
 
-Modules talk to each other through Application-layer interfaces or domain events, never by editing another module's
-tables directly. One `FleetSyncDbContext` holds all entities; each module adds its own `IEntityTypeConfiguration<T>`
-classes, which the context already picks up with `ApplyConfigurationsFromAssembly`.
+**Current state:** `Identity` and `Audit` are implemented together as the `Auth` module
+(`Modules/Auth/FleetSync.Modules.Auth`, schema `identity`, routes under `/api/auth`). It also holds
+`CustomerCompanies`, which the table assigns to `Customers`. Whether to rename or split it is an open decision.
+
+Per ADR-0002, each module owns its own `DbContext`, PostgreSQL schema and migrations history table. Schema names must
+not clash with the schemas Supabase reserves (`auth`, `storage`, `realtime`, `extensions`, `graphql`, `vault`, …).
+Modules talk to each other through a published `FleetSync.Modules.<Name>.Contracts` project or domain events, never by
+reading or editing another module's tables.
 
 ## Data and EF Core rules
 
@@ -121,6 +137,7 @@ classes, which the context already picks up with `ApplyConfigurationsFromAssembl
 - Deny by default: every endpoint requires an authenticated user unless marked anonymous, and declares its roles with the
   shared policies from the auth contract (`RequireFleetOwner`, `RequireFleetManagement`, `RequireOperations`, `RequireStaff`,
   `RequireDriver`, `RequireMechanic`, `RequireCustomer`). Do not define new role lists under those names.
+  (The host sets the fallback policy; mark public endpoints with `AllowAnonymous()`.)
 - **Account management is Fleet Administrator only** (DI-01, DI-02): creating accounts, reviewing applications, approving,
   rejecting, suspending and changing roles. This overrides the auth contract, which gives staff creation and approval to the
   Fleet Owner. Use a dedicated policy (e.g. `RequireFleetAdministrator`) for these endpoints. This covers **customer
@@ -133,6 +150,7 @@ classes, which the context already picks up with `ApplyConfigurationsFromAssembl
   transitions, no double booking of a driver or vehicle, odometer readings never decrease.
 - Every endpoint appears in OpenAPI with request and response types. The frontends generate or copy types from it.
 - If an endpoint style (controllers or minimal APIs) already exists, follow it; if not, ask before choosing.
+  (Minimal APIs are in use.)
 
 ## Scope rules
 
@@ -148,21 +166,25 @@ classes, which the context already picks up with `ApplyConfigurationsFromAssembl
   automatic full refund (DI-06, DI-22).
 - Chat pairs allowed: Customer ↔ Coordinator, Coordinator ↔ Driver, Coordinator ↔ Mechanic, Driver ↔ Mechanic (DI-21).
 - Never put passwords, NIC numbers or tokens in logs, JWTs or notifications.
+  (Development emails are saved to `App_Data/dev-emails/`, not logged, for this reason.)
 
 ## Tests
 
-- Unit tests for domain rules and Application services in `FleetSync.UnitTests`.
+- Unit tests for domain rules and Application services in `FleetSync.UnitTests` or the module's
+  `FleetSync.Modules.<Name>.UnitTests` project.
 - Integration tests for anything that depends on the database (constraints, concurrency, migrations) in
   `FleetSync.IntegrationTests`, against PostgreSQL (`docs/runbooks/database-testing.md`).
 - Add tests with every rule you implement, including the failure cases (wrong role, wrong owner, invalid transition).
+- Manual API test suites and their test-case document: `apps/api/tests/manual/`, `docs/testing/auth-api-testing.md`.
 
 ## Commands
 
 ```
-docker compose up -d                                   # local PostgreSQL (from the repo root)
+docker compose up -d                                   # local PostgreSQL (from the repo root), or use a native install
 dotnet build apps/api/FleetSync.slnx
 dotnet test apps/api/tests/FleetSync.UnitTests
-dotnet test apps/api/tests/FleetSync.IntegrationTests  # needs the database
+dotnet test apps/api/tests/FleetSync.Modules.Auth.UnitTests
+dotnet test apps/api/tests/FleetSync.IntegrationTests  # needs the database (fleetsync_test)
 dotnet run --project apps/api/src/FleetSync.Api
 ```
 
