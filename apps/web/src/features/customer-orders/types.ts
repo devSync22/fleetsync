@@ -58,3 +58,99 @@ export interface MyOrdersResult {
   /** Orders per tab that match the search and period. */
   tabCounts: Record<MyOrdersTab, number>
 }
+
+/* ───────────── Order details (/customer/orders/:orderId) ───────────── */
+
+/**
+ * One step of the order progress stepper. `stopped` marks the step where an order ended without
+ * completing (quote declined, quotation expired, order cancelled).
+ */
+export type OrderProgressState = 'done' | 'current' | 'upcoming' | 'stopped'
+
+export type OrderProgressStepId = 'submitted' | 'quoted' | 'paid' | 'trip-scheduled' | 'in-progress' | 'completed'
+
+export interface OrderProgressStep {
+  id: OrderProgressStepId
+  /** "Submitted", "Quoted", "Paid", "Trip scheduled", "In progress", "Completed". */
+  label: string
+  state: OrderProgressState
+  /** "15 Oct, 10:05", "LKR 27,900", "Quote declined" or "—" for upcoming steps. */
+  caption: string
+}
+
+/** The trip that carries the order, as the customer sees it. */
+export interface CustomerOrderTrip {
+  tripId: string
+  status: 'scheduled' | 'in-progress' | 'completed' | 'trip-cancelled'
+  /** Plate, e.g. "WP LC-4410". */
+  vehicle: string
+  driver: string
+  /** "Today, 08:00 – 13:00". */
+  window: string
+  /** "08:15", or null before the driver starts the trip. */
+  started: string | null
+}
+
+/** Colour of the dot next to an update; follows the Status Badge tones. */
+export type OrderUpdateTone = 'neutral' | 'pending' | 'accent' | 'info' | 'success' | 'danger'
+
+/** One entry of the Updates timeline, newest first. */
+export interface OrderUpdate {
+  title: string
+  detail: string
+  /** "Today, 08:15" or "15 Oct, 16:40". */
+  when: string
+  tone: OrderUpdateTone
+}
+
+export interface OrderStop {
+  address: string
+  /** "Today, 08:00" or "Before 13:00". */
+  when: string
+  /** Contact person at the stop. */
+  contact: string
+}
+
+export interface OrderCargo {
+  /** "Ceramic tiles". */
+  type: string
+  weightKg: number
+  /** What the units are: "Pallets", "Boxes"… */
+  unitsLabel: string
+  unitsCount: number
+  /** "Fragile, keep upright". */
+  handling: string
+}
+
+/** Payment for the quotation; null until the customer accepts a quote. */
+export interface OrderPayment {
+  quotationAmount: number
+  /** "15 Oct, 15:02"; null while awaiting payment. */
+  paidOn: string | null
+  /** "Online · Visa ending 4421"; null while awaiting payment. */
+  method: string | null
+  /** "PAY-58213"; null while awaiting payment. */
+  reference: string | null
+  status: 'awaiting-payment' | 'paid' | 'refunded'
+}
+
+/** Everything "Customer — Order details" (158:5805) shows for one order. */
+export interface CustomerOrderDetail {
+  orderId: string
+  status: CustomerOrderStatus
+  /** "15 Oct, 10:05". */
+  placedLabel: string
+  /** "Colombo → Kurunegala". */
+  route: string
+  /** "9 t ceramic tiles". */
+  cargoSummary: string
+  /** Quoted amount in LKR; null until the order has been quoted. Same as the My orders row. */
+  amount: number | null
+  progress: OrderProgressStep[]
+  trip: CustomerOrderTrip | null
+  updates: OrderUpdate[]
+  pickup: OrderStop
+  destination: OrderStop
+  cargo: OrderCargo
+  payment: OrderPayment | null
+}
