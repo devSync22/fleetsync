@@ -112,6 +112,59 @@ access goes through the FleetSync API.
 - Never share the `service_role` key. FleetSync doesn't need any Supabase API
   key, only the database password.
 
+## 6. Shared test accounts (one per role)
+
+The shared database holds one ready-to-use account per role, so everyone can
+try the web and mobile sign-in without going through registration and approval.
+All six share one password, which is **not** in the repo: ask Prasad for it.
+
+| Role | Email | Sign in on |
+| ---- | ----- | ---------- |
+| Fleet Owner | `owner@fleetsync.local` | Web |
+| Fleet Administrator | `admin@fleetsync.local` | Web |
+| Operational Coordinator | `coordinator@fleetsync.local` | Web |
+| Customer | `customer@fleetsync.local` | Web |
+| Driver | `driver@fleetsync.local` | Mobile |
+| Mechanic | `mechanic@fleetsync.local` | Mobile |
+
+**Using them** needs nothing extra: point your API at Supabase (section 2) and
+sign in. Because everyone shares these accounts:
+
+- **Don't change their passwords** (Profile → Change password, or a reset): it
+  changes them for the whole team and signs everyone else out.
+- **Don't guess the password.** Five wrong attempts lock the account for 15
+  minutes for everybody.
+- Don't deactivate them or approve/reject real applications as the test admin
+  unless that is what you are testing.
+
+**Creating them** is done once, by one person (Prasad). `DevTestAccountsSeeder`
+runs at API startup in Development only, and only when
+`Auth:DevTestAccounts:Password` is set:
+
+```bash
+dotnet user-secrets set "Auth:DevTestAccounts:Password" "<strong shared password>" --project apps/api/src/FleetSync.Api
+dotnet run --project apps/api/src/FleetSync.Api
+```
+
+The log shows `Created development test account … (role)` for each new account.
+Emails that already exist are skipped, so the password is set by whoever seeds
+first and running it again never resets it. Everyone else should **leave
+`Auth:DevTestAccounts:Password` unset**. (If the test customer is skipped with
+a warning, another company already uses registration number `PV 00001`.)
+
+Rules for the shared password:
+
+- Use a strong one (not the `FleetSync@2026` example from
+  [auth-module.md](auth-module.md)): the list includes a Fleet Administrator.
+- Share it privately with the team. Never commit it or post it in an issue or PR.
+- Never set it on an API that is reachable from the internet. On a hosted
+  environment pointing at this database, anyone could sign in as the admin.
+  (Production uses Azure and is not in Development, so the seeder never runs there.)
+
+To reset a forgotten or changed password, use **Forgot password** with that
+email; the link is saved under `App_Data/dev-emails/` on the machine running the
+API that sent it.
+
 ## Tests
 
 Integration tests write data, so they only run against databases named
