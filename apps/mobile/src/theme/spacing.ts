@@ -27,6 +27,8 @@ export const radii = {
   card: 14,
   /** Chips, count pills, avatars. */
   pill: 999,
+  /** Chat bubble corner on the sender's side (Driver — Chat). */
+  bubbleTail: 4,
 } as const;
 
 /** Fixed component sizes from Figma. */
@@ -35,6 +37,8 @@ export const sizes = {
   touchTarget: 44,
   /** Avatar / round icon button. */
   avatar: 40,
+  /** Large avatar on the profile header (Driver — Profile). */
+  avatarLarge: 60,
   /** Small avatar / round icon button inside cards (call, chat). */
   iconButton: 36,
   /** Empty-state icon circle. */
@@ -50,5 +54,31 @@ export const sizes = {
   iconXl: 24,
   /** Border widths. */
   hairline: 1,
+  /** Selected choice chip, dashed "Add photo" tile. */
+  selectedBorder: 1.5,
   focusBorder: 2,
+  /** Delivery photo tile (Driver — Proof of delivery). */
+  photoTile: 112,
+  /** Receiver signature pad height. */
+  signaturePad: 132,
+  /** Pen width inside the signature pad. */
+  signatureStroke: 2.5,
+  /** Minimum height of a multi-line text field (notes). */
+  textArea: 88,
+  /** Step circle on the trip progress card (Driver — Active trip). */
+  progressDot: 20,
+  /** Filled centre of the current step's circle. */
+  progressDotCore: 8,
+  /** Connector line between progress steps. */
+  progressLine: 2,
+  /** Text cursor next to the big odometer value. */
+  odometerCursor: 30,
+  /** Initials circle inside a chat participant chip. */
+  chipAvatar: 26,
+  /** Round Send button next to the chat composer. */
+  sendButton: 40,
+  /** Unread count pill on a chat room card. */
+  countPill: 18,
+  /** Tallest the chat composer grows before it scrolls. */
+  composerMaxHeight: 100,
 } as const;

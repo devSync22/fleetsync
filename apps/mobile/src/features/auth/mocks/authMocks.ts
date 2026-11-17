@@ -4,6 +4,7 @@ import type { AccountApproval, AuthUser } from '../types';
  * Mock data copied from the Figma frames:
  * - Kasun Jayasinghe — "Driver — Profile" / "Mobile — Sign in"
  * - Ishara Bandara — "Mechanic — Profile"
+ * - Ruwan Silva — not in the frames: a second driver whose licence expires soon ("Driver — Profile (Licence expiring)")
  * - Tharindu Wijesinghe — "Mobile — Request account / Request sent / Account approved"
  */
 
@@ -24,6 +25,17 @@ export const mockAccounts: MockAccount[] = [
       role: 'driver',
       staffId: 'DRV-014',
       email: 'kasun.j@fleetms.lk',
+      depot: 'Colombo depot',
+    },
+  },
+  {
+    password: MOCK_PASSWORD,
+    user: {
+      id: 'usr-drv-021',
+      name: 'Ruwan Silva',
+      role: 'driver',
+      staffId: 'DRV-021',
+      email: 'ruwan.s@fleetms.lk',
       depot: 'Colombo depot',
     },
   },

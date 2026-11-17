@@ -1,13 +1,15 @@
 import { ApiError } from '@/services/apiClient'
 import { MOCK_TODAY, myOrdersMock, type MyOrderRecord } from '../mocks/myOrdersMock'
+import { buildSubmittedOrder } from '../mocks/newOrderMock'
 import { orderDetailsMock } from '../mocks/orderDetailsMock'
 import { myOrdersTabs } from '../myOrdersTabs'
-import type { CustomerOrderDetail, CustomerOrderRow, MyOrdersPeriod, MyOrdersQuery, MyOrdersResult, MyOrdersTab } from '../types'
+import type { CreatedOrder, CustomerOrderDetail, CustomerOrderRow, MyOrdersPeriod, MyOrdersQuery, MyOrdersResult, MyOrdersTab, NewOrderDraft } from '../types'
 
 /*
  * Mocked until the customer order endpoints exist:
  *   getMyOrders    → apiClient.get<MyOrdersResult>('/customer/orders', { params: query })
  *   getOrderDetail → apiClient.get<CustomerOrderDetail>(`/customer/orders/${orderId}`)
+ *   createOrder    → apiClient.post<CreatedOrder>('/customer/orders', draft)
  *
  * The mock filters, counts and paginates the way the endpoint will, so the page only reads
  * the result. In dev, add `mock=empty` or `mock=error` to the URL query.
@@ -90,4 +92,25 @@ export async function getOrderDetail(orderId: string): Promise<CustomerOrderDeta
   const detail = orderDetailsMock.find((order) => order.orderId === orderId)
   if (!detail) throw new ApiError(`We couldn’t find order ${orderId} in your account.`, 404)
   return detail
+}
+
+/** Next free ORD- number across the list and detail mocks. */
+function nextOrderId() {
+  const ids = [...myOrdersMock, ...orderDetailsMock].map((order) => Number(order.orderId.replace('ORD-', '')))
+  return `ORD-${Math.max(...ids) + 1}`
+}
+
+/**
+ * Submits a new transport order. It starts as "Pending review" until a coordinator quotes it.
+ * The mock adds it to the in-memory lists, so it shows at the top of My orders and opens in Order details
+ * (until the page is reloaded).
+ */
+export async function createOrder(draft: NewOrderDraft): Promise<CreatedOrder> {
+  await mockRequest()
+  // Future call: apiClient.post<CreatedOrder>('/customer/orders', draft)
+  const orderId = nextOrderId()
+  const { row, detail } = buildSubmittedOrder(orderId, draft, new Date())
+  myOrdersMock.unshift(row)
+  orderDetailsMock.push(detail)
+  return { orderId }
 }

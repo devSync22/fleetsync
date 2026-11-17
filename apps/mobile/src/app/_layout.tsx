@@ -8,6 +8,7 @@ import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { useNotificationTaps } from '@/features/notifications';
 import { colors } from '@/theme';
 
 // Keep the native splash screen up until fonts and the saved session are ready (module scope, don't await).
@@ -20,6 +21,7 @@ SplashScreen.preventAutoHideAsync();
  */
 function RootNavigator() {
   const { user, isLoading } = useAuth();
+  useNotificationTaps();
 
   useEffect(() => {
     if (!isLoading) {

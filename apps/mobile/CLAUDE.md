@@ -45,10 +45,11 @@ src/
 ├── app/                         ROUTES ONLY (Expo Router). Keep screens thin: import from features/.
 │   ├── _layout.tsx              root stack: fonts, splash, providers
 │   ├── (auth)/                  sign-in, request-account, request-sent, account-approved
-│   ├── (driver)/                driver area
-│   │   ├── _layout.tsx          stack wrapping the tabs + trip flow screens
-│   │   ├── (tabs)/              bottom tabs: Home, Trips, Chat, Profile (as in Figma)
-│   │   └── trip/[tripId]/...    trip details, start, active, picked-up, proof-of-delivery, complete, report-issue
+│   ├── driver/                  driver area
+│   │   ├── _layout.tsx          stack wrapping the tabs
+│   │   └── (tabs)/              bottom tabs: Home, Trips, Chat, Profile (as in Figma)
+│   │       └── (home)/          Home tab stack: home + trip/[tripId]/... (details, start, active, picked-up,
+│   │                            proof-of-delivery, complete, report-issue) — every mobile screen keeps the tab bar
 │   └── (mechanic)/              mechanic area (tabs as in the Mechanic Figma frames)
 ├── features/                    one folder per module
 │   └── <feature>/
