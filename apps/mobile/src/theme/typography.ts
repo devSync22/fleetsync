@@ -103,6 +103,30 @@ export const typography = {
     fontSize: fontSizes.base,
     color: colors.text,
   },
+  /** Medium body — cargo description, person names ("Ruwini Fonseka"). */
+  bodyMedium: {
+    fontFamily: fonts.medium,
+    fontSize: fontSizes.base,
+    color: colors.text,
+  },
+  /** Small emphasised body — compact banner title ("Your trip was due to start at 09:30"). */
+  bodySmallStrong: {
+    fontFamily: fonts.semiBold,
+    fontSize: fontSizes.md,
+    color: colors.text,
+  },
+  /** Metadata line under a screen greeting — "Monday, 19 Oct · DRV-014". */
+  meta: {
+    fontFamily: fonts.regular,
+    fontSize: fontSizes.md,
+    color: colors.muted,
+  },
+  /** Medium value inside a small tile — "2.1 t", "38 km". */
+  value: {
+    fontFamily: fonts.medium,
+    fontSize: fontSizes.md,
+    color: colors.text,
+  },
   /** Small body — banner and empty-state messages. */
   bodySmall: {
     fontFamily: fonts.regular,
@@ -137,6 +161,19 @@ export const typography = {
     fontFamily: fonts.semiBold,
     fontSize: fontSizes.md,
     color: colors.accent,
+  },
+  /** Multi-line caption — stop addresses ("No. 140, Sri Sangaraja Mawatha, Colombo 10"). */
+  captionLong: {
+    fontFamily: fonts.regular,
+    fontSize: fontSizes.sm,
+    lineHeight: 17,
+    color: colors.muted,
+  },
+  /** Emphasised caption — "Contact: Ruwini Fonseka". */
+  captionStrong: {
+    fontFamily: fonts.medium,
+    fontSize: fontSizes.sm,
+    color: colors.text,
   },
   /** Smallest metadata — step dates "17 Oct". */
   tiny: {
@@ -178,10 +215,22 @@ export const typography = {
     fontSize: fontSizes.base,
     color: colors.accent,
   },
+  /** Initials in a small (36 px) avatar — "People on this trip". */
+  avatarSmall: {
+    fontFamily: fonts.semiBold,
+    fontSize: fontSizes.sm,
+    color: colors.accent,
+  },
   /** Data / mono — "WP LB-7702", "09:30". */
   mono: {
     fontFamily: fonts.monoMedium,
     fontSize: fontSizes.md,
+    color: colors.text,
+  },
+  /** Mono at body size — upcoming trip time "07:00". */
+  monoBody: {
+    fontFamily: fonts.monoMedium,
+    fontSize: fontSizes.base,
     color: colors.text,
   },
   /** Mono for IDs in titles — "TRP-2208". */
