@@ -34,6 +34,7 @@ export function AdminDashboardPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
+        className="items-start"
         title={data ? `${greeting()}, ${data.adminFirstName}` : 'Dashboard'}
         description={
           data && (

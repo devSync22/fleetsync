@@ -1,3 +1,7 @@
+import type { Paged } from '@/lib/paging'
+
+export type { Paged }
+
 /** The six roles; values match the Auth module's role names (see docs/runbooks/auth-module.md). */
 export type UserRole = 'customer' | 'driver' | 'mechanic' | 'coordinator' | 'fleet-administrator' | 'owner'
 
@@ -44,8 +48,6 @@ export type UserAccount = {
 }
 
 export type UsersQuery = { search: string; role: UserRole | 'all'; status: AccountStatus | 'all'; page: number }
-
-export type Paged<T> = { items: T[]; total: number; page: number; pageCount: number; pageSize: number }
 
 /** Counts for the four tab pills. */
 export type UserTabCounts = { all: number; drivers: number; companies: number; roles: number }

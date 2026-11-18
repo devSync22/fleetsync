@@ -9,6 +9,8 @@ import { VerifyEmailPage } from '@/features/auth/pages/VerifyEmailPage'
 import { AdminDashboardPage } from '@/features/admin-dashboard/pages/AdminDashboardPage'
 import { CreateUserPage } from '@/features/admin-users/pages/CreateUserPage'
 import { UserAccountsPage } from '@/features/admin-users/pages/UserAccountsPage'
+import { ApplicationReviewPage } from '@/features/applications/pages/ApplicationReviewPage'
+import { ApplicationsPage } from '@/features/applications/pages/ApplicationsPage'
 import { AvailabilityPage } from '@/features/availability/pages/AvailabilityPage'
 import { ChatPage } from '@/features/chat/pages/ChatPage'
 import { CoordinatorDashboardPage } from '@/features/coordinator-dashboard/pages/CoordinatorDashboardPage'
@@ -111,6 +113,8 @@ export const router = createBrowserRouter([
       // Tabs (?tab=drivers) and the open profile (?user=USR-0142) are query values on one route.
       { path: 'users', element: <UserAccountsPage /> },
       { path: 'users/new', element: <CreateUserPage /> },
+      { path: 'applications', element: <ApplicationsPage /> },
+      { path: 'applications/:applicationId', element: <ApplicationReviewPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

@@ -1,10 +1,10 @@
 import { Banner } from '@/components/shared/Banner'
 import { FilterSelect } from '@/components/shared/FilterSelect'
+import { ListSearchBox } from '@/components/shared/ListSearchBox'
+import { PagedListCard } from '@/components/shared/PagedListCard'
 import { useDriverList } from '../hooks/useDriverList'
 import type { DriverRow } from '../types'
 import { DriversTable } from './DriversTable'
-import { ListCard } from './ListCard'
-import { SearchBox } from './SearchBox'
 
 const classOptions = [
   { id: 'all', label: 'All licence classes' },
@@ -50,21 +50,21 @@ export function DriversTab({ onView, onChangeRole, onDeactivate }: DriversTabPro
           message={attentionMessage(attention)}
         />
       )}
-      <ListCard
+      <PagedListCard
         state={state}
         retry={retry}
         noun="drivers"
         onPageChange={(page) => setQuery('page', String(page))}
         filters={
           <>
-            <SearchBox value={query.search} onChange={(v) => setQuery('search', v, { replace: true })} placeholder="Search name, phone or licence no." />
+            <ListSearchBox value={query.search} onChange={(v) => setQuery('search', v, { replace: true })} placeholder="Search name, phone or licence no." />
             <FilterSelect label="Licence class" value={query.licenceClass} options={classOptions} onChange={(v) => setQuery('licenceClass', v)} className="w-[200px]" />
             <FilterSelect label="Status" value={query.status} options={statusOptions} onChange={(v) => setQuery('status', v)} className="w-[200px]" />
           </>
         }
       >
         {(data) => <DriversTable drivers={data.items} onView={onView} onChangeRole={onChangeRole} onDeactivate={onDeactivate} />}
-      </ListCard>
+      </PagedListCard>
     </div>
   )
 }

@@ -1,7 +1,7 @@
 import { SearchInput } from '@/components/shared/SearchInput'
 
 /** The grey search field at the start of each list card's filter row. */
-export function SearchBox({ value, onChange, placeholder }: { value: string; onChange: (value: string) => void; placeholder: string }) {
+export function ListSearchBox({ value, onChange, placeholder }: { value: string; onChange: (value: string) => void; placeholder: string }) {
   return (
     <SearchInput
       value={value}

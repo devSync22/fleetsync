@@ -1,3 +1,4 @@
+import { paginate, textMatches } from '@/lib/paging'
 import { ApiError } from '@/services/apiClient'
 import { mockRequest, nowTime } from '@/services/mockRequest'
 import {
@@ -37,26 +38,12 @@ import type {
  * In dev, `?mock=error` previews error states and `?mock=empty` empty lists.
  */
 
-export const PAGE_SIZE = 8
-
 // Working copies, so role changes and deactivations persist while the app is open.
 const users: UserAccount[] = usersMock.map((u) => ({ ...u, recentActivity: [...u.recentActivity] }))
 const companies: CustomerCompany[] = companiesMock.map((c) => ({ ...c }))
 let nextEmployeeNumber = 159
 
-function paginate<T>(rows: T[], page: number): Paged<T> {
-  const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE))
-  const current = Math.min(page, pageCount)
-  return {
-    items: rows.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE),
-    total: rows.length,
-    page: current,
-    pageCount,
-    pageSize: PAGE_SIZE,
-  }
-}
-
-const matches = (text: string, search: string) => text.toLowerCase().includes(search.trim().toLowerCase())
+const matches = textMatches
 
 function findUser(userId: string) {
   const found = users.find((u) => u.userId === userId)

@@ -6,24 +6,26 @@ import { TablePagination } from '@/components/shared/TablePagination'
 import { TableSkeleton } from '@/components/shared/TableSkeleton'
 import { Button } from '@/components/ui/button'
 import type { AsyncState } from '@/hooks/useAsyncData'
-import type { Paged } from '../types'
+import type { Paged } from '@/lib/paging'
 
-type ListCardProps<T, P extends Paged<T>> = {
+type PagedListCardProps<T, P extends Paged<T>> = {
   /** Search box and filter selects shown in the card's top row. */
   filters: ReactNode
   state: AsyncState<P>
   retry: () => void
   /** "users", "drivers"… used in the loading, error and empty texts. */
   noun: string
+  /** Replaces "Showing 1–8 of 86" on the right of the filter row (e.g. "Oldest waiting: 2 days"). */
+  summary?: string
   onPageChange: (page: number) => void
   children: (data: P) => ReactNode
 }
 
 /**
- * The white table card used on every User accounts tab: filter row with "Showing 1–8 of 86",
+ * The white table card used by the admin lists (User accounts tabs, Applications…): filter row with "Showing 1–8 of 86",
  * the table, and the numbered pagination, plus the loading, error and no-results states.
  */
-export function ListCard<T, P extends Paged<T>>({ filters, state, retry, noun, onPageChange, children }: ListCardProps<T, P>) {
+export function PagedListCard<T, P extends Paged<T>>({ filters, state, retry, noun, summary, onPageChange, children }: PagedListCardProps<T, P>) {
   const data = state.status === 'success' ? state.data : null
   const first = data && data.total > 0 ? (data.page - 1) * data.pageSize + 1 : 0
   const last = data ? first + data.items.length - 1 : 0
@@ -33,9 +35,7 @@ export function ListCard<T, P extends Paged<T>>({ filters, state, retry, noun, o
       <div className="flex flex-wrap items-center gap-3 border-b px-5 py-3.5">
         {filters}
         {data && data.total > 0 && (
-          <p className="ml-auto text-[13px] text-muted-foreground">
-            Showing {first}–{last} of {data.total}
-          </p>
+          <p className="ml-auto text-[13px] text-muted-foreground">{summary ?? `Showing ${first}–${last} of ${data.total}`}</p>
         )}
       </div>
 

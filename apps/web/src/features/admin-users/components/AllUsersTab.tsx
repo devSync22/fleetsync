@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { Banner } from '@/components/shared/Banner'
 import { FilterSelect } from '@/components/shared/FilterSelect'
+import { ListSearchBox } from '@/components/shared/ListSearchBox'
+import { PagedListCard } from '@/components/shared/PagedListCard'
 import { useAction } from '@/hooks/useAction'
 import { useUserList } from '../hooks/useUserList'
 import { roleInfo, roleOrder } from '../roles'
 import { setUserActive } from '../services/adminUsersApi'
 import type { UserAccount } from '../types'
 import { AllUsersTable } from './AllUsersTable'
-import { ListCard } from './ListCard'
-import { SearchBox } from './SearchBox'
 
 const roleOptions = [{ id: 'all', label: 'All roles' }, ...roleOrder.map((role) => ({ id: role, label: roleInfo[role].label }))]
 const statusOptions = [
@@ -39,14 +39,14 @@ export function AllUsersTab({ onView, onChangeRole, onDeactivate }: AllUsersTabP
   return (
     <div className="flex flex-col gap-4">
       {activate.error && <Banner tone="danger" title="Couldn’t activate the account" message={activate.error.message} />}
-      <ListCard
+      <PagedListCard
         state={state}
         retry={retry}
         noun="users"
         onPageChange={(page) => setQuery('page', String(page))}
         filters={
           <>
-            <SearchBox value={query.search} onChange={(v) => setQuery('search', v, { replace: true })} placeholder="Search by name or email" />
+            <ListSearchBox value={query.search} onChange={(v) => setQuery('search', v, { replace: true })} placeholder="Search by name or email" />
             <FilterSelect label="Role" value={query.role} options={roleOptions} onChange={(v) => setQuery('role', v)} className="w-[200px]" />
             <FilterSelect label="Status" value={query.status} options={statusOptions} onChange={(v) => setQuery('status', v)} className="w-[200px]" />
           </>
@@ -62,7 +62,7 @@ export function AllUsersTab({ onView, onChangeRole, onDeactivate }: AllUsersTabP
             activatingId={activatingId}
           />
         )}
-      </ListCard>
+      </PagedListCard>
     </div>
   )
 }

@@ -7,7 +7,7 @@ export const adminDashboardMock: AdminDashboard = {
   deactivatedUsers: 3,
   pendingApplications: [
     {
-      applicationId: 'APP-0412',
+      applicationId: 'APP-2026-0118',
       name: 'Tharindu Wijesinghe',
       email: 'tharindu.w@gmail.com',
       type: 'Staff',
@@ -15,7 +15,7 @@ export const adminDashboardMock: AdminDashboard = {
       submittedLabel: '2 days ago',
     },
     {
-      applicationId: 'APP-0413',
+      applicationId: 'APP-2026-0121',
       name: 'Ceylon Agro Ltd',
       email: 'ops@ceylonagro.lk',
       type: 'Company',
@@ -23,7 +23,7 @@ export const adminDashboardMock: AdminDashboard = {
       submittedLabel: 'Yesterday',
     },
     {
-      applicationId: 'APP-0414',
+      applicationId: 'APP-2026-0120',
       name: 'Malsha Gunawardena',
       email: 'malsha.g@gmail.com',
       type: 'Staff',
@@ -31,7 +31,7 @@ export const adminDashboardMock: AdminDashboard = {
       submittedLabel: 'Yesterday',
     },
     {
-      applicationId: 'APP-0415',
+      applicationId: 'APP-2026-0123',
       name: 'Ruwan Bandara',
       email: 'ruwan.b@yahoo.com',
       type: 'Staff',

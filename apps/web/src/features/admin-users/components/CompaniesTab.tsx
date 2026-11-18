@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Banner } from '@/components/shared/Banner'
 import { FilterSelect } from '@/components/shared/FilterSelect'
+import { ListSearchBox } from '@/components/shared/ListSearchBox'
+import { PagedListCard } from '@/components/shared/PagedListCard'
 import { useAction } from '@/hooks/useAction'
 import { formatLKR } from '@/lib/utils'
 import { useCompanyList } from '../hooks/useCompanyList'
@@ -8,8 +10,6 @@ import { reactivateCompany } from '../services/adminUsersApi'
 import type { CustomerCompany } from '../types'
 import { CompaniesTable } from './CompaniesTable'
 import { CompanySheet } from './CompanySheet'
-import { ListCard } from './ListCard'
-import { SearchBox } from './SearchBox'
 
 const statusOptions = [
   { id: 'all', label: 'All statuses' },
@@ -61,14 +61,14 @@ export function CompaniesTab() {
         />
       )}
       {reactivate.error && <Banner tone="danger" title="Couldn’t reactivate the company" message={reactivate.error.message} />}
-      <ListCard
+      <PagedListCard
         state={state}
         retry={retry}
         noun="companies"
         onPageChange={(page) => setQuery('page', String(page))}
         filters={
           <>
-            <SearchBox value={query.search} onChange={(v) => setQuery('search', v, { replace: true })} placeholder="Search company, BR no. or contact" />
+            <ListSearchBox value={query.search} onChange={(v) => setQuery('search', v, { replace: true })} placeholder="Search company, BR no. or contact" />
             <FilterSelect label="Status" value={query.status} options={statusOptions} onChange={(v) => setQuery('status', v)} className="w-[200px]" />
             <FilterSelect label="Balance" value={query.balance} options={balanceOptions} onChange={(v) => setQuery('balance', v)} className="w-[200px]" />
           </>
@@ -77,7 +77,7 @@ export function CompaniesTab() {
         {(data) => (
           <CompaniesTable companies={data.items} onView={setViewing} onReactivate={handleReactivate} reactivatingId={reactivatingId} />
         )}
-      </ListCard>
+      </PagedListCard>
       {viewing && <CompanySheet company={viewing} onClose={() => setViewing(null)} />}
     </div>
   )
