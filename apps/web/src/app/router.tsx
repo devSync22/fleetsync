@@ -16,6 +16,7 @@ import { EditVehiclePage } from '@/features/vehicles/pages/EditVehiclePage'
 import { VehiclesPage } from '@/features/vehicles/pages/VehiclesPage'
 import { ReferenceDataPage } from '@/features/reference-data/pages/ReferenceDataPage'
 import { ChangeApprovalsPage } from '@/features/change-approvals/pages/ChangeApprovalsPage'
+import { AuditLogPage } from '@/features/audit-log/pages/AuditLogPage'
 import { AvailabilityPage } from '@/features/availability/pages/AvailabilityPage'
 import { ChatPage } from '@/features/chat/pages/ChatPage'
 import { CoordinatorDashboardPage } from '@/features/coordinator-dashboard/pages/CoordinatorDashboardPage'
@@ -125,6 +126,7 @@ export const router = createBrowserRouter([
       { path: 'vehicles/:plate/edit', element: <EditVehiclePage /> },
       { path: 'reference-data', element: <ReferenceDataPage /> },
       { path: 'change-approvals', element: <ChangeApprovalsPage /> },
+      { path: 'audit-log', element: <AuditLogPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

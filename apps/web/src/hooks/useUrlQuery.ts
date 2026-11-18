@@ -8,6 +8,7 @@ import { useSearchParams } from 'react-router'
  *   const [query, setQuery] = useUrlQuery({ search: '', role: 'all', page: '1' })
  *   setQuery('role', 'driver')
  *   setQuery('search', text, { replace: true })   // typing doesn't fill the history
+ *   setQuery('event', id, { keepPage: true })     // selecting a row stays on the same page
  */
 export function useUrlQuery<K extends string>(defaults: Record<K, string>) {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -19,13 +20,13 @@ export function useUrlQuery<K extends string>(defaults: Record<K, string>) {
   ) as Record<K, string>
 
   const setQuery = useCallback(
-    (key: K, value: string, options: { replace?: boolean } = {}) => {
+    (key: K, value: string, options: { replace?: boolean; keepPage?: boolean } = {}) => {
       setSearchParams(
         (params) => {
           const next = new URLSearchParams(params)
           if (value === initial[key]) next.delete(key)
           else next.set(key, value)
-          if (key !== 'page') next.delete('page')
+          if (key !== 'page' && !options.keepPage) next.delete('page')
           return next
         },
         { replace: options.replace },

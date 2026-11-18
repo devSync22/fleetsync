@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -6,6 +7,8 @@ type TablePaginationProps = {
   pageCount: number
   pageSize: number
   onChange: (page: number) => void
+  /** Text on the left; defaults to "Rows per page: 8". */
+  label?: ReactNode
 }
 
 /**
@@ -29,10 +32,10 @@ const squareButton =
   'flex size-8 items-center justify-center rounded-md border border-line bg-card text-[13px] font-medium transition-colors hover:bg-secondary disabled:pointer-events-none disabled:opacity-50'
 
 /** Table footer: "Rows per page: 8" and numbered pages with previous / next arrows. */
-export function TablePagination({ page, pageCount, pageSize, onChange }: TablePaginationProps) {
+export function TablePagination({ page, pageCount, pageSize, onChange, label }: TablePaginationProps) {
   return (
     <nav aria-label="Pages" className="flex items-center gap-2 border-t px-5 py-3">
-      <p className="flex-1 text-[13px] text-muted-foreground">Rows per page: {pageSize}</p>
+      <p className="flex-1 text-[13px] text-muted-foreground">{label ?? `Rows per page: ${pageSize}`}</p>
       <button
         type="button"
         className={squareButton}
