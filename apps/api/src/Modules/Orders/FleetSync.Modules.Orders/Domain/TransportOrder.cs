@@ -120,18 +120,20 @@ internal sealed class TransportOrder
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(cargo.WeightKg);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(cargo.UnitsCount);
 
+        // Each order keeps its own copies: EF Core stores these values inside the order's row, and one instance
+        // can't belong to two orders (a shared CustomerSnapshot saved only one of them and left the rest empty).
         var order = new TransportOrder
         {
             Id = Guid.CreateVersion7(now),
             OrderNumber = orderNumber,
             CustomerUserId = customerUserId,
             CustomerCompanyId = customerCompanyId,
-            Customer = customer,
-            Pickup = pickup,
-            Destination = destination,
+            Customer = customer with { },
+            Pickup = pickup with { },
+            Destination = destination with { },
             PickupAt = pickupAt,
             DeliverBy = deliverBy,
-            Cargo = cargo,
+            Cargo = cargo with { },
             RequiredVehicleType = requiredVehicleType,
             Status = OrderStatus.PendingReview,
             PaymentStatus = OrderPaymentStatus.NotDue,

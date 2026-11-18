@@ -19,6 +19,29 @@ public sealed class TransportOrderTests
     }
 
     [Fact]
+    public void Submit_KeepsItsOwnCopies_SoOneCustomerCanPlaceManyOrders()
+    {
+        var customer = new CustomerSnapshot("Lanka Tiles PLC", "Dilini Perera", null, "orders@lankatiles.lk");
+        var pickup = new Location("No. 215, Nawala Road", "Nugegoda");
+        var destination = new Location("Kurunegala Distribution Yard", "Kurunegala");
+        var cargo = new CargoDetails(CargoType.Pallets, "Ceramic tiles", 6200, 12);
+
+        TransportOrder Place(string number) => TransportOrder.Submit(
+            number, Customer, null, customer, pickup, destination, Now.AddDays(1), null, cargo, null, Now);
+
+        var first = Place("ORD-1");
+        var second = Place("ORD-2");
+
+        // Same values, separate instances: EF Core can't store one owned instance in two orders.
+        Assert.Equal(first.Customer, second.Customer);
+        Assert.NotSame(first.Customer, second.Customer);
+        Assert.NotSame(first.Pickup, second.Pickup);
+        Assert.NotSame(first.Destination, second.Destination);
+        Assert.NotSame(first.Cargo, second.Cargo);
+        Assert.NotSame(customer, first.Customer);
+    }
+
+    [Fact]
     public void Submit_RefusesAPickupThatIsNotInTheFuture() =>
         Assert.Throws<ArgumentException>(() => TransportOrder.Submit(
             "ORD-1049",
