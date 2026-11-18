@@ -26,7 +26,7 @@ export function ChangePasswordScreen({ onUpdated }: ChangePasswordScreenProps) {
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader title="Change password" subtitle={user ? `${user.name} · ${user.staffId}` : undefined} />
+      <ScreenHeader title="Change password" subtitle={user ? [user.name, user.staffId].filter(Boolean).join(' · ') : undefined} />
       <KeyboardAwareScroll contentContainerStyle={styles.body}>
         <TextField
           label="Current password"

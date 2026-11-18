@@ -74,6 +74,34 @@ be reached.
 **Expected result** is the HTTP status and, where relevant, the ProblemDetails
 `errorCode`. "Database check passes" means the script queried the tables directly.
 
+## Test accounts per role
+
+For manual sign-in testing of the web and mobile apps. Development only: set
+`Auth:DevTestAccounts:Password` in User Secrets and restart the API (see
+[auth-module.md](../runbooks/auth-module.md), Local setup step 3). Every account
+uses that password; the examples below assume `FleetSync@2026`.
+
+| Role | Email | Sign in on | Expected after sign-in |
+| ---- | ----- | ---------- | ---------------------- |
+| Fleet Owner | `owner@fleetsync.local` | Web | "You're signed in" page (no owner area yet) |
+| Fleet Administrator | `admin@fleetsync.local` | Web | "You're signed in" page (no admin area yet) |
+| Operational Coordinator | `coordinator@fleetsync.local` | Web | `/coordinator` dashboard; top bar shows "Test Coordinator" |
+| Customer | `customer@fleetsync.local` | Web | `/customer` dashboard; top bar shows "Test Customer" |
+| Driver | `driver@fleetsync.local` | Mobile | Driver Home tab ("Good …, Test") |
+| Mechanic | `mechanic@fleetsync.local` | Mobile | Mechanic Maintenance queue |
+
+If `Auth:DevAdmin:Email` is also `admin@fleetsync.local`, that account already
+exists and keeps the `Auth:DevAdmin:Password` instead.
+
+Checks worth doing by hand:
+
+- Web, signed out: opening `/coordinator` or `/customer` goes to sign in, then back to that page.
+- Web, signed in as the customer: opening `/coordinator` goes back to `/customer` (and the other way round).
+- Web: **Log out** in the sidebar ends the session; Back does not reopen the area.
+- Mobile: a web-only account (e.g. the customer) is refused with "This app is for drivers and mechanics…".
+- Mobile: Profile → Change password signs out other devices; this phone stays signed in.
+- Wrong password five times locks the account for 15 minutes (`auth.locked_out`).
+
 # Part A — Core flows
 
 ## A1. Health

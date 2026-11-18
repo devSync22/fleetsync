@@ -83,6 +83,20 @@ this, and the role's subtype row is written in the same transaction
    `dotnet user-secrets set "Auth:DevAdmin:Email" "admin@fleetsync.local" --project apps/api/src/FleetSync.Api`
    `dotnet user-secrets set "Auth:DevAdmin:Password" "<password meeting the policy>" --project apps/api/src/FleetSync.Api`
 
+   Optional: create **one test account per role** for manual testing
+   (`DevTestAccountsSeeder`, Development only, opt-in). Set the shared password
+   and restart the API:
+
+   `dotnet user-secrets set "Auth:DevTestAccounts:Password" "FleetSync@2026" --project apps/api/src/FleetSync.Api`
+
+   It creates `owner@`, `admin@`, `coordinator@`, `customer@`, `driver@` and
+   `mechanic@fleetsync.local` (domain: `Auth:DevTestAccounts:EmailDomain`),
+   already verified and approved, so they can sign in straight away. The
+   customer gets the company "FleetSync Test Customer (Pvt) Ltd"; the driver
+   gets licence `DEV-DRV-0001`. Existing emails are skipped, so a password
+   changed while testing is never reset. The list and what to check per role
+   are in [auth-api-testing.md](../testing/auth-api-testing.md#test-accounts-per-role).
+
 4. Apply the Auth migrations. The command needs
    `ConnectionStrings__FleetSyncDatabase` set in the terminal.
 
@@ -121,6 +135,7 @@ All routes are under `/api/auth`. In Development, browse and try them at
 | POST   | `/forgot-password`                        | anyone     | Always 202                                |
 | POST   | `/reset-password/lookup`                  | anyone     | `{ token }` → `{ email }`                 |
 | POST   | `/reset-password`                         | anyone     | `{ token, newPassword }`                  |
+| POST   | `/change-password`                        | signed in  | `{ currentPassword, newPassword, rememberMe }`; ends every session and returns a new one for this device |
 | POST   | `/profile-change-requests`                | signed in  | `{ field, newValue }`; field `full-name`, `phone`, `email`, or for drivers `licence-number`, `licence-class`, `licence-expiry` |
 | GET    | `/profile-change-requests/mine`           | signed in  | The user's own requests                   |
 | GET    | `/profile-change-requests?status=&page=&pageSize=` | admin | Review list, oldest first          |
@@ -152,7 +167,8 @@ cookie scoped to `/api/auth`. JavaScript never sees the token. Call
 `/refresh` and `/logout` with `credentials: 'include'` and no body.
 
 **Refresh token, mobile app.** Send the header `X-Client-Type: mobile` on
-`/login`, `/refresh` and `/logout`. The response then contains `refreshToken`;
+`/login`, `/refresh`, `/logout` and `/change-password` (the mobile `apiClient` sends it on every
+request). The response then contains `refreshToken`;
 store it in SecureStore. Without the header on `/refresh`, the rotated token is
 set as a cookie instead and the app loses it.
 Send it back as `{ "refreshToken": "…" }` to `/refresh` and `/logout`.

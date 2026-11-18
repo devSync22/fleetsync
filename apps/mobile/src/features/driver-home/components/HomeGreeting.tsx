@@ -9,8 +9,8 @@ import { firstName, greetingFor } from '../greeting';
 type HomeGreetingProps = {
   /** Signed-in driver's full name — "Kasun Jayasinghe". */
   name: string;
-  /** "DRV-014". */
-  staffId: string;
+  /** "DRV-014"; not sent by the API yet, so it may be missing. */
+  staffId?: string;
   now: Date;
 };
 
@@ -23,7 +23,7 @@ export function HomeGreeting({ name, staffId, now }: HomeGreetingProps) {
           {greetingFor(now)}, {firstName(name)}
         </Text>
         <Text style={typography.meta}>
-          {formatDate(now)} · {staffId}
+          {staffId ? `${formatDate(now)} · ${staffId}` : formatDate(now)}
         </Text>
       </View>
       <Avatar name={name} />

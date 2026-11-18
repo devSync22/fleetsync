@@ -1,39 +1,21 @@
-import { ApiError } from '@/services/apiClient';
+import { ApiError, apiClient } from '@/services/apiClient';
 
-import { LOCKOUT_MINUTES, MAX_SIGN_IN_ATTEMPTS } from '../constants';
-import {
-  APPROVED_BY,
-  APPROVED_DEPOT,
-  FIRST_REQUEST_NUMBER,
-  NEXT_STAFF_IDS,
-  REQUEST_ID_PREFIX,
-  STAFF_EMAIL_DOMAIN,
-  mockAccounts,
-  mockApproval,
-  mockResetTokens,
-} from '../mocks/authMocks';
-import type {
-  AccountApproval,
-  AccountRequest,
-  AccountRequestForm,
-  ActivateAccountInput,
-  AuthUser,
-  Session,
-  SignInCredentials,
-} from '../types';
+import type { AccountApproval } from '../activation/types';
+import type { AccountRequest } from '../registration/types';
+import type { AuthUser, Session, SignInCredentials, StaffRole } from '../types';
 
 /**
- * Auth service. Every function returns mock data behind the same async signature the real
- * API will use (POST /auth/sign-in, POST /account-requests, …), so switching to the backend
- * only changes this file.
+ * Auth service: every call goes to the FleetSync API (`/api/auth/*`, see /scalar on the API in
+ * development). apiClient sends `X-Client-Type: mobile`, so the API returns the refresh token in the
+ * body instead of a browser cookie. The in-memory test double lives in `mocks/authApiMock.ts`.
  */
 
-/** Wrong email or password. `attemptsLeft` drives the "2 attempts left" helper. */
+/** Wrong email or password. `attemptsLeft` drives the "2 attempts left" helper (null when unknown). */
 export class InvalidCredentialsError extends ApiError {
-  readonly attemptsLeft: number;
+  readonly attemptsLeft: number | null;
 
-  constructor(attemptsLeft: number) {
-    super('Incorrect email or password', 401);
+  constructor(attemptsLeft: number | null) {
+    super('Incorrect email or password', 401, 'auth.invalid_credentials');
     this.name = 'InvalidCredentialsError';
     this.attemptsLeft = attemptsLeft;
   }
@@ -41,24 +23,24 @@ export class InvalidCredentialsError extends ApiError {
 
 /** Too many failed attempts. */
 export class AccountLockedError extends ApiError {
-  constructor() {
-    super(`Too many failed attempts. Try again in ${LOCKOUT_MINUTES} minutes.`, 423);
+  constructor(message: string) {
+    super(message, 423, 'auth.locked_out');
     this.name = 'AccountLockedError';
   }
 }
 
-/** The reset link is invalid, expired (30 minutes) or already used. */
+/** The reset link is invalid, expired or already used. */
 export class ResetLinkExpiredError extends ApiError {
   constructor() {
-    super('This reset link has expired or was already used. Reset links work for 30 minutes.', 410);
+    super('This reset link has expired or was already used. Request a new one.', 400, 'auth.invalid_token');
     this.name = 'ResetLinkExpiredError';
   }
 }
 
-/** The new password is the same as the current one ("Not the same as your last password"). */
+/** The new password is the same as the current or a recent one ("Not the same as your last password"). */
 export class SamePasswordError extends ApiError {
   constructor() {
-    super('Choose a password that’s different from your last one.', 422);
+    super('Choose a password that’s different from your last one.', 400, 'auth.password_reused');
     this.name = 'SamePasswordError';
   }
 }
@@ -66,174 +48,181 @@ export class SamePasswordError extends ApiError {
 /** Change password: the current password is wrong. */
 export class WrongCurrentPasswordError extends ApiError {
   constructor() {
-    super('Your current password is incorrect.', 401);
+    super('Your current password is incorrect.', 400, 'auth.wrong_current_password');
     this.name = 'WrongCurrentPasswordError';
   }
 }
 
-const MOCK_LATENCY_MS = 700;
-
-function delay(ms = MOCK_LATENCY_MS) {
-  return new Promise<void>((resolve) => setTimeout(resolve, ms));
-}
-
-function createToken(user: AuthUser) {
-  return `mock.${user.id}.${Date.now()}`;
-}
-
-// In-memory mock state (resets when the app reloads).
-const failedAttempts = new Map<string, number>();
-const lockedUntil = new Map<string, number>();
-const submittedRequests = new Map<string, AccountRequest>();
-let nextRequestNumber = FIRST_REQUEST_NUMBER;
-const initialAccounts = mockAccounts.map((account) => ({ ...account }));
-
-/** Tests only: puts the in-memory mock state back to how the app starts. */
-export function resetAuthMocks() {
-  failedAttempts.clear();
-  lockedUntil.clear();
-  submittedRequests.clear();
-  nextRequestNumber = FIRST_REQUEST_NUMBER;
-  mockAccounts.splice(0, mockAccounts.length, ...initialAccounts.map((account) => ({ ...account })));
-}
-
-export async function signIn(credentials: SignInCredentials): Promise<Session> {
-  await delay();
-  const email = credentials.email.trim().toLowerCase();
-
-  const lockEnd = lockedUntil.get(email);
-  if (lockEnd && lockEnd > Date.now()) {
-    throw new AccountLockedError();
+/** Signed in with a web-only role (customer, coordinator, admin, owner). */
+export class WebOnlyRoleError extends ApiError {
+  constructor() {
+    super('This app is for drivers and mechanics. Please sign in on the FleetSync website.', 403, 'auth.web_only_role');
+    this.name = 'WebOnlyRoleError';
   }
-
-  const account = mockAccounts.find((candidate) => candidate.user.email === email);
-  if (!account || account.password !== credentials.password) {
-    const attempts = (failedAttempts.get(email) ?? 0) + 1;
-    if (attempts >= MAX_SIGN_IN_ATTEMPTS) {
-      failedAttempts.delete(email);
-      lockedUntil.set(email, Date.now() + LOCKOUT_MINUTES * 60 * 1000);
-      throw new AccountLockedError();
-    }
-    failedAttempts.set(email, attempts);
-    throw new InvalidCredentialsError(MAX_SIGN_IN_ATTEMPTS - attempts);
-  }
-
-  failedAttempts.delete(email);
-  lockedUntil.delete(email);
-  return { token: createToken(account.user), user: account.user };
 }
 
-export async function requestAccount(form: AccountRequestForm): Promise<AccountRequest> {
-  await delay();
-  if (!form.role) {
-    throw new ApiError('Choose Driver or Mechanic.', 400);
-  }
+/** POST /api/auth/login, /refresh and /change-password response (AuthSessionResponse). */
+type ApiSession = {
+  accessToken: string;
+  tokenType: 'Bearer';
+  accessTokenExpiresAt: string;
+  /** Filled for mobile clients only. */
+  refreshToken: string | null;
+  refreshTokenExpiresAt: string;
+  user: { id: string; email: string; fullName: string; roles: string[] };
+};
 
-  const requestId = `${REQUEST_ID_PREFIX}${String(nextRequestNumber).padStart(4, '0')}`;
-  nextRequestNumber += 1;
-
-  const request: AccountRequest = {
-    requestId,
-    role: form.role,
-    fullName: form.fullName.trim().replace(/\s+/g, ' '),
-    sentAt: new Date().toISOString(),
-  };
-  submittedRequests.set(requestId, request);
-  return request;
-}
-
-/** "Tharindu Wijesinghe" → "tharindu.w@fms.lk", as in the "Account approved" frame. */
-function staffEmail(fullName: string) {
-  const [first = '', ...rest] = fullName.toLowerCase().replace(/[^a-z ]/g, '').split(' ').filter(Boolean);
-  const lastInitial = rest.at(-1)?.[0];
-  return `${first}${lastInitial ? `.${lastInitial}` : ''}@${STAFF_EMAIL_DOMAIN}`;
-}
+const MOBILE_ROLES: readonly StaffRole[] = ['driver', 'mechanic'];
 
 /**
- * The approval behind the link in the approval email. In the mock, a request sent in this
- * session is approved straight away; otherwise the approval from the Figma frame is returned.
+ * The API's session → the app's Session. Only drivers and mechanics may use the app.
+ * Staff ID and depot are not in the API yet (staff management isn't built), so they stay empty.
  */
-export async function getAccountApproval(requestId: string | undefined): Promise<AccountApproval> {
-  await delay(400);
-  const request = requestId ? submittedRequests.get(requestId) : undefined;
-  if (!request) {
-    return mockApproval;
+function toSession(data: ApiSession): Session {
+  const role = data.user.roles.find((candidate): candidate is StaffRole =>
+    MOBILE_ROLES.includes(candidate as StaffRole),
+  );
+  if (!role || !data.refreshToken) {
+    throw new WebOnlyRoleError();
   }
-
-  const now = new Date().toISOString();
-  return {
-    requestId: request.requestId,
-    role: request.role,
-    fullName: request.fullName,
-    staffId: NEXT_STAFF_IDS[request.role],
-    depot: APPROVED_DEPOT,
-    signInEmail: staffEmail(request.fullName),
-    approvedBy: APPROVED_BY,
-    sentAt: request.sentAt,
-    reviewedAt: now,
-    approvedAt: now,
-  };
-}
-
-/** Sets the first password for an approved account and signs the new user in. */
-export async function activateAccount({ requestId, password }: ActivateAccountInput): Promise<Session> {
-  const approval = await getAccountApproval(requestId);
-  await delay();
 
   const user: AuthUser = {
-    id: `usr-${approval.staffId.toLowerCase()}`,
-    name: approval.fullName,
-    role: approval.role,
-    staffId: approval.staffId,
-    email: approval.signInEmail,
-    depot: approval.depot,
+    id: data.user.id,
+    name: data.user.fullName,
+    role,
+    email: data.user.email,
   };
+  return { token: data.accessToken, refreshToken: data.refreshToken, user };
+}
 
-  // Let the new account sign in again later in this session.
-  const existing = mockAccounts.find((account) => account.user.email === user.email);
-  if (existing) {
-    existing.password = password;
-  } else {
-    mockAccounts.push({ user, password });
+/** Re-throws the API's error as the typed error a screen checks for, when there is one. */
+function rethrow(error: unknown): never {
+  if (error instanceof ApiError) {
+    switch (error.code) {
+      case 'auth.invalid_credentials': {
+        const attemptsLeft = error.extensions.attemptsLeft;
+        throw new InvalidCredentialsError(typeof attemptsLeft === 'number' ? attemptsLeft : null);
+      }
+      case 'auth.locked_out':
+        throw new AccountLockedError(error.message);
+      case 'auth.invalid_token':
+        throw new ResetLinkExpiredError();
+      case 'auth.password_reused':
+        throw new SamePasswordError();
+      case 'auth.wrong_current_password':
+        throw new WrongCurrentPasswordError();
+    }
   }
+  throw error;
+}
 
-  return { token: createToken(user), user };
+/** POST /api/auth/login. `keepSignedIn` asks for the longer "remember me" refresh token. */
+export async function signIn(credentials: SignInCredentials, keepSignedIn = false): Promise<Session> {
+  try {
+    const { data } = await apiClient.post<ApiSession>('/auth/login', {
+      email: credentials.email.trim(),
+      password: credentials.password,
+      rememberMe: keepSignedIn,
+    });
+    return toSession(data);
+  } catch (error) {
+    rethrow(error);
+  }
+}
+
+/** POST /api/auth/refresh: swaps the (single-use) refresh token for a new session. */
+export async function refreshSession(refreshToken: string): Promise<Session> {
+  const { data } = await apiClient.post<ApiSession>('/auth/refresh', { refreshToken });
+  return toSession(data);
+}
+
+/** POST /api/auth/logout: ends the session on the server. Never throws — signing out locally always works. */
+export async function signOut(refreshToken: string | null): Promise<void> {
+  if (!refreshToken) return;
+  try {
+    await apiClient.post('/auth/logout', { refreshToken });
+  } catch {
+    // Offline or already expired: the local session is cleared anyway.
+  }
 }
 
 /**
- * Sends a reset link to `email`. Resolves the same way whether or not an account exists,
- * so the screen can't reveal which emails are registered.
+ * POST /api/auth/staff-applications (multipart): a driver or mechanic asks for an account.
+ * Resolves to the reference shown on "Request sent" (e.g. "REG-2026-0001").
+ */
+export async function requestAccount(request: AccountRequest): Promise<{ reference: string; submittedAt: string }> {
+  const form = new FormData();
+  form.append('role', request.role);
+  form.append('fullName', request.fullName);
+  form.append('nic', request.nic);
+  form.append('email', request.email);
+  form.append('mobile', request.mobile);
+  if (request.licenceNumber) form.append('licenceNumber', request.licenceNumber);
+  if (request.licenceClass) form.append('licenceClass', request.licenceClass);
+  // React Native's FormData takes { uri, name, type } for a local file; one "documents" part per file.
+  for (const document of request.documents) {
+    form.append('documents', {
+      uri: document.uri,
+      name: document.name,
+      type: document.mimeType ?? 'application/octet-stream',
+    } as unknown as Blob);
+  }
+
+  const { data } = await apiClient.post<{ reference: string; submittedAt: string }>('/auth/staff-applications', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return data;
+}
+
+/** POST /api/auth/activation/lookup: the approved account behind the approval email's link. */
+export async function getAccountApproval(token: string): Promise<AccountApproval> {
+  try {
+    const { data } = await apiClient.post<AccountApproval>('/auth/activation/lookup', { token });
+    return data;
+  } catch (error) {
+    rethrow(error);
+  }
+}
+
+/** POST /api/auth/activation: sets the first password. The user then signs in with it. */
+export async function activateAccount(token: string, password: string): Promise<void> {
+  try {
+    await apiClient.post('/auth/activation', { token, password });
+  } catch (error) {
+    rethrow(error);
+  }
+}
+
+/**
+ * POST /api/auth/forgot-password: emails a reset link. Resolves the same way whether or not an account
+ * exists, so the screen can't reveal which emails are registered.
  */
 export async function requestPasswordReset(email: string): Promise<void> {
-  await delay();
-  // Mock: nothing is sent. The real API emails a link to `email` if the account exists.
-  void email;
+  await apiClient.post('/auth/forgot-password', { email });
 }
 
-/** Sets a new password using the token from the reset link. */
+/** POST /api/auth/reset-password: sets a new password using the token from the reset link. */
 export async function resetPassword(token: string, newPassword: string): Promise<void> {
-  await delay();
-  const email = mockResetTokens[token];
-  const account = email ? mockAccounts.find((candidate) => candidate.user.email === email) : undefined;
-  if (!account) {
-    throw new ResetLinkExpiredError();
+  try {
+    await apiClient.post('/auth/reset-password', { token, newPassword });
+  } catch (error) {
+    rethrow(error);
   }
-  if (account.password === newPassword) {
-    throw new SamePasswordError();
-  }
-  account.password = newPassword;
-  // Mock: the demo token stays valid so the flow can be tested again.
 }
 
-/** Change password while signed in. Mock: checks and updates the in-memory account. */
-export async function changePassword(email: string, currentPassword: string, newPassword: string): Promise<void> {
-  await delay();
-  const account = mockAccounts.find((candidate) => candidate.user.email === email);
-  if (!account || account.password !== currentPassword) {
-    throw new WrongCurrentPasswordError();
+/**
+ * POST /api/auth/change-password while signed in. The API signs out every other device and returns a
+ * new session for this phone, which the caller must store.
+ */
+export async function changePassword(currentPassword: string, newPassword: string, keepSignedIn: boolean): Promise<Session> {
+  try {
+    const { data } = await apiClient.post<ApiSession>('/auth/change-password', {
+      currentPassword,
+      newPassword,
+      rememberMe: keepSignedIn,
+    });
+    return toSession(data);
+  } catch (error) {
+    rethrow(error);
   }
-  if (account.password === newPassword) {
-    throw new SamePasswordError();
-  }
-  account.password = newPassword;
 }

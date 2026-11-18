@@ -180,4 +180,49 @@ public sealed class StaffAndPasswordFlowTests(AuthApiFactory factory)
             HttpStatusCode.BadRequest,
             "auth.invalid_token");
     }
+
+    [Fact]
+    public async Task Signed_in_user_changes_password_with_current_password_checked()
+    {
+        var mobile = factory.CreateMobileClient();
+        var email = UniqueEmail("change");
+        await RegisterApprovedCustomerAsync(factory, mobile, email);
+        var client = await SignedInClientAsync(factory, email);
+        // A second device signed in before the change.
+        var otherRefresh = (await ReadJsonAsync(await LoginAsync(mobile, email))).GetProperty("refreshToken").GetString();
+        const string newPassword = "Changed2026Pw";
+
+        // Anonymous callers are refused.
+        Assert.Equal(HttpStatusCode.Unauthorized,
+            (await mobile.PostAsJsonAsync("/api/auth/change-password", new { currentPassword = Password, newPassword })).StatusCode);
+
+        // Wrong current password: 400 (not 401, so clients don't sign the user out).
+        await AssertProblemAsync(
+            await client.PostAsJsonAsync("/api/auth/change-password", new { currentPassword = "Wrong2026Pass", newPassword }),
+            HttpStatusCode.BadRequest,
+            "auth.wrong_current_password");
+
+        // The new password must differ from the current one.
+        await AssertProblemAsync(
+            await client.PostAsJsonAsync("/api/auth/change-password", new { currentPassword = Password, newPassword = Password }),
+            HttpStatusCode.BadRequest,
+            "auth.password_reused");
+
+        // Success returns a new session for this device.
+        var changed = await ReadJsonAsync(
+            await client.PostAsJsonAsync("/api/auth/change-password", new { currentPassword = Password, newPassword }));
+        var newRefresh = changed.GetProperty("refreshToken").GetString();
+        Assert.False(string.IsNullOrEmpty(changed.GetProperty("accessToken").GetString()));
+
+        // The other device was signed out; this device's new session works.
+        await AssertProblemAsync(
+            await mobile.PostAsJsonAsync("/api/auth/refresh", new { refreshToken = otherRefresh }),
+            HttpStatusCode.Unauthorized,
+            "auth.invalid_refresh_token");
+        (await mobile.PostAsJsonAsync("/api/auth/refresh", new { refreshToken = newRefresh })).EnsureSuccessStatusCode();
+
+        // Only the new password signs in now.
+        await AssertProblemAsync(await LoginAsync(mobile, email), HttpStatusCode.Unauthorized, "auth.invalid_credentials");
+        (await LoginAsync(mobile, email, newPassword)).EnsureSuccessStatusCode();
+    }
 }

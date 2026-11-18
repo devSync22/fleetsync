@@ -1,5 +1,6 @@
 using FleetSync.Modules.Auth.Application.Activation;
 using FleetSync.Modules.Auth.Application.Passwords;
+using FleetSync.Modules.Auth.Application.Sessions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -46,6 +47,30 @@ internal static class AccountEndpoints
             .WithValidation<ResetPasswordRequest>()
             .RequireRateLimiting(AuthPolicies.PublicRateLimit)
             .AllowAnonymous();
+
+        // Signed-in users only (any role); rate-limited because it checks a password.
+        group.MapPost("/change-password", ChangePasswordAsync)
+            .WithName("ChangePassword")
+            .WithSummary("Change the signed-in user's password; signs out other devices")
+            .WithValidation<ChangePasswordRequest>()
+            .RequireRateLimiting(AuthPolicies.PublicRateLimit)
+            .RequireAuthorization();
+    }
+
+    /// <summary>
+    /// Returns the new session for this device: browsers get the refresh token
+    /// as the HttpOnly cookie, mobile clients (X-Client-Type: mobile) in the body.
+    /// </summary>
+    private static async Task<Results<Ok<AuthSessionResponse>, ProblemHttpResult>> ChangePasswordAsync(
+        ChangePasswordRequest request,
+        PasswordResetService passwords,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var result = await passwords.ChangeAsync(context.User.GetUserId(), request, cancellationToken);
+        return result.IsSuccess
+            ? TypedResults.Ok(RefreshTokenTransport.Deliver(context, result.Value))
+            : result.Error.ToProblem();
     }
 
     private static async Task<Results<Ok<AccountApprovalResponse>, ProblemHttpResult>> LookupActivationAsync(

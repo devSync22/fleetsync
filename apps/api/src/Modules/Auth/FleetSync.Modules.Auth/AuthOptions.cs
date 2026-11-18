@@ -24,6 +24,9 @@ internal sealed class AuthOptions
     public RateLimitOptions RateLimiting { get; set; } = new();
 
     public DevAdminOptions DevAdmin { get; set; } = new();
+
+    /// <summary>One test account per role, Development only (see DevTestAccountsSeeder).</summary>
+    public DevTestAccountsOptions DevTestAccounts { get; set; } = new();
 }
 
 /// <summary>How access tokens (JWT) are signed and how long sessions last.</summary>
@@ -118,4 +121,17 @@ internal sealed class DevAdminOptions
     public string? Password { get; set; }
 
     public string FullName { get; set; } = "Development Admin";
+}
+
+/// <summary>
+/// Test accounts for every role, created at startup in Development only.
+/// Leave <see cref="Password"/> empty (the default) to skip seeding.
+/// </summary>
+internal sealed class DevTestAccountsOptions
+{
+    /// <summary>Shared password for all test accounts. Set via User Secrets: Auth:DevTestAccounts:Password.</summary>
+    public string? Password { get; set; }
+
+    /// <summary>Emails are "&lt;role&gt;@&lt;domain&gt;", e.g. driver@fleetsync.local.</summary>
+    public string EmailDomain { get; set; } = "fleetsync.local";
 }

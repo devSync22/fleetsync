@@ -95,7 +95,7 @@ export function ProfileScreen() {
             value={formatFullDate(parseIsoDate(licence.expiresOn))}
             warning={expiring && !pendingRenewal}
           />
-          <DetailRow label="Depot" value={user.depot} divider={false} />
+          <DetailRow label="Depot" value={user.depot ?? 'Not assigned yet'} divider={false} />
         </DetailsCard>
 
         <DetailsCard title="My change requests">

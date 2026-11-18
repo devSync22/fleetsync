@@ -25,6 +25,7 @@ import {
 import { AppBar } from '@/features/auth/shared/components/AppBar'
 import type { MobileRole } from '@/features/auth/shared/types'
 import { isValidEmail } from '@/features/auth/shared/utils/validation'
+import { requestAccount } from '@/features/auth/services/authApi'
 
 /** Text fields of the form, kept together so one setter can update any of them. */
 type TextValues = {
@@ -80,6 +81,8 @@ export default function RequestAccountScreen() {
   const [confirmed, setConfirmed] = useState(false)
   // Errors appear after the first submit, then update live as the user fixes them.
   const [submitted, setSubmitted] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [sendError, setSendError] = useState<string>()
 
   const errors = submitted ? validate(role, values, licenceClass, documents, confirmed) : {}
 
@@ -94,9 +97,9 @@ export default function RequestAccountScreen() {
     else router.replace('/sign-in')
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     setSubmitted(true)
-    if (Object.keys(validate(role, values, licenceClass, documents, confirmed)).length > 0) return
+    if (sending || Object.keys(validate(role, values, licenceClass, documents, confirmed)).length > 0) return
 
     const request: AccountRequest = {
       role,
@@ -111,19 +114,25 @@ export default function RequestAccountScreen() {
       documents,
     }
 
-    // TODO: send `request` to the staff application API as multipart/form-data
-    // (documents are files) once the backend exists; show a loading state on the
-    // button and an error message on failure. Only continue below on success,
-    // and pass the server's request ID (e.g. "APP-2026-0118") as `requestId`.
-    // `replace` so the back gesture on the next screen doesn't reopen this form.
-    router.replace({
-      pathname: '/request-sent',
-      params: {
-        firstName: getFirstName(request.fullName),
-        role: request.role,
-        sentAt: new Date().toISOString(),
-      },
-    })
+    // POST /api/auth/staff-applications (multipart: the documents are files).
+    setSending(true)
+    setSendError(undefined)
+    try {
+      const submittedRequest = await requestAccount(request)
+      // `replace` so the back gesture on the next screen doesn't reopen this form.
+      router.replace({
+        pathname: '/request-sent',
+        params: {
+          firstName: getFirstName(request.fullName),
+          role: request.role,
+          sentAt: submittedRequest.submittedAt,
+          requestId: submittedRequest.reference,
+        },
+      })
+    } catch (error) {
+      setSendError(error instanceof Error ? error.message : 'Something went wrong. Please try again.')
+      setSending(false)
+    }
   }
 
   return (
@@ -249,7 +258,9 @@ export default function RequestAccountScreen() {
         {errors.confirmed && <Text style={styles.error}>{errors.confirmed}</Text>}
       </View>
 
-      <Button label="Send request" onPress={handleSubmit} />
+      {/* Server-side refusal, e.g. "an application with this NIC is already open". */}
+      {sendError && <Text style={styles.error}>{sendError}</Text>}
+      <Button label="Send request" onPress={() => void handleSubmit()} loading={sending} />
 
       <View style={styles.footer}>
         <Text style={styles.footerText}>Already have an account?</Text>

@@ -23,6 +23,11 @@ Inside a feature:
 | `types.ts`      | Request/response and view types for the feature          |
 | `api/`, `hooks/` | Add when needed (e.g. API calls once the backend exists) |
 
+API calls: `services/authApi.ts` talks to the real API (`/api/auth/*`) for
+sign-in, refresh, sign-out, request account, activation, forgot/reset and
+change password. `mocks/authApiMock.ts` is its in-memory test double with the
+same exports; `jest.setup.ts` swaps it in, so tests never call the network.
+
 Routing: Expo Router only looks in `src/app`, so each route file there is a
 one-line re-export of a screen, e.g. `src/app/(auth)/sign-in.tsx`:
 

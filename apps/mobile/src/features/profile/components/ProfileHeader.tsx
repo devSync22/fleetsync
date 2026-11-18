@@ -17,7 +17,8 @@ export function ProfileHeader({ user, profile }: { user: AuthUser; profile: Driv
       <View style={styles.text}>
         <Text style={typography.profileName}>{user.name}</Text>
         <Text style={typography.meta}>
-          {ROLE_LABELS[user.role]} · {user.staffId} · {user.depot}
+          {/* Staff ID and depot are left out until the API provides them. */}
+          {[ROLE_LABELS[user.role], user.staffId, user.depot].filter(Boolean).join(' · ')}
         </Text>
         <View style={styles.badges}>
           <StatusBadge label={profile.status} />
