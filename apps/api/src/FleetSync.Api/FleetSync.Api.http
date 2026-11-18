@@ -65,3 +65,48 @@ Authorization: Bearer {{login.response.body.accessToken}}
 
 ### Sign out
 POST {{host}}/api/auth/logout
+
+# ───────────── Orders (Operational Coordinator) ─────────────
+# Sign in with the shared test coordinator first (password: ask Prasad, or your own if you seeded the accounts).
+
+@coordinatorEmail = coordinator@fleetsync.local
+@coordinatorPassword = paste-the-test-account-password
+
+### Sign in as the test coordinator
+# @name coordinator
+POST {{host}}/api/auth/login
+Content-Type: application/json
+X-Client-Type: mobile
+
+{ "email": "{{coordinatorEmail}}", "password": "{{coordinatorPassword}}", "rememberMe": false }
+
+### Submitted orders: All open (default tab)
+GET {{host}}/api/orders
+Authorization: Bearer {{coordinator.response.body.accessToken}}
+
+### Submitted orders: Needs quotation, second page of 5
+GET {{host}}/api/orders?tab=needs-quotation&page=2&pageSize=5
+Authorization: Bearer {{coordinator.response.body.accessToken}}
+
+### Submitted orders: Quoted, searching for a customer
+GET {{host}}/api/orders?tab=quoted&search=matale
+Authorization: Bearer {{coordinator.response.body.accessToken}}
+
+### Submitted orders: Closed
+GET {{host}}/api/orders?tab=closed
+Authorization: Bearer {{coordinator.response.body.accessToken}}
+
+### Order details with quotation and history
+GET {{host}}/api/orders/ORD-1039
+Authorization: Bearer {{coordinator.response.body.accessToken}}
+
+### Unknown order → 404 orders.not_found
+GET {{host}}/api/orders/ORD-9999
+Authorization: Bearer {{coordinator.response.body.accessToken}}
+
+### Bad tab → 400 validation_failed
+GET {{host}}/api/orders?tab=everything
+Authorization: Bearer {{coordinator.response.body.accessToken}}
+
+### No token → 401
+GET {{host}}/api/orders
