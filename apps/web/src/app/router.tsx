@@ -11,6 +11,9 @@ import { CreateUserPage } from '@/features/admin-users/pages/CreateUserPage'
 import { UserAccountsPage } from '@/features/admin-users/pages/UserAccountsPage'
 import { ApplicationReviewPage } from '@/features/applications/pages/ApplicationReviewPage'
 import { ApplicationsPage } from '@/features/applications/pages/ApplicationsPage'
+import { AddVehiclePage } from '@/features/vehicles/pages/AddVehiclePage'
+import { EditVehiclePage } from '@/features/vehicles/pages/EditVehiclePage'
+import { VehiclesPage } from '@/features/vehicles/pages/VehiclesPage'
 import { AvailabilityPage } from '@/features/availability/pages/AvailabilityPage'
 import { ChatPage } from '@/features/chat/pages/ChatPage'
 import { CoordinatorDashboardPage } from '@/features/coordinator-dashboard/pages/CoordinatorDashboardPage'
@@ -115,6 +118,9 @@ export const router = createBrowserRouter([
       { path: 'users/new', element: <CreateUserPage /> },
       { path: 'applications', element: <ApplicationsPage /> },
       { path: 'applications/:applicationId', element: <ApplicationReviewPage /> },
+      { path: 'vehicles', element: <VehiclesPage /> },
+      { path: 'vehicles/new', element: <AddVehiclePage /> },
+      { path: 'vehicles/:plate/edit', element: <EditVehiclePage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

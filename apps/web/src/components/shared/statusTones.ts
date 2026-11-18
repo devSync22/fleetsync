@@ -10,7 +10,6 @@ export const statusMeta = {
   draft: { label: 'Draft', tone: 'neutral' },
   inactive: { label: 'Inactive', tone: 'neutral' },
   'off-duty': { label: 'Off duty', tone: 'neutral' },
-  'in-maintenance': { label: 'In maintenance', tone: 'neutral' },
   'not-due': { label: 'Not due yet', tone: 'neutral' },
   'no-payment': { label: 'No payment', tone: 'neutral' },
   'quotation-expired': { label: 'Quotation expired', tone: 'neutral' },
@@ -29,6 +28,8 @@ export const statusMeta = {
   'service-soon': { label: 'Service soon', tone: 'pending' },
   'not-opened': { label: 'Not opened', tone: 'pending' },
   maintenance: { label: 'Maintenance', tone: 'pending' },
+  // Admin → Vehicles draws a vehicle in the workshop amber.
+  'in-maintenance': { label: 'In maintenance', tone: 'pending' },
   // accent — assigned / quoted / scheduled
   quoted: { label: 'Quoted', tone: 'accent' },
   assigned: { label: 'Assigned', tone: 'accent' },
@@ -59,6 +60,7 @@ export const statusMeta = {
   overdue: { label: 'Overdue', tone: 'danger' },
   'payment-failed': { label: 'Payment failed', tone: 'danger' },
   suspended: { label: 'Suspended', tone: 'danger' },
+  'out-of-service': { label: 'Out of service', tone: 'danger' },
   cancelled: { label: 'Cancelled', tone: 'danger' },
   'trip-cancelled': { label: 'Trip cancelled', tone: 'danger' },
   rejected: { label: 'Rejected', tone: 'danger' },
