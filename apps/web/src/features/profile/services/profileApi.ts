@@ -1,7 +1,7 @@
 import { ApiError } from '@/services/apiClient'
-import { profileMock } from '../mocks/profileMock'
+import { adminProfileMock, profileMock } from '../mocks/profileMock'
 import { passwordRules } from '../profileFields'
-import type { ChangeRequest, ProfileDetails, ProfileField, ProfileOverview, Security } from '../types'
+import type { ChangeRequest, ProfileDetails, ProfileField, ProfileOverview, ProfileRole, Security } from '../types'
 
 /*
  * Mocked until the profile endpoints exist:
@@ -9,12 +9,17 @@ import type { ChangeRequest, ProfileDetails, ProfileField, ProfileOverview, Secu
  *   submitChangeRequest   → apiClient.post<ChangeRequest[]>('/me/change-requests', { changes, reason })
  *   changePassword        → apiClient.post<Security>('/me/password', { currentPassword, newPassword })
  *   signOutSession(s)     → apiClient.delete(`/me/sessions/${id}`) / apiClient.delete('/me/sessions?others=true')
- * Detail changes are never applied directly: a Fleet Administrator approves each change request.
+ * Detail changes are never applied directly: a Fleet Administrator approves each change request
+ * (for an administrator's own profile, another administrator). The signed-in user's role picks the mock;
+ * the real endpoints take it from the session, so `role` goes away then.
  * Changes made here live in module state until the page is reloaded.
  * In dev, add `mock=error` to the URL query to preview the error state.
  */
 
-let state: ProfileOverview = structuredClone(profileMock)
+const states: Record<ProfileRole, ProfileOverview> = {
+  coordinator: structuredClone(profileMock),
+  admin: structuredClone(adminProfileMock),
+}
 let nextRequest = 314
 
 function now() {
@@ -28,12 +33,13 @@ async function mockRequest(ms = 400) {
   }
 }
 
-export async function getProfileOverview(): Promise<ProfileOverview> {
+export async function getProfileOverview(role: ProfileRole): Promise<ProfileOverview> {
   await mockRequest()
-  return structuredClone(state)
+  return structuredClone(states[role])
 }
 
-export async function submitChangeRequest(changes: Partial<ProfileDetails>, reason: string): Promise<ChangeRequest[]> {
+export async function submitChangeRequest(role: ProfileRole, changes: Partial<ProfileDetails>, reason: string): Promise<ChangeRequest[]> {
+  const state = states[role]
   await mockRequest(500)
   const fields = Object.keys(changes) as ProfileField[]
   if (fields.length === 0) throw new ApiError('Change at least one detail first.', 400)
@@ -46,11 +52,12 @@ export async function submitChangeRequest(changes: Partial<ProfileDetails>, reas
     status: 'pending-review',
     note: 'submitted today',
   }))
-  state = { ...state, changeRequests: [...created, ...state.changeRequests] }
+  states[role] = { ...state, changeRequests: [...created, ...state.changeRequests] }
   return created
 }
 
-export async function changePassword(currentPassword: string, newPassword: string): Promise<Security> {
+export async function changePassword(role: ProfileRole, currentPassword: string, newPassword: string): Promise<Security> {
+  const state = states[role]
   await mockRequest(600)
   if (!currentPassword) throw new ApiError('Enter your current password.', 400)
   if (!passwordRules.every((rule) => rule.test(newPassword))) {
@@ -60,7 +67,7 @@ export async function changePassword(currentPassword: string, newPassword: strin
 
   const at = now()
   const others = state.security.sessions.filter((s) => !s.current)
-  state = {
+  states[role] = {
     ...state,
     security: {
       ...state.security,
@@ -73,17 +80,19 @@ export async function changePassword(currentPassword: string, newPassword: strin
       passwordChange: { at, signedOut: others.map((s) => s.device) },
     },
   }
-  return structuredClone(state.security)
+  return structuredClone(states[role].security)
 }
 
-export async function signOutSession(id: string): Promise<Security> {
+export async function signOutSession(role: ProfileRole, id: string): Promise<Security> {
   await mockRequest(300)
-  state = { ...state, security: { ...state.security, sessions: state.security.sessions.filter((s) => s.id !== id) } }
-  return structuredClone(state.security)
+  const state = states[role]
+  states[role] = { ...state, security: { ...state.security, sessions: state.security.sessions.filter((s) => s.id !== id) } }
+  return structuredClone(states[role].security)
 }
 
-export async function signOutOtherSessions(): Promise<Security> {
+export async function signOutOtherSessions(role: ProfileRole): Promise<Security> {
   await mockRequest(300)
-  state = { ...state, security: { ...state.security, sessions: state.security.sessions.filter((s) => s.current) } }
-  return structuredClone(state.security)
+  const state = states[role]
+  states[role] = { ...state, security: { ...state.security, sessions: state.security.sessions.filter((s) => s.current) } }
+  return structuredClone(states[role].security)
 }

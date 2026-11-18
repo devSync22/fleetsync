@@ -10,7 +10,6 @@ export const statusMeta = {
   draft: { label: 'Draft', tone: 'neutral' },
   inactive: { label: 'Inactive', tone: 'neutral' },
   'off-duty': { label: 'Off duty', tone: 'neutral' },
-  'in-maintenance': { label: 'In maintenance', tone: 'neutral' },
   'not-due': { label: 'Not due yet', tone: 'neutral' },
   'no-payment': { label: 'No payment', tone: 'neutral' },
   'quotation-expired': { label: 'Quotation expired', tone: 'neutral' },
@@ -18,6 +17,9 @@ export const statusMeta = {
   'quote-declined': { label: 'Quote declined', tone: 'neutral' },
   busy: { label: 'Busy', tone: 'neutral' },
   refunded: { label: 'Refunded', tone: 'neutral' },
+  deactivated: { label: 'Deactivated', tone: 'neutral' },
+  applied: { label: 'Applied', tone: 'neutral' },
+  retired: { label: 'Retired', tone: 'neutral' },
   // pending — pending / due soon
   pending: { label: 'Pending', tone: 'pending' },
   'pending-review': { label: 'Pending review', tone: 'pending' },
@@ -26,11 +28,14 @@ export const statusMeta = {
   'service-soon': { label: 'Service soon', tone: 'pending' },
   'not-opened': { label: 'Not opened', tone: 'pending' },
   maintenance: { label: 'Maintenance', tone: 'pending' },
+  // Admin → Vehicles draws a vehicle in the workshop amber.
+  'in-maintenance': { label: 'In maintenance', tone: 'pending' },
   // accent — assigned / quoted / scheduled
   quoted: { label: 'Quoted', tone: 'accent' },
   assigned: { label: 'Assigned', tone: 'accent' },
   scheduled: { label: 'Scheduled', tone: 'accent' },
   'trip-scheduled': { label: 'Trip scheduled', tone: 'accent' },
+  changed: { label: 'Changed', tone: 'accent' },
   // info — on trip / in progress / accepted
   'in-progress': { label: 'In progress', tone: 'info' },
   'trip-in-progress': { label: 'Trip in progress', tone: 'info' },
@@ -47,15 +52,21 @@ export const statusMeta = {
   opened: { label: 'Opened', tone: 'success' },
   'trip-created': { label: 'Trip created', tone: 'success' },
   approved: { label: 'Approved', tone: 'success' },
+  success: { label: 'Success', tone: 'success' },
+  valid: { label: 'Valid', tone: 'success' },
   'signed-in': { label: 'Success', tone: 'success' },
   'this-device': { label: 'This device', tone: 'success' },
   // danger — overdue / failed / suspended / cancelled
   overdue: { label: 'Overdue', tone: 'danger' },
   'payment-failed': { label: 'Payment failed', tone: 'danger' },
   suspended: { label: 'Suspended', tone: 'danger' },
+  'out-of-service': { label: 'Out of service', tone: 'danger' },
   cancelled: { label: 'Cancelled', tone: 'danger' },
   'trip-cancelled': { label: 'Trip cancelled', tone: 'danger' },
   rejected: { label: 'Rejected', tone: 'danger' },
+  failed: { label: 'Failed', tone: 'danger' },
+  blocked: { label: 'Blocked', tone: 'danger' },
+  'licence-expired': { label: 'Licence expired', tone: 'danger' },
   'wrong-password': { label: 'Wrong password', tone: 'danger' },
 } as const satisfies Record<string, { label: string; tone: StatusTone }>
 

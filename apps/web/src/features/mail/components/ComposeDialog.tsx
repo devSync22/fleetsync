@@ -6,8 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogClose, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import type { ApiError } from '@/services/apiClient'
 import { cn } from '@/lib/utils'
-import { me } from '../mocks/mailMock'
-import type { MailAttachment, OutgoingMail, Recipient } from '../types'
+import type { MailAttachment, MailContact, OutgoingMail, Recipient } from '../types'
 
 export type ComposeDraft = { to: Recipient[]; subject: string; body: string }
 
@@ -15,6 +14,8 @@ type ComposeDialogProps = {
   open: boolean
   initial: ComposeDraft
   recipients: Recipient[]
+  /** The signed-in user, shown as From. */
+  from: MailContact
   sending: boolean
   error: ApiError | null
   onClose: () => void
@@ -44,7 +45,7 @@ function formatSize(bytes: number) {
 }
 
 /** "New message" (from Admin — Mail / Compose, 229:7069): recipients, subject, body, attachments. */
-export function ComposeDialog({ open, initial, recipients, sending, error, onClose, onSend, onSaveDraft }: ComposeDialogProps) {
+export function ComposeDialog({ open, initial, recipients, from, sending, error, onClose, onSend, onSaveDraft }: ComposeDialogProps) {
   const [to, setTo] = useState<Recipient[]>(initial.to)
   const [query, setQuery] = useState('')
   const [subject, setSubject] = useState(initial.subject)
@@ -88,9 +89,9 @@ export function ComposeDialog({ open, initial, recipients, sending, error, onClo
         <div className="flex items-center gap-4 border-b px-5 py-3 text-[13px]">
           <span className="w-14 shrink-0 text-muted-foreground">From</span>
           <span className="flex-1">
-            <span className="text-sm">{me.name}</span>{' '}
+            <span className="text-sm">{from.name}</span>{' '}
             <span className="text-muted-foreground">
-              &lt;{me.email}&gt; · {me.role}
+              &lt;{from.email}&gt; · {from.role}
             </span>
           </span>
           <Lock className="size-3.5 text-faint" aria-label="You can only send as yourself" />

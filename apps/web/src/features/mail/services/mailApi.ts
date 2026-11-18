@@ -1,6 +1,7 @@
 import { ApiError } from '@/services/apiClient'
+import { adminMailMock, adminMe, adminRecipientsMock } from '../mocks/adminMailMock'
 import { mailMock, me, recipientsMock } from '../mocks/mailMock'
-import type { MailMessage, OutgoingMail, Recipient } from '../types'
+import type { MailContact, MailMessage, MailRole, OutgoingMail, Recipient } from '../types'
 
 /*
  * Mocked until the mail endpoints exist:
@@ -8,6 +9,7 @@ import type { MailMessage, OutgoingMail, Recipient } from '../types'
  *   sendMail   → apiClient.post<MailMessage>('/mail/send', mail)
  *   saveDraft  → apiClient.post<MailMessage>('/mail/drafts', mail)
  * Reading, starring and deleting are kept in the page for now (apiClient.patch(`/mail/${id}`) later).
+ * `role` picks the mock mailbox; the real endpoints use the signed-in user, so it goes away then.
  * In dev, add `mock=empty` or `mock=error` to the URL query to preview those states.
  */
 
@@ -15,22 +17,30 @@ function scenario() {
   return import.meta.env.DEV ? new URLSearchParams(window.location.search).get('mock') : null
 }
 
-export async function getMailbox(): Promise<{ messages: MailMessage[]; recipients: Recipient[] }> {
+const mailboxes: Record<MailRole, { me: MailContact; messages: MailMessage[]; recipients: Recipient[] }> = {
+  coordinator: { me, messages: mailMock, recipients: recipientsMock },
+  admin: { me: adminMe, messages: adminMailMock, recipients: adminRecipientsMock },
+}
+
+export type Mailbox = { me: MailContact; messages: MailMessage[]; recipients: Recipient[] }
+
+export async function getMailbox(role: MailRole): Promise<Mailbox> {
   await new Promise((resolve) => setTimeout(resolve, 400))
   if (scenario() === 'error') {
     throw new ApiError('Check your connection and try again. If it keeps happening, contact support.')
   }
-  return { messages: scenario() === 'empty' ? [] : mailMock, recipients: recipientsMock }
+  const box = mailboxes[role]
+  return { me: box.me, messages: scenario() === 'empty' ? [] : box.messages, recipients: box.recipients }
 }
 
 let nextId = 1
 
-function outgoing(mail: OutgoingMail, folder: 'sent' | 'drafts'): MailMessage {
+function outgoing(role: MailRole, mail: OutgoingMail, folder: 'sent' | 'drafts'): MailMessage {
   const time = new Date().toTimeString().slice(0, 5)
   return {
     id: `${folder}-${nextId++}`,
     folder,
-    from: me,
+    from: mailboxes[role].me,
     to: mail.to.map((r) => r.name),
     subject: mail.subject.trim() || '(no subject)',
     body: mail.body,
@@ -43,14 +53,14 @@ function outgoing(mail: OutgoingMail, folder: 'sent' | 'drafts'): MailMessage {
   }
 }
 
-export async function sendMail(mail: OutgoingMail): Promise<MailMessage> {
+export async function sendMail(role: MailRole, mail: OutgoingMail): Promise<MailMessage> {
   await new Promise((resolve) => setTimeout(resolve, 300))
   if (mail.to.length === 0) throw new ApiError('Add at least one recipient.', 400)
   if (!mail.subject.trim() && !mail.body.trim()) throw new ApiError('Write a subject or a message before sending.', 400)
-  return outgoing(mail, 'sent')
+  return outgoing(role, mail, 'sent')
 }
 
-export async function saveDraft(mail: OutgoingMail): Promise<MailMessage> {
+export async function saveDraft(role: MailRole, mail: OutgoingMail): Promise<MailMessage> {
   await new Promise((resolve) => setTimeout(resolve, 200))
-  return outgoing(mail, 'drafts')
+  return outgoing(role, mail, 'drafts')
 }

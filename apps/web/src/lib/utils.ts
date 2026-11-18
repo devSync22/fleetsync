@@ -27,3 +27,14 @@ export function formatTime(value: Date): string {
 export function formatDateTime(value: Date): string {
   return `${formatDate(value)}, ${formatTime(value)}`
 }
+
+/** "Kasun Perera" → "KP", "Lanka Tiles PLC" → "LT" (avatar initials). */
+export function initialsOf(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
+}

@@ -1,15 +1,18 @@
 import { cn } from '@/lib/utils'
 import { folderCount, folders } from '../folders'
-import type { MailFolder, MailMessage } from '../types'
+import type { MailFolder, MailMessage, Recipient } from '../types'
 
 type FolderListProps = {
   messages: MailMessage[]
   active: MailFolder
   onSelect: (folder: MailFolder) => void
+  /** Recipient groups listed under GROUPS (Admin frame); empty hides the section. */
+  groups?: Recipient[]
+  onPickGroup?: (group: Recipient) => void
 }
 
-/** Left column: Inbox, Starred, Sent, Drafts, Trash. Hidden below xl, where the list header has a picker. */
-export function FolderList({ messages, active, onSelect }: FolderListProps) {
+/** Left column: Inbox, Starred, Sent, Drafts, Trash (and groups). Hidden below xl, where the list header has a picker. */
+export function FolderList({ messages, active, onSelect, groups = [], onPickGroup }: FolderListProps) {
   return (
     <nav aria-label="Mail folders" className="hidden h-full w-[200px] shrink-0 flex-col gap-0.5 border-r px-2.5 pt-3.5 xl:flex">
       {folders.map(({ id, label, icon: Icon }) => {
@@ -34,6 +37,25 @@ export function FolderList({ messages, active, onSelect }: FolderListProps) {
           </button>
         )
       })}
+
+      {groups.length > 0 && (
+        <div className="flex flex-col gap-1 px-2.5 pt-5">
+          <p className="pb-1 text-[11px] font-semibold tracking-[0.06em] text-muted-foreground">GROUPS</p>
+          {groups.map((group) => (
+            <button
+              key={group.id}
+              type="button"
+              onClick={() => onPickGroup?.(group)}
+              title={`Write to ${group.name}`}
+              className="flex items-center gap-2 py-0.5 text-left text-[13px] hover:text-brand"
+            >
+              {group.name}
+              {/* "Group · 4 people" → 4 */}
+              <span className="text-xs text-muted-foreground">{group.detail.match(/\d+/)?.[0]}</span>
+            </button>
+          ))}
+        </div>
+      )}
     </nav>
   )
 }

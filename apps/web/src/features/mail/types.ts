@@ -49,3 +49,6 @@ export interface OutgoingMail {
   separateEmails: boolean
   important: boolean
 }
+
+/** Roles with a Mail page; each has its own mock mailbox until the API exists. */
+export type MailRole = 'coordinator' | 'admin'

@@ -10,8 +10,7 @@ import { MessageList } from '../components/MessageList'
 import { ReadingPane } from '../components/ReadingPane'
 import { folders, inFolder } from '../folders'
 import { useMailbox } from '../hooks/useMailbox'
-import { me } from '../mocks/mailMock'
-import type { MailFolder, MailMessage, Recipient } from '../types'
+import type { MailFolder, MailMessage, MailRole, Recipient } from '../types'
 
 const boxClass = 'flex h-[calc(100vh-232px)] min-h-[560px] overflow-hidden rounded-xl border bg-card'
 const emptyDraft: ComposeDraft = { to: [], subject: '', body: '' }
@@ -20,9 +19,17 @@ function quote(message: MailMessage) {
   return `\n\n— On ${message.dateLabel}, ${message.from.name} wrote:\n${message.body}`
 }
 
-/** "Coordinator — Mail / Inbox" (229:10801). Folder and open message are in the URL (`?folder=&id=`). */
-export function MailPage() {
-  const mailbox = useMailbox()
+const descriptions: Record<MailRole, string> = {
+  coordinator: 'Email with the Fleet Administrator and other coordinators.',
+  admin: 'Internal email between the Fleet Administrator and Operational Coordinators.',
+}
+
+/**
+ * "Coordinator — Mail / Inbox" (229:10801) and "Admin — Mail / Inbox" (227:6969) with Compose (229:7069).
+ * Folder and open message are in the URL (`?folder=&id=`). The admin view also lists the coordinator groups.
+ */
+export function MailPage({ role = 'coordinator' }: { role?: MailRole }) {
+  const mailbox = useMailbox(role)
   const [searchParams, setSearchParams] = useSearchParams()
   const [compose, setCompose] = useState<{ key: number; draft: ComposeDraft } | null>(null)
   const [sentTo, setSentTo] = useState<string | null>(null)
@@ -56,7 +63,7 @@ export function MailPage() {
       return
     }
     const names = mode === 'reply-all' ? [selected.from.name, ...selected.to] : [selected.from.name]
-    const to = [...new Set(names)].filter((n) => n !== me.name).map(recipientFor)
+    const to = [...new Set(names)].filter((n) => n !== mailbox.me?.name).map(recipientFor)
     openCompose({ to, subject: `Re: ${subject}`, body: quote(selected) })
   }
 
@@ -69,7 +76,7 @@ export function MailPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Mail"
-        description="Email with the Fleet Administrator and other coordinators."
+        description={descriptions[role]}
         actions={
           <Button type="button" onClick={() => openCompose(emptyDraft)} disabled={!mailbox.messages}>
             Compose
@@ -116,7 +123,14 @@ export function MailPage() {
 
       {mailbox.messages && (
         <div className={boxClass}>
-          <FolderList messages={messages} active={folder} onSelect={(f) => setSearchParams({ folder: f })} />
+          <FolderList
+            messages={messages}
+            active={folder}
+            onSelect={(f) => setSearchParams({ folder: f })}
+            // Groups are drawn only in the Admin frame; picking one starts an email to it.
+            groups={role === 'admin' ? mailbox.recipients.filter((r) => r.isGroup) : []}
+            onPickGroup={(group) => openCompose({ to: [group], subject: '', body: '' })}
+          />
           <MessageList
             folder={folder}
             messages={inThisFolder}
@@ -137,12 +151,13 @@ export function MailPage() {
         </div>
       )}
 
-      {compose && (
+      {compose && mailbox.me && (
         <ComposeDialog
           key={compose.key}
           open
           initial={compose.draft}
           recipients={mailbox.recipients}
+          from={mailbox.me}
           sending={mailbox.sending}
           error={mailbox.sendError}
           onClose={() => setCompose(null)}
