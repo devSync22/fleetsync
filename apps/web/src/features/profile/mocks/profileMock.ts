@@ -46,3 +46,43 @@ export const profileMock: ProfileOverview = {
     passwordChange: null,
   },
 }
+
+/**
+ * Copied from "Admin — Profile & settings" (417:8471). The frame shows the mobile mid-edit
+ * (077 410 2281 is the pending request); the saved number matches User accounts.
+ */
+export const adminProfileMock: ProfileOverview = {
+  profile: {
+    initials: 'AS',
+    roleLabel: 'Fleet Administrator',
+    employeeId: 'EMP-0001',
+    memberSince: 'Mar 2020',
+    details: {
+      fullName: 'Ayesha Silva',
+      workEmail: 'ayesha.s@fms.lk',
+      mobile: '077 555 1020',
+      officePhone: '011 268 4400',
+      address: 'No. 7, Flower Road, Colombo 07',
+    },
+  },
+  changeRequests: [
+    { id: 'CR-2026-0312', field: 'mobile', newValue: '077 410 2281', status: 'pending-review', note: 'submitted today' },
+    { id: 'CR-2026-0244', field: 'address', newValue: 'No. 7, Flower Road, Colombo 07', status: 'approved', note: '2 Sep · approved by Nadeesha Perera' },
+  ],
+  security: {
+    passwordLastChanged: '3 months ago',
+    lastSignIn: 'Today, 08:02 · Chrome on Windows',
+    signIns: [
+      { id: 's1', when: 'Today, 08:02', description: 'Chrome on Windows · Colombo', outcome: 'success' },
+      { id: 's2', when: 'Yesterday, 17:48', description: 'Chrome on Windows · Colombo', outcome: 'success' },
+      { id: 's3', when: '15 Nov, 09:10', description: 'Safari on iPhone · Colombo', outcome: 'success' },
+      { id: 's4', when: '14 Nov, 22:03', description: 'Chrome on Android · Negombo', outcome: 'wrong-password' },
+      { id: 's5', when: '14 Nov, 08:12', description: 'Chrome on Windows · Colombo', outcome: 'success' },
+    ],
+    sessions: [
+      { id: 'd1', device: 'Chrome on Windows', kind: 'desktop', location: 'Colombo', lastActive: 'active now', current: true },
+      { id: 'd2', device: 'Safari on iPhone', kind: 'mobile', location: 'Colombo', lastActive: '3 days ago', current: false },
+    ],
+    passwordChange: null,
+  },
+}

@@ -13,11 +13,15 @@ import { SessionsCard } from '../components/SessionsCard'
 import { SignInActivityCard } from '../components/SignInActivityCard'
 import { SignInSummaryCard } from '../components/SignInSummaryCard'
 import { useProfile } from '../hooks/useProfile'
+import type { ProfileRole } from '../types'
 
 type Tab = 'profile' | 'security'
 
-const PROFILE_PATH = '/coordinator/profile'
-const SECURITY_PATH = `${PROFILE_PATH}/security`
+/** Who approves changes to this role's own details: administrators can't approve their own. */
+const reviewerByRole: Record<ProfileRole, string> = {
+  coordinator: 'a Fleet Administrator',
+  admin: 'another Fleet Administrator',
+}
 
 const tabs: { id: Tab; label: string }[] = [
   { id: 'profile', label: 'Profile' },
@@ -41,19 +45,23 @@ function LoadingColumns() {
 
 /**
  * "Coordinator — Profile & settings" (417:8776), "Password & security" (453:10118) and
- * "Password updated" (456:10519). Both tabs are one route so switching keeps the loaded data.
+ * "Password updated" (456:10519), and the same three Admin frames (417:8471, 453:9730, 456:10251).
+ * Both tabs are one route so switching keeps the loaded data. `role` picks the paths and copy.
  */
-export function ProfileSettingsPage() {
+export function ProfileSettingsPage({ role = 'coordinator' }: { role?: ProfileRole }) {
+  const PROFILE_PATH = `/${role}/profile`
+  const SECURITY_PATH = `${PROFILE_PATH}/security`
+  const reviewer = reviewerByRole[role]
   const navigate = useNavigate()
   const tab: Tab = useMatch(SECURITY_PATH) ? 'security' : 'profile'
-  const profile = useProfile()
+  const profile = useProfile(role)
   const overview = profile.overview
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Profile & settings"
-        description="Your own account. Changes to your details are approved by a Fleet Administrator."
+        description={`Your own account. Changes to your details are approved by ${reviewer}.`}
       />
       <StatusTabs
         label="Profile sections"
@@ -86,6 +94,7 @@ export function ProfileSettingsPage() {
               submitting={profile.submitting}
               error={profile.submitError}
               onSubmit={profile.submitChanges}
+              reviewer={reviewer}
             />
           </div>
           <div className="flex min-w-0 flex-col gap-5">
@@ -119,7 +128,7 @@ export function ProfileSettingsPage() {
               onSignOutOthers={profile.signOutOthers}
             />
             <InfoNote className="rounded-[10px] bg-secondary px-3.5 py-3">
-              Something looks wrong? Change your password and contact a Fleet Administrator.
+              Something looks wrong? Change your password and contact {reviewer}.
             </InfoNote>
           </div>
         </div>

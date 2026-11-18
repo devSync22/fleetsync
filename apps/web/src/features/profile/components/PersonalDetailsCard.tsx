@@ -14,6 +14,8 @@ type PersonalDetailsCardProps = {
   submitting: boolean
   error: ApiError | null
   onSubmit: (changes: Partial<ProfileDetails>, reason: string) => Promise<boolean>
+  /** "a Fleet Administrator", or "another Fleet Administrator" on an administrator's own profile. */
+  reviewer?: string
 }
 
 const layout: { field: ProfileField; mono?: boolean; wide?: boolean; type?: string }[] = [
@@ -25,7 +27,8 @@ const layout: { field: ProfileField; mono?: boolean; wide?: boolean; type?: stri
 ]
 
 /** "Personal details": edits are sent to a Fleet Administrator as change requests, not saved directly. */
-export function PersonalDetailsCard({ saved, submitting, error, onSubmit }: PersonalDetailsCardProps) {
+export function PersonalDetailsCard({ saved, submitting, error, onSubmit, reviewer = 'a Fleet Administrator' }: PersonalDetailsCardProps) {
+  const Reviewer = reviewer.charAt(0).toUpperCase() + reviewer.slice(1)
   const [draft, setDraft] = useState<ProfileDetails>(saved)
   const [reason, setReason] = useState('')
   const [sent, setSent] = useState(false)
@@ -48,7 +51,14 @@ export function PersonalDetailsCard({ saved, submitting, error, onSubmit }: Pers
   }
 
   return (
-    <SectionCard title="Personal details" subtitle="Changes to these details are sent to a Fleet Administrator for approval">
+    <SectionCard
+      title="Personal details"
+      subtitle={
+        reviewer.startsWith('another')
+          ? `Sent to ${reviewer} for approval. You can’t approve your own changes.`
+          : `Changes to these details are sent to ${reviewer} for approval`
+      }
+    >
       <form
         className="flex flex-col gap-4 px-6 py-5"
         onSubmit={(event) => {
@@ -60,7 +70,7 @@ export function PersonalDetailsCard({ saved, submitting, error, onSubmit }: Pers
           <Banner
             tone="success"
             title="Sent for approval"
-            message="A Fleet Administrator will review your change. Your details update once it is approved."
+            message={`${Reviewer} will review your change. Your details update once it is approved.`}
           />
         )}
         {error && <Banner tone="danger" title="Couldn’t send your change" message={error.message} />}
@@ -97,7 +107,7 @@ export function PersonalDetailsCard({ saved, submitting, error, onSubmit }: Pers
           <Input
             id="profile-reason"
             value={reason}
-            placeholder={changedCount ? 'Tell the Fleet Administrator why this changed' : 'Change a detail above first'}
+            placeholder={changedCount ? 'Tell the reviewer why this changed' : 'Change a detail above first'}
             disabled={changedCount === 0}
             onChange={(event) => setReason(event.target.value)}
             className="border-line"

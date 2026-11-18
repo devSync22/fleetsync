@@ -1,7 +1,6 @@
 import { SearchInput } from '@/components/shared/SearchInput'
 import { cn } from '@/lib/utils'
 
-/** The grey search field at the start of each list card's filter row. */
 type ListSearchBoxProps = {
   value: string
   onChange: (value: string) => void
@@ -10,6 +9,7 @@ type ListSearchBoxProps = {
   className?: string
 }
 
+/** The grey search field at the start of each list card's filter row. */
 export function ListSearchBox({ value, onChange, placeholder, className }: ListSearchBoxProps) {
   return (
     <SearchInput

@@ -2,17 +2,18 @@ import { useCallback, useMemo, useState } from 'react'
 import { useAction } from '@/hooks/useAction'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { getMailbox, saveDraft, sendMail } from '../services/mailApi'
-import type { MailMessage, OutgoingMail } from '../types'
+import type { MailMessage, MailRole, OutgoingMail } from '../types'
 
 type Change = Partial<Pick<MailMessage, 'unread' | 'starred' | 'folder'>>
 
-/** Loads the mailbox and keeps this session's reads, stars, deletes, sends and drafts on top of it. */
-export function useMailbox() {
-  const { state, retry } = useAsyncData(getMailbox)
+/** Loads one role's mailbox and keeps this session's reads, stars, deletes, sends and drafts on top of it. */
+export function useMailbox(role: MailRole) {
+  const load = useCallback(() => getMailbox(role), [role])
+  const { state, retry } = useAsyncData(load)
   const [changes, setChanges] = useState<Record<string, Change>>({})
   const [added, setAdded] = useState<MailMessage[]>([])
-  const send = useAction(sendMail)
-  const draft = useAction(saveDraft)
+  const send = useAction(useCallback((mail: OutgoingMail) => sendMail(role, mail), [role]))
+  const draft = useAction(useCallback((mail: OutgoingMail) => saveDraft(role, mail), [role]))
 
   const messages = useMemo<MailMessage[] | null>(() => {
     if (state.status !== 'success') return null
@@ -51,6 +52,8 @@ export function useMailbox() {
     retry,
     messages,
     recipients: state.status === 'success' ? state.data.recipients : [],
+    /** The signed-in user, as the sender. */
+    me: state.status === 'success' ? state.data.me : null,
     markRead,
     setStarred,
     moveToTrash,

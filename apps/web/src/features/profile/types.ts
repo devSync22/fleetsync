@@ -55,3 +55,6 @@ export type ProfileOverview = {
   changeRequests: ChangeRequest[]
   security: Security
 }
+
+/** Roles whose web layout has a Profile & settings page. Each has its own mock profile until the API exists. */
+export type ProfileRole = 'coordinator' | 'admin'

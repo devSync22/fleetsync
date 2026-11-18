@@ -8,18 +8,20 @@ import {
   signOutSession,
   submitChangeRequest,
 } from '../services/profileApi'
-import type { ChangeRequest, ProfileDetails, Security } from '../types'
+import type { ChangeRequest, ProfileDetails, ProfileRole, Security } from '../types'
 
-/** Profile, change requests and security, plus every action on the Profile & settings page. */
-export function useProfile() {
-  const { state, retry } = useAsyncData(getProfileOverview)
+/** Profile, change requests and security, plus every action on the Profile & settings page, for one role. */
+export function useProfile(role: ProfileRole) {
+  const load = useCallback(() => getProfileOverview(role), [role])
+  const { state, retry } = useAsyncData(load)
   const [newRequests, setNewRequests] = useState<ChangeRequest[]>([])
   const [security, setSecurity] = useState<Security | null>(null)
 
-  const submitting = useAction(submitChangeRequest)
-  const updatingPassword = useAction(changePassword)
-  const signingOut = useAction(signOutSession)
-  const signingOutOthers = useAction(signOutOtherSessions)
+  // Bind the role once so the actions keep their (changes, reason) / (current, next) shapes.
+  const submitting = useAction(useCallback((changes: Partial<ProfileDetails>, reason: string) => submitChangeRequest(role, changes, reason), [role]))
+  const updatingPassword = useAction(useCallback((current: string, next: string) => changePassword(role, current, next), [role]))
+  const signingOut = useAction(useCallback((id: string) => signOutSession(role, id), [role]))
+  const signingOutOthers = useAction(useCallback(() => signOutOtherSessions(role), [role]))
 
   const overview =
     state.status === 'success'

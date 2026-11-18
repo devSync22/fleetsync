@@ -127,6 +127,9 @@ export const router = createBrowserRouter([
       { path: 'reference-data', element: <ReferenceDataPage /> },
       { path: 'change-approvals', element: <ChangeApprovalsPage /> },
       { path: 'audit-log', element: <AuditLogPage /> },
+      { path: 'mail', element: <MailPage role="admin" /> },
+      // One route for both tabs so switching between them keeps the loaded profile.
+      { path: 'profile/security?', element: <ProfileSettingsPage role="admin" /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },
