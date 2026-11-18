@@ -14,6 +14,8 @@ import { ApplicationsPage } from '@/features/applications/pages/ApplicationsPage
 import { AddVehiclePage } from '@/features/vehicles/pages/AddVehiclePage'
 import { EditVehiclePage } from '@/features/vehicles/pages/EditVehiclePage'
 import { VehiclesPage } from '@/features/vehicles/pages/VehiclesPage'
+import { ReferenceDataPage } from '@/features/reference-data/pages/ReferenceDataPage'
+import { ChangeApprovalsPage } from '@/features/change-approvals/pages/ChangeApprovalsPage'
 import { AvailabilityPage } from '@/features/availability/pages/AvailabilityPage'
 import { ChatPage } from '@/features/chat/pages/ChatPage'
 import { CoordinatorDashboardPage } from '@/features/coordinator-dashboard/pages/CoordinatorDashboardPage'
@@ -121,6 +123,8 @@ export const router = createBrowserRouter([
       { path: 'vehicles', element: <VehiclesPage /> },
       { path: 'vehicles/new', element: <AddVehiclePage /> },
       { path: 'vehicles/:plate/edit', element: <EditVehiclePage /> },
+      { path: 'reference-data', element: <ReferenceDataPage /> },
+      { path: 'change-approvals', element: <ChangeApprovalsPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

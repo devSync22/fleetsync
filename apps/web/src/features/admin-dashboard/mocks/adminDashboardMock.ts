@@ -41,9 +41,9 @@ export const adminDashboardMock: AdminDashboard = {
   ],
   oldestApplicationWait: '2 days',
   changeRequests: [
-    { requestId: 'PCR-0091', who: 'K. Perera · Driver', field: 'Mobile number' },
-    { requestId: 'PCR-0092', who: 'S. Fernando · Driver', field: 'Licence expiry date' },
-    { requestId: 'PCR-0093', who: 'Lanka Tiles PLC · Customer', field: 'Billing address' },
+    { requestId: 'CR-2026-0311', who: 'K. Perera · Driver', field: 'Mobile number' },
+    { requestId: 'CR-2026-0309', who: 'S. Fernando · Driver', field: 'Licence expiry date' },
+    { requestId: 'CR-2026-0306', who: 'Lanka Tiles PLC · Customer', field: 'Billing address' },
   ],
   auditEventsToday: 1284,
   lastAuditEventAt: '11:58',
