@@ -6,6 +6,9 @@ import { SetNewPasswordPage } from '@/features/auth/pages/SetNewPasswordPage'
 import { SignedInPage } from '@/features/auth/pages/SignedInPage'
 import { StaffApplicationPage } from '@/features/auth/pages/StaffApplicationPage'
 import { VerifyEmailPage } from '@/features/auth/pages/VerifyEmailPage'
+import { AdminDashboardPage } from '@/features/admin-dashboard/pages/AdminDashboardPage'
+import { CreateUserPage } from '@/features/admin-users/pages/CreateUserPage'
+import { UserAccountsPage } from '@/features/admin-users/pages/UserAccountsPage'
 import { AvailabilityPage } from '@/features/availability/pages/AvailabilityPage'
 import { ChatPage } from '@/features/chat/pages/ChatPage'
 import { CoordinatorDashboardPage } from '@/features/coordinator-dashboard/pages/CoordinatorDashboardPage'
@@ -30,14 +33,15 @@ import { TripDetailsPage } from '@/features/trips/pages/TripDetailsPage'
 import { TripsPage } from '@/features/trips/pages/TripsPage'
 import { NotFoundPage } from './NotFoundPage'
 import { RedirectTo } from './RedirectTo'
+import { AdminLayout } from './layouts/AdminLayout'
 import { AuthLayout } from './layouts/AuthLayout'
 import { CoordinatorLayout } from './layouts/CoordinatorLayout'
 import { CustomerLayout } from './layouts/CustomerLayout'
 import { RequireAuth } from './layouts/RequireAuth'
 
 /**
- * All routes, grouped per role area (/auth/*, /coordinator/*, /customer/*; /admin/* and /owner/*
- * get their own group and layout as their screens are built).
+ * All routes, grouped per role area (/auth/*, /coordinator/*, /customer/*, /admin/*; /owner/*
+ * gets its own group and layout as its screens are built).
  * The role areas are not behind RequireAuth yet: their screens still run on mock data.
  */
 export const router = createBrowserRouter([
@@ -96,6 +100,17 @@ export const router = createBrowserRouter([
       { path: 'quotations/:orderId', element: <FareQuotationPage /> },
       { path: 'payments', element: <PaymentHistoryPage /> },
       { path: 'payments/:paymentId', element: <PaymentResultPage /> },
+      { path: '*', element: <NotFoundPage /> },
+    ],
+  },
+  {
+    path: '/admin',
+    element: <AdminLayout />,
+    children: [
+      { index: true, element: <AdminDashboardPage /> },
+      // Tabs (?tab=drivers) and the open profile (?user=USR-0142) are query values on one route.
+      { path: 'users', element: <UserAccountsPage /> },
+      { path: 'users/new', element: <CreateUserPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },
