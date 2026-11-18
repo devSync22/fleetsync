@@ -1,8 +1,21 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using FleetSync.Modules.Orders.Domain;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace FleetSync.Modules.Orders.Infrastructure.Persistence.Configurations;
+
+/// <summary>How a <see cref="QuotationDraft"/> is stored in its jsonb column (enums as names, like every other column).</summary>
+internal static class DraftJson
+{
+    private static readonly JsonSerializerOptions Options = new() { Converters = { new JsonStringEnumConverter() } };
+
+    public static string Serialize(QuotationDraft? draft) => JsonSerializer.Serialize(draft, Options);
+
+    public static QuotationDraft? Deserialize(string json) => JsonSerializer.Deserialize<QuotationDraft>(json, Options);
+}
 
 /// <summary>TRANSPORT_ORDER with its owned customer, locations and cargo (plan §2).</summary>
 internal sealed class TransportOrderConfiguration : IEntityTypeConfiguration<TransportOrder>
@@ -40,6 +53,18 @@ internal sealed class TransportOrderConfiguration : IEntityTypeConfiguration<Tra
         builder.Navigation(o => o.Cargo).IsRequired();
 
         builder.Property(o => o.TripNumber).HasMaxLength(30);
+
+        // The unsent draft is read and written as a whole, never queried, so one jsonb column is enough.
+        builder.Property(o => o.Draft)
+            .HasColumnName("QuotationDraft")
+            .HasColumnType("jsonb")
+            .HasConversion(
+                draft => DraftJson.Serialize(draft),
+                json => DraftJson.Deserialize(json),
+                new ValueComparer<QuotationDraft?>(
+                    (a, b) => DraftJson.Serialize(a) == DraftJson.Serialize(b),
+                    draft => DraftJson.Serialize(draft).GetHashCode(),
+                    draft => DraftJson.Deserialize(DraftJson.Serialize(draft))));
 
         // xmin: concurrent changes to the same order fail instead of silently overwriting.
         builder.Property(o => o.Version).IsRowVersion();

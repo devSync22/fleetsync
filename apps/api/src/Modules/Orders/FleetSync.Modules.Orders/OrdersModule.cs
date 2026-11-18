@@ -2,7 +2,9 @@ using FleetSync.Application.Security;
 using FleetSync.Modules.Orders.Application.Abstractions;
 using FleetSync.Modules.Orders.Application.Details;
 using FleetSync.Modules.Orders.Application.Listing;
+using FleetSync.Modules.Orders.Application.Quotations;
 using FleetSync.Modules.Orders.Endpoints;
+using FleetSync.Modules.Orders.Infrastructure.Email;
 using FleetSync.Modules.Orders.Infrastructure.Persistence;
 using FleetSync.Modules.Orders.Infrastructure.Seeding;
 using FluentValidation;
@@ -47,10 +49,15 @@ public static class OrdersModule
         services.TryAddSingleton(TimeProvider.System);
 
         services.AddScoped<IOrderNumbers, OrderNumbers>();
+        services.AddSingleton<FareCalculator>();
+
+        // Infrastructure adapters (swap for production implementations later).
+        services.AddSingleton<IOrderEmailSender, PickupFolderOrderEmailSender>();
 
         // Use-case services, one per screen or flow.
         services.AddScoped<OrderListService>();
         services.AddScoped<OrderDetailService>();
+        services.AddScoped<QuotationService>();
 
         services.AddHostedService<DevOrdersSeeder>();
 
@@ -68,6 +75,7 @@ public static class OrdersModule
             .RequireAuthorization(FleetSyncPolicies.RequireOperations);
 
         group.MapOrderEndpoints();
+        group.MapQuotationEndpoints();
 
         return endpoints;
     }

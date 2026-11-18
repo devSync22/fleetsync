@@ -157,6 +157,10 @@ namespace FleetSync.Modules.Orders.Infrastructure.Persistence.Migrations
                     b.Property<int?>("DistanceKm")
                         .HasColumnType("integer");
 
+                    b.Property<string>("Draft")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("QuotationDraft");
+
                     b.Property<string>("OrderNumber")
                         .IsRequired()
                         .HasMaxLength(20)

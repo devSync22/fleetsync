@@ -110,3 +110,58 @@ Authorization: Bearer {{coordinator.response.body.accessToken}}
 
 ### No token → 401
 GET {{host}}/api/orders
+
+# ───────────── Quotations (Prepare quote → Send → Quotation details) ─────────────
+
+### Fare rates (LKR per km for each vehicle type)
+GET {{host}}/api/orders/fare-rates
+Authorization: Bearer {{coordinator.response.body.accessToken}}
+
+### Save a draft (anything may be missing; never send the distance charge, it is calculated)
+PUT {{host}}/api/orders/ORD-1049/quotation/draft
+Authorization: Bearer {{coordinator.response.body.accessToken}}
+Content-Type: application/json
+
+{
+  "vehicleType": "heavy-9",
+  "distanceKm": 96,
+  "lines": [
+    { "kind": "load", "label": "Load charge", "detail": "6.2 t", "amount": 4500 },
+    { "kind": "handling", "label": "Loading and unloading", "detail": "12 pallets", "amount": 3000 }
+  ],
+  "message": "Price includes loading and unloading of all 12 pallets."
+}
+
+### Send the quotation (201; order → quoted; email saved in App_Data/dev-emails/)
+# Set validUntil to a time within the next 30 days.
+POST {{host}}/api/orders/ORD-1049/quotation/send
+Authorization: Bearer {{coordinator.response.body.accessToken}}
+Content-Type: application/json
+
+{
+  "vehicleType": "heavy-9",
+  "distanceKm": 96,
+  "lines": [
+    { "kind": "load", "label": "Load charge", "detail": "6.2 t", "amount": 4500 },
+    { "kind": "handling", "label": "Loading and unloading", "detail": "12 pallets", "amount": 3000 },
+    { "kind": "special", "label": "Fragile handling", "detail": "Keep upright", "amount": 2500 },
+    { "kind": "tolls", "label": "Tolls and fees", "detail": "Expressway", "amount": 1250 }
+  ],
+  "validUntil": "2026-11-25T12:30:00Z",
+  "message": "Price includes loading and unloading of all 12 pallets."
+}
+
+### Quotation details
+GET {{host}}/api/orders/ORD-1049/quotation
+Authorization: Bearer {{coordinator.response.body.accessToken}}
+
+### Send again → 409 orders.already_quoted
+POST {{host}}/api/orders/ORD-1049/quotation/send
+Authorization: Bearer {{coordinator.response.body.accessToken}}
+Content-Type: application/json
+
+{ "vehicleType": "heavy-9", "distanceKm": 96, "lines": [], "validUntil": "2026-11-25T12:30:00Z" }
+
+### A pending order has no quotation yet → 404 orders.no_quotation
+GET {{host}}/api/orders/ORD-1053/quotation
+Authorization: Bearer {{coordinator.response.body.accessToken}}

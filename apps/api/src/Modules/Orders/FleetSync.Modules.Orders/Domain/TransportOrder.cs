@@ -45,6 +45,9 @@ internal sealed class TransportOrder
 
     public OrderPaymentStatus PaymentStatus { get; private set; }
 
+    /// <summary>The quotation being prepared, until it is sent. Only a pending order has one.</summary>
+    public QuotationDraft? Draft { get; private set; }
+
     /// <summary>The coordinator who reviewed and quoted it (EER "Reviews order").</summary>
     public Guid? ReviewedByUserId { get; private set; }
 
@@ -144,6 +147,14 @@ internal sealed class TransportOrder
         return order;
     }
 
+    /// <summary>The coordinator saves unfinished work on the quotation. Not part of the history.</summary>
+    public void SaveQuotationDraft(QuotationDraft draft, DateTimeOffset now)
+    {
+        Require(CanSendQuotation, "given a quotation draft");
+        Draft = draft with { SavedAt = now };
+        UpdatedAt = now;
+    }
+
     /// <summary>The coordinator sends a fare quotation: the order becomes Quoted and payment falls due on acceptance.</summary>
     public FareQuotation SendQuotation(
         string quotationNumber,
@@ -162,6 +173,7 @@ internal sealed class TransportOrder
         _quotations.Add(quotation);
 
         DistanceKm = distanceKm;
+        Draft = null;
         ReviewedByUserId = coordinatorUserId;
         Status = OrderStatus.Quoted;
         PaymentStatus = OrderPaymentStatus.AwaitingPayment;

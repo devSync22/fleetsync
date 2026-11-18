@@ -95,6 +95,20 @@ Fields added while implementing, beyond the tables above:
   DeclineQuotation, ExpireQuotation, ScheduleTrip, StartTrip, Complete, Cancel). **The customer side should call these
   same methods** so both sides follow one set of rules.
 
+### As built (slice 3)
+
+- **Draft**: one nullable `jsonb` column `QuotationDraft` on `TransportOrders` (migration `AddQuotationDraft`). Only a
+  pending order has one; sending clears it. Drafts are not written to the history.
+- **Pricing**: the client sends `distanceKm` and the hand-priced lines only. The API adds the distance charge itself
+  (km × `Orders:FareRates`, default 150 / 210 / 260); a `distance` line from the client is a 400.
+  `GET /api/orders/fare-rates` gives the web the same rates.
+- **Validity**: a sent quotation must be valid until a time in the future, at most 30 days ahead.
+- **Email**: "Fare quotation ready · ORD-…" to the customer's contact email, with every line, the total, the deadline
+  in Sri Lanka time and a link (`Orders:CustomerQuotationUrl`). Development saves it in `App_Data/dev-emails/`
+  (same folder as the Auth module). A failed email is logged; the quotation stays sent.
+- **Errors**: `orders.already_quoted` (409), `orders.no_quotation` (404), `orders.concurrent_change` (409, two
+  coordinators saving the same order at once).
+
 ## 3. Status values (needs agreement — DI-14)
 
 The two frontends use slightly different names. Proposed single list, sent as kebab-case:
@@ -131,6 +145,7 @@ All under `/api/orders`, tag `Orders`, policy **`RequireOperations`**.
 | PUT | `/api/orders/{orderNumber}/quotation/draft` | Prepare Fare Estimation (save) | `saveQuotationDraft` |
 | POST | `/api/orders/{orderNumber}/quotation/send` | Send Fare Quotation (+ email) | `sendQuotation` |
 | GET | `/api/orders/{orderNumber}/quotation` | Quotation sent / details | `getSentQuotation` |
+| GET | `/api/orders/fare-rates` | Rates the Prepare quote form prices with | `fareRates.ts` (constants today) |
 
 - The list returns `{ items, page, pageSize, totalCount, tabCounts }` (default 20, max 100).
 - Routes use the **order number** because the web URLs and people use it; the GUID is still the key.

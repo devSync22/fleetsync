@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Text.Json;
 using FleetSync.Modules.Orders.Application.Common;
 using FluentValidation;
@@ -28,6 +29,11 @@ internal static class EndpointHelpers
             title: error.Title,
             extensions: extensions);
     }
+
+    /// <summary>The signed-in user's id: the access token's "sub" claim (the Auth module keeps short claim names).</summary>
+    public static Guid GetUserId(this ClaimsPrincipal user) =>
+        Guid.Parse(user.FindFirstValue("sub")
+                   ?? throw new InvalidOperationException("The access token has no subject claim."));
 
     /// <summary>Runs the FluentValidation validator for <typeparamref name="T"/> before the handler.</summary>
     public static RouteHandlerBuilder WithValidation<T>(this RouteHandlerBuilder builder) =>

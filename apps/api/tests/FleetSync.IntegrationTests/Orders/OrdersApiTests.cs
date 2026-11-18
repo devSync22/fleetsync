@@ -1,13 +1,7 @@
 using System.Net;
-using System.Net.Http.Headers;
 using System.Text.Json;
 using FleetSync.Application.Security;
 using FleetSync.IntegrationTests.Auth;
-using FleetSync.Modules.Auth.Domain;
-using FleetSync.Modules.Auth.Infrastructure.Security;
-using FleetSync.Modules.Orders.Domain;
-using FleetSync.Modules.Orders.Infrastructure.Persistence;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace FleetSync.IntegrationTests.Orders;
 
@@ -19,8 +13,6 @@ namespace FleetSync.IntegrationTests.Orders;
 [Collection(DatabaseCollection.Name)]
 public sealed class OrdersApiTests(AuthApiFactory factory)
 {
-    private static readonly DateTimeOffset Now = DateTimeOffset.UtcNow;
-
     [Fact]
     public async Task List_ShowsOpenOrders_WithTabCounts()
     {
@@ -135,62 +127,15 @@ public sealed class OrdersApiTests(AuthApiFactory factory)
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
-    private static string UniqueCompany() => $"TestCo{Guid.NewGuid():N}"[..20];
+    private static string UniqueCompany() => OrdersTestHelpers.UniqueCompany();
 
     private async Task<JsonElement> GetJsonAsync(string path) =>
         await AuthTestHelpers.ReadJsonAsync(await CoordinatorClient().GetAsync(path));
 
     private HttpClient CoordinatorClient() => ClientFor(FleetSyncRoles.Coordinator);
 
-    /// <summary>A client with a real signed access token for the role (no account needed: the API only checks the token).</summary>
-    private HttpClient ClientFor(string role)
-    {
-        var issuer = factory.Services.GetRequiredService<AccessTokenIssuer>();
-        var user = new ApplicationUser { Id = Guid.CreateVersion7(), Email = $"{role}@example.com", FullName = "Test User" };
-        var client = factory.CreateClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", issuer.Issue(user, [role]).Token);
-        return client;
-    }
+    private HttpClient ClientFor(string role) => OrdersTestHelpers.ClientFor(factory, role);
 
-    /// <summary>Saves an order (optionally with a sent quotation) straight through the domain and returns its number.</summary>
-    private async Task<string> CreateAsync(string company, bool quoted, int minutesAgo = 5)
-    {
-        var submitted = Now.AddMinutes(-minutesAgo);
-        var number = $"ORD-T{Random.Shared.Next(10_000_000, 99_999_999)}";
-
-        var order = TransportOrder.Submit(
-            number,
-            Guid.CreateVersion7(),
-            customerCompanyId: null,
-            new CustomerSnapshot(company, "Dilini Perera", "077 214 5590", "orders@lankatiles.lk"),
-            new Location("No. 215, Nawala Road", "Nugegoda"),
-            new Location("Kurunegala Distribution Yard", "Kurunegala"),
-            Now.AddDays(2),
-            null,
-            new CargoDetails(CargoType.Pallets, "Ceramic tiles", 6200, 12),
-            VehicleType.Heavy9t,
-            submitted);
-
-        if (quoted)
-        {
-            order.SendQuotation(
-                $"QT-T{Random.Shared.Next(10_000_000, 99_999_999)}",
-                VehicleType.Heavy9t,
-                96,
-                [
-                    new QuotationLine(QuotationLineKind.Distance, "Distance charge", "96 km × LKR 210", 20160, 0),
-                    new QuotationLine(QuotationLineKind.Load, "Load charge", "6.2 t", 7500, 1),
-                ],
-                Now.AddDays(1),
-                null,
-                Guid.CreateVersion7(),
-                submitted.AddMinutes(1));
-        }
-
-        await using var scope = factory.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<OrdersDbContext>();
-        db.Orders.Add(order);
-        await db.SaveChangesAsync();
-        return number;
-    }
+    private Task<string> CreateAsync(string company, bool quoted, int minutesAgo = 5) =>
+        OrdersTestHelpers.CreateOrderAsync(factory, company, quoted, minutesAgo);
 }

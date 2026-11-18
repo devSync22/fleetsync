@@ -1,4 +1,5 @@
 using FleetSync.Modules.Orders.Application.Common;
+using FleetSync.Modules.Orders.Application.Quotations;
 using FleetSync.Modules.Orders.Domain;
 using FleetSync.Modules.Orders.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -19,6 +20,7 @@ internal sealed record OrderDetailResponse(
     int? DistanceKm,
     CargoResponse Cargo,
     VehicleType? RequiredVehicleType,
+    QuotationDraftResponse? Draft,
     QuotationResponse? Quotation,
     string? TripNumber,
     DateTimeOffset? ClosedAt,
@@ -54,6 +56,7 @@ internal sealed class OrderDetailService(OrdersDbContext db)
             order.DistanceKm,
             order.Cargo.ToResponse(),
             order.RequiredVehicleType,
+            order.Draft is { } draft ? QuotationService.ToResponse(draft) : null,
             order.CurrentQuotation?.ToResponse(),
             order.TripNumber,
             order.ClosedAt,

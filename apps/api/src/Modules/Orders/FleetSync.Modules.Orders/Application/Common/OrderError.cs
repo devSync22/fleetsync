@@ -31,6 +31,20 @@ internal static class OrderErrors
         "Already quoted",
         $"{orderNumber} has already been quoted.");
 
+    /// <summary>The order has no sent quotation to show yet.</summary>
+    public static OrderError NoQuotation(string orderNumber) => new(
+        "orders.no_quotation",
+        StatusCodes.Status404NotFound,
+        "No quotation yet",
+        $"No quotation has been sent for {orderNumber} yet.");
+
+    /// <summary>Someone else changed the order between loading and saving; reload and try again.</summary>
+    public static OrderError ConcurrentChange(string orderNumber) => new(
+        "orders.concurrent_change",
+        StatusCodes.Status409Conflict,
+        "The order changed",
+        $"{orderNumber} was changed by someone else just now. Reload it and try again.");
+
     /// <summary>The order's current status doesn't allow this action.</summary>
     public static OrderError InvalidTransition(string orderNumber, string currentStatus, string action) => new(
         "orders.invalid_transition",

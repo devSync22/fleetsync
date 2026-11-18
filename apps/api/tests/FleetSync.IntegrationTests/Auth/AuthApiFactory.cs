@@ -22,6 +22,9 @@ public sealed class AuthApiFactory : WebApplicationFactory<Program>, IAsyncLifet
 
     internal CapturingEmailSender Emails { get; } = new();
 
+    /// <summary>Emails sent by the Orders module (quotations).</summary>
+    internal Orders.CapturingOrderEmailSender OrderEmails { get; } = new();
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         // Fails before the host starts if the database isn't a disposable one.
@@ -38,6 +41,8 @@ public sealed class AuthApiFactory : WebApplicationFactory<Program>, IAsyncLifet
         {
             services.RemoveAll<IEmailSender>();
             services.AddSingleton<IEmailSender>(Emails);
+            services.RemoveAll<Modules.Orders.Application.Abstractions.IOrderEmailSender>();
+            services.AddSingleton<Modules.Orders.Application.Abstractions.IOrderEmailSender>(OrderEmails);
         });
     }
 
