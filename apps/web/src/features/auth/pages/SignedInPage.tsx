@@ -13,10 +13,14 @@ const roleLabels: Record<string, string> = {
   mechanic: 'Mechanic',
 }
 
+/** Roles that use the mobile app instead of the website. */
+const mobileRoles = new Set(['driver', 'mechanic'])
+
 /**
- * Temporary landing page after sign-in, until the role dashboards exist
- * (coordinator-dashboard, owner-dashboard, …). It only confirms who is signed
- * in and offers sign-out. Not a Figma screen: replace it with the role layouts.
+ * Landing page for roles that have no web area yet (Fleet Owner, Fleet
+ * Administrator) and for drivers and mechanics, who use the mobile app.
+ * Coordinators and customers never see it: "/" sends them to their own area.
+ * It only confirms who is signed in and offers sign-out. Not a Figma screen.
  */
 export function SignedInPage() {
   const { user, signOut } = useAuth()
@@ -28,6 +32,7 @@ export function SignedInPage() {
   }
 
   const roles = user?.roles.map((role) => roleLabels[role] ?? role).join(', ')
+  const usesMobileApp = user?.roles.some((role) => mobileRoles.has(role)) ?? false
 
   return (
     <main className="flex min-h-svh items-center justify-center bg-background px-4">
@@ -38,7 +43,11 @@ export function SignedInPage() {
           <br />
           <span className="font-mono text-[13px]">{user?.email}</span>
         </p>
-        <p className="text-sm text-muted-foreground">Your dashboard is not available yet.</p>
+        <p className="text-sm text-muted-foreground">
+          {usesMobileApp
+            ? 'Drivers and mechanics use the FleetSync mobile app. Sign in there to see your trips and jobs.'
+            : 'Your dashboard is not available yet.'}
+        </p>
         <Button variant="outline" className="w-full" onClick={() => void handleSignOut()}>
           <LogOut aria-hidden="true" />
           Sign out

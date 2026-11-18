@@ -212,6 +212,13 @@ internal sealed class SessionService(
         return user is null ? null : await ToResponseAsync(user);
     }
 
+    /// <summary>
+    /// A fresh session for a user who just proved who they are some other way
+    /// (e.g. changing their password), after their old sessions were revoked.
+    /// </summary>
+    public Task<IssuedSession> StartNewSessionAsync(ApplicationUser user, bool rememberMe, CancellationToken cancellationToken) =>
+        IssueSessionAsync(user, rememberMe, cancellationToken);
+
     private async Task<IssuedSession> IssueSessionAsync(
         ApplicationUser user,
         bool rememberMe,

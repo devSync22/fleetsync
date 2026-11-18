@@ -11,6 +11,7 @@ import {
 import { Outlet } from 'react-router'
 import { AppSidebar, type SidebarNavItem } from '@/components/shared/AppSidebar'
 import { TopBar } from '@/components/shared/TopBar'
+import { useShellUser } from './useShellUser'
 import { NotificationsBell } from '@/features/notifications/components/NotificationsBell'
 
 const navItems: SidebarNavItem[] = [
@@ -25,24 +26,23 @@ const navItems: SidebarNavItem[] = [
 
 const footerItems: SidebarNavItem[] = [{ label: 'Profile', to: '/coordinator/profile', icon: User }]
 
-// TODO: read from AuthContext once sign-in exists
-const currentUser = { name: 'Nimal Perera', initials: 'NP', role: 'Operational Coordinator' }
 
 export function CoordinatorLayout() {
+  // The signed-in user from AuthContext (name, role, initials) and the Log out action.
+  const currentUser = useShellUser()
+
   return (
     <div className="flex min-h-screen bg-background">
       <AppSidebar
         roleLabel="Coordinator"
         items={navItems}
         footerItems={footerItems}
-        onLogout={() => {
-          // TODO: sign out through AuthContext
-        }}
+        onLogout={currentUser.logOut}
       />
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar
           userName={currentUser.name}
-          userRole={currentUser.role}
+          userRole={currentUser.roleLabel}
           initials={currentUser.initials}
           searchPlaceholder="Search orders, trips, vehicles…"
           notifications={<NotificationsBell role="coordinator" />}

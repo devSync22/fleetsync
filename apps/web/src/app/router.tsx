@@ -3,7 +3,6 @@ import { CustomerRegistrationPage } from '@/features/auth/pages/CustomerRegistra
 import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage'
 import { LoginPage } from '@/features/auth/pages/LoginPage'
 import { SetNewPasswordPage } from '@/features/auth/pages/SetNewPasswordPage'
-import { SignedInPage } from '@/features/auth/pages/SignedInPage'
 import { StaffApplicationPage } from '@/features/auth/pages/StaffApplicationPage'
 import { VerifyEmailPage } from '@/features/auth/pages/VerifyEmailPage'
 import { AvailabilityPage } from '@/features/availability/pages/AvailabilityPage'
@@ -28,6 +27,7 @@ import { TripCancelledPage } from '@/features/trips/pages/TripCancelledPage'
 import { TripCreatedPage } from '@/features/trips/pages/TripCreatedPage'
 import { TripDetailsPage } from '@/features/trips/pages/TripDetailsPage'
 import { TripsPage } from '@/features/trips/pages/TripsPage'
+import { HomeRedirect } from './HomeRedirect'
 import { NotFoundPage } from './NotFoundPage'
 import { RedirectTo } from './RedirectTo'
 import { AuthLayout } from './layouts/AuthLayout'
@@ -38,7 +38,9 @@ import { RequireAuth } from './layouts/RequireAuth'
 /**
  * All routes, grouped per role area (/auth/*, /coordinator/*, /customer/*; /admin/* and /owner/*
  * get their own group and layout as their screens are built).
- * The role areas are not behind RequireAuth yet: their screens still run on mock data.
+ * Every role area sits behind RequireAuth with its allowed roles, so a signed-out
+ * visitor is sent to sign in and a signed-in user with another role is sent to
+ * their own area. (The screens inside still run on mock data until their APIs exist.)
  */
 export const router = createBrowserRouter([
   {
@@ -57,46 +59,56 @@ export const router = createBrowserRouter([
   {
     element: <RequireAuth />,
     children: [
-      // Temporary landing page after sign-in, until each role is sent to its own home.
-      { path: '/', element: <SignedInPage /> },
+      // Sends each role to its own area; roles without a web area see the signed-in page.
+      { path: '/', element: <HomeRedirect /> },
     ],
   },
   {
     path: '/coordinator',
-    element: <CoordinatorLayout />,
+    element: <RequireAuth roles={['coordinator']} />,
     children: [
-      { index: true, element: <CoordinatorDashboardPage /> },
-      { path: 'orders', element: <SubmittedOrdersPage /> },
-      { path: 'orders/:orderId', element: <OrderReviewPage /> },
-      { path: 'orders/:orderId/quotation-sent', element: <QuotationSentPage /> },
-      { path: 'trips', element: <TripsPage /> },
-      { path: 'trips/new', element: <CreateTripPage /> },
-      // One route for details and the Cancel trip dialog, so opening the dialog doesn't reload the page.
-      { path: 'trips/:tripId/cancel?', element: <TripDetailsPage /> },
-      { path: 'trips/:tripId/cancelled', element: <TripCancelledPage /> },
-      { path: 'trips/:tripId/created', element: <TripCreatedPage /> },
-      { path: 'availability', element: <AvailabilityPage /> },
-      { path: 'chat/:orderId?', element: <ChatPage /> },
-      { path: 'mail', element: <MailPage /> },
-      { path: 'reports', element: <ReportsPage /> },
-      // One route for both tabs so switching between them keeps the loaded profile.
-      { path: 'profile/security?', element: <ProfileSettingsPage /> },
-      { path: '*', element: <NotFoundPage /> },
+      {
+        element: <CoordinatorLayout />,
+        children: [
+          { index: true, element: <CoordinatorDashboardPage /> },
+          { path: 'orders', element: <SubmittedOrdersPage /> },
+          { path: 'orders/:orderId', element: <OrderReviewPage /> },
+          { path: 'orders/:orderId/quotation-sent', element: <QuotationSentPage /> },
+          { path: 'trips', element: <TripsPage /> },
+          { path: 'trips/new', element: <CreateTripPage /> },
+          // One route for details and the Cancel trip dialog, so opening the dialog doesn't reload the page.
+          { path: 'trips/:tripId/cancel?', element: <TripDetailsPage /> },
+          { path: 'trips/:tripId/cancelled', element: <TripCancelledPage /> },
+          { path: 'trips/:tripId/created', element: <TripCreatedPage /> },
+          { path: 'availability', element: <AvailabilityPage /> },
+          { path: 'chat/:orderId?', element: <ChatPage /> },
+          { path: 'mail', element: <MailPage /> },
+          { path: 'reports', element: <ReportsPage /> },
+          // One route for both tabs so switching between them keeps the loaded profile.
+          { path: 'profile/security?', element: <ProfileSettingsPage /> },
+          { path: '*', element: <NotFoundPage /> },
+        ],
+      },
     ],
   },
   {
     path: '/customer',
-    element: <CustomerLayout />,
+    element: <RequireAuth roles={['customer']} />,
     children: [
-      { index: true, element: <CustomerDashboardPage /> },
-      { path: 'orders', element: <MyOrdersPage /> },
-      { path: 'new-order', element: <NewOrderPage /> },
-      { path: 'orders/:orderId', element: <CustomerOrderDetailsPage /> },
-      { path: 'orders/:orderId/pay', element: <PaymentPage /> },
-      { path: 'quotations/:orderId', element: <FareQuotationPage /> },
-      { path: 'payments', element: <PaymentHistoryPage /> },
-      { path: 'payments/:paymentId', element: <PaymentResultPage /> },
-      { path: '*', element: <NotFoundPage /> },
+      {
+        element: <CustomerLayout />,
+        children: [
+          { index: true, element: <CustomerDashboardPage /> },
+          { path: 'orders', element: <MyOrdersPage /> },
+          { path: 'new-order', element: <NewOrderPage /> },
+          { path: 'orders/:orderId', element: <CustomerOrderDetailsPage /> },
+          { path: 'orders/:orderId/pay', element: <PaymentPage /> },
+          { path: 'quotations/:orderId', element: <FareQuotationPage /> },
+          { path: 'payments', element: <PaymentHistoryPage /> },
+          { path: 'payments/:paymentId', element: <PaymentResultPage /> },
+          { path: '*', element: <NotFoundPage /> },
+        ],
+      },
     ],
   },
   // Short links used in emails (verify / reset) and old bookmarks.

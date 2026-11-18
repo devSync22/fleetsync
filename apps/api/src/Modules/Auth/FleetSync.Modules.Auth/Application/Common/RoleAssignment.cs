@@ -36,7 +36,11 @@ internal sealed class RoleAssignment(AuthDbContext db, UserManager<ApplicationUs
     public Task<IdentityResult> AssignFleetAdministratorAsync(ApplicationUser user) =>
         AssignAsync(user, AuthRoles.FleetAdministrator, new FleetAdministrator(user.Id));
 
-    private async Task<IdentityResult> AssignAsync(ApplicationUser user, string role, object subtypeRow)
+    /// <summary>
+    /// Gives <paramref name="user"/> the role and queues its subtype row. Used
+    /// directly by the development test-account seeder, which has no application.
+    /// </summary>
+    public async Task<IdentityResult> AssignAsync(ApplicationUser user, string role, object subtypeRow)
     {
         var added = await userManager.AddToRoleAsync(user, role);
         if (!added.Succeeded)

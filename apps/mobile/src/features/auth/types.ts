@@ -6,10 +6,11 @@ export type AuthUser = {
   id: string;
   name: string;
   role: StaffRole;
-  /** Driver or mechanic ID, e.g. "DRV-014", "MEC-012". */
-  staffId: string;
+  /** Driver or mechanic ID, e.g. "DRV-014", "MEC-012". Not sent by the API yet (staff management isn't built). */
+  staffId?: string;
   email: string;
-  depot: string;
+  /** Not sent by the API yet, like `staffId`. */
+  depot?: string;
 };
 
 export type SignInCredentials = {
@@ -18,7 +19,10 @@ export type SignInCredentials = {
 };
 
 export type Session = {
+  /** Short-lived access token (JWT, 15 minutes), sent as "Authorization: Bearer". */
   token: string;
+  /** Single-use refresh token; swapped for a new session when the access token expires. */
+  refreshToken: string;
   user: AuthUser;
 };
 

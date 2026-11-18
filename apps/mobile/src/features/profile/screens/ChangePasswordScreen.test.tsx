@@ -1,7 +1,7 @@
 import { fireEvent, renderRouter, screen, testRouter } from 'expo-router/testing-library';
 
 import { MOCK_PASSWORD } from '@/features/auth/mocks/authMocks';
-import { resetAuthMocks } from '@/features/auth/services/authApi';
+import { resetAuthMocks } from '@/features/auth/mocks/authApiMock';
 import { DRIVER_EMAIL, saveSessionFor } from '@/testing/session';
 
 // Real navigation over the real `src/app` routes, so "back to Profile with the banner" is the app's own route.

@@ -1,4 +1,5 @@
 using FleetSync.Modules.Auth.Application.Applications;
+using FleetSync.Modules.Auth.Application.Passwords;
 
 namespace FleetSync.Modules.Auth.UnitTests;
 
@@ -97,4 +98,30 @@ public sealed class SubmitStaffApplicationCommandValidatorTests
     public void Too_many_files_are_rejected() =>
         Assert.False(_validator.Validate(
             new SubmitStaffApplicationCommand(ValidForm(), Enumerable.Range(0, 6).Select(_ => File()).ToList())).IsValid);
+}
+
+public sealed class ChangePasswordRequestValidatorTests
+{
+    private readonly ChangePasswordRequestValidator _validator = new();
+
+    [Fact]
+    public void Accepts_a_current_password_and_a_new_one_meeting_the_policy() =>
+        Assert.True(_validator.Validate(new ChangePasswordRequest("anything", "Fleet2026New")).IsValid);
+
+    [Fact]
+    public void Requires_the_current_password_but_does_not_apply_the_policy_to_it()
+    {
+        Assert.Contains(_validator.Validate(new ChangePasswordRequest("", "Fleet2026New")).Errors,
+            e => e.PropertyName == nameof(ChangePasswordRequest.CurrentPassword));
+        // A weak *current* password is still allowed: policy hints would leak information about it.
+        Assert.True(_validator.Validate(new ChangePasswordRequest("weak", "Fleet2026New")).IsValid);
+    }
+
+    [Theory]
+    [InlineData("short1A")]       // under 8 characters
+    [InlineData("alllowercase1")] // no capital letter
+    [InlineData("NoNumbersHere")] // no number
+    public void Rejects_a_new_password_that_breaks_the_policy(string newPassword) =>
+        Assert.Contains(_validator.Validate(new ChangePasswordRequest("Current2026", newPassword)).Errors,
+            e => e.PropertyName == nameof(ChangePasswordRequest.NewPassword));
 }

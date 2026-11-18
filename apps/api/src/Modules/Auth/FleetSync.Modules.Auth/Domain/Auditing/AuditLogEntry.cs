@@ -66,6 +66,7 @@ internal static class AuditActions
 
     public const string PasswordResetRequested = "PASSWORD_RESET_REQUESTED";
     public const string PasswordReset = "PASSWORD_RESET";
+    public const string PasswordChanged = "PASSWORD_CHANGED";
 
     public const string ApplicationSubmitted = "APPLICATION_SUBMITTED";
     public const string EmailVerified = "EMAIL_VERIFIED";

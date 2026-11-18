@@ -117,6 +117,56 @@ internal sealed class PasswordResetService(
         return Result.Success();
     }
 
+    /// <summary>
+    /// Signed-in password change: checks the current password, then applies the
+    /// same reuse and policy rules as a reset. Every existing session is ended
+    /// (other devices are signed out) and a new session is returned for the
+    /// device that made the change, so it stays signed in.
+    /// </summary>
+    public async Task<Result<IssuedSession>> ChangeAsync(Guid userId, ChangePasswordRequest request, CancellationToken cancellationToken)
+    {
+        var user = await userManager.FindByIdAsync(userId.ToString());
+        if (user is null || !user.IsActive)
+        {
+            return AuthErrors.UserNotFound;
+        }
+
+        if (!await userManager.CheckPasswordAsync(user, request.CurrentPassword))
+        {
+            return AuthErrors.WrongCurrentPassword;
+        }
+
+        if (await IsReusedPasswordAsync(user, request.NewPassword, cancellationToken))
+        {
+            return AuthErrors.PasswordReused;
+        }
+
+        var now = clock.GetUtcNow();
+        var previousHash = user.PasswordHash;
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+
+        // ChangePasswordAsync runs the password validators and rotates the security stamp.
+        var changed = await userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+        if (!changed.Succeeded)
+        {
+            return IdentityErrorMapper.ToAuthError(changed);
+        }
+
+        if (previousHash is not null)
+        {
+            db.PasswordHistory.Add(new PasswordHistoryEntry(user.Id, previousHash, now));
+        }
+
+        // Sign out every device, then start a new session for this one (saved together).
+        await sessions.RevokeAllForUserAsync(user.Id, cancellationToken);
+        audit.RecordForUser(AuditActions.PasswordChanged, user.Id, details: "Other sessions ended");
+        var session = await sessions.StartNewSessionAsync(user, request.RememberMe, cancellationToken);
+
+        await transaction.CommitAsync(cancellationToken);
+
+        return session;
+    }
+
     private async Task<(OneTimeToken? Token, ApplicationUser? User)> FindTargetAsync(
         string rawToken,
         CancellationToken cancellationToken)

@@ -3,7 +3,7 @@ import { fireEvent, renderRouter, screen } from 'expo-router/testing-library';
 import { DRIVER_EMAIL, MECHANIC_EMAIL } from '@/testing/session';
 
 import { MOCK_PASSWORD } from '../mocks/authMocks';
-import { resetAuthMocks } from '../services/authApi';
+import { resetAuthMocks } from '../mocks/authApiMock';
 
 // Real navigation over the real `src/app` routes: the root layout's guards decide where a user lands.
 jest.unmock('expo-router');

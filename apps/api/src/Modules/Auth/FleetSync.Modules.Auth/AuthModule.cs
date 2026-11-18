@@ -99,6 +99,8 @@ public static class AuthModule
         services.AddScoped<UserAdministrationService>();
 
         services.AddHostedService<DevAdminSeeder>();
+        // Development only and opt-in: one sign-in account per role for manual testing.
+        services.AddHostedService<DevTestAccountsSeeder>();
 
         return services;
     }
