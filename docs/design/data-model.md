@@ -326,6 +326,7 @@ Types are taken from the class diagram ([class-diagram.md](class-diagram.md)); t
 | PAYMENT | **payment_id** PK, amount, currency, payment_method, gateway_reference, payment_status, paid_at | PayHere. DI-22, DI-27 |
 | REFUND | **refund_id** PK, amount, currency, refund_status, gateway_refund_reference, initiated_at, completed_at, failure_reason | Automatic full refund on cancellation |
 | INVOICE | **invoice_id** PK, invoice_number, total_amount, issued_at, file_reference | One per order |
+| ORDER_EVENT | **event_id** PK, order_id FK, event_type, occurred_at, actor_user_id, detail, amount | **Not in the EER drawing yet** (DI-30, decided): the order history timeline. One TRANSPORT_ORDER has 0..N events |
 
 ### Fleet and maintenance
 

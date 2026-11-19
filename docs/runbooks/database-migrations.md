@@ -19,6 +19,7 @@ Each backend module has its own DbContext, schema and migrations history table.
 | Module | DbContext        | Migration project                           | Schema | Migration directory                     |
 | ------ | ---------------- | ------------------------------------------- | ------ | --------------------------------------- |
 | Auth   | `AuthDbContext`  | `src/Modules/Auth/FleetSync.Modules.Auth`   | `identity` | `Infrastructure/Persistence/Migrations` |
+| Orders | `OrdersDbContext` | `src/Modules/Orders/FleetSync.Modules.Orders` | `orders` | `Infrastructure/Persistence/Migrations` |
 
 Always pass `--context` and the module's `--project` when running `dotnet ef`
 for a module. Example:

@@ -21,6 +21,7 @@
     <ProjectReference Include="..\FleetSync.Application\FleetSync.Application.csproj" />
     <ProjectReference Include="..\FleetSync.Infrastructure\FleetSync.Infrastructure.csproj" />
     <ProjectReference Include="..\Modules\Auth\FleetSync.Modules.Auth\FleetSync.Modules.Auth.csproj" />
+    <ProjectReference Include="..\Modules\Orders\FleetSync.Modules.Orders\FleetSync.Modules.Orders.csproj" />
   </ItemGroup>
 
 </Project>

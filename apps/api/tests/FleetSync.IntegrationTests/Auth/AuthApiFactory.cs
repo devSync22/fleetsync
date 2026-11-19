@@ -22,6 +22,9 @@ public sealed class AuthApiFactory : WebApplicationFactory<Program>, IAsyncLifet
 
     internal CapturingEmailSender Emails { get; } = new();
 
+    /// <summary>Emails sent by the Orders module (quotations).</summary>
+    internal Orders.CapturingOrderEmailSender OrderEmails { get; } = new();
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         // Fails before the host starts if the database isn't a disposable one.
@@ -38,6 +41,8 @@ public sealed class AuthApiFactory : WebApplicationFactory<Program>, IAsyncLifet
         {
             services.RemoveAll<IEmailSender>();
             services.AddSingleton<IEmailSender>(Emails);
+            services.RemoveAll<Modules.Orders.Application.Abstractions.IOrderEmailSender>();
+            services.AddSingleton<Modules.Orders.Application.Abstractions.IOrderEmailSender>(OrderEmails);
         });
     }
 
@@ -71,6 +76,8 @@ public sealed class AuthApiFactory : WebApplicationFactory<Program>, IAsyncLifet
     {
         await using var scope = Services.CreateAsyncScope();
         await scope.ServiceProvider.GetRequiredService<AuthDbContext>().Database.MigrateAsync();
+        // Every module's tables, so module tests can share this one fixture.
+        await scope.ServiceProvider.GetRequiredService<Modules.Orders.Infrastructure.Persistence.OrdersDbContext>().Database.MigrateAsync();
     }
 
     async Task IAsyncLifetime.DisposeAsync()

@@ -16,6 +16,7 @@ to switch between local PostgreSQL and Supabase.
 | ---------- | ---------------------- | ---------------------------------------------------- |
 | `public`   | `FleetSyncDbContext`   | Shared baseline migration history                    |
 | `identity` | Auth module            | Users, role subtypes, applications, profile changes, audit log, sessions, tokens |
+| `orders`   | Orders module          | Transport orders, fare quotations, order history (tables arrive with the module's first migration) |
 
 Supabase reserves several schemas for its own services, including `auth`,
 `storage`, `realtime`, `extensions`, `graphql`, `vault` and `cron`. Never
@@ -76,6 +77,8 @@ export ConnectionStrings__FleetSyncDatabase="<same connection string as above>"
 dotnet ef database update --project apps/api/src/FleetSync.Infrastructure --startup-project apps/api/src/FleetSync.Api --context FleetSyncDbContext
 
 dotnet ef database update --project apps/api/src/Modules/Auth/FleetSync.Modules.Auth --startup-project apps/api/src/FleetSync.Api --context AuthDbContext
+
+dotnet ef database update --project apps/api/src/Modules/Orders/FleetSync.Modules.Orders --startup-project apps/api/src/FleetSync.Api --context OrdersDbContext
 
 unset ConnectionStrings__FleetSyncDatabase
 ```

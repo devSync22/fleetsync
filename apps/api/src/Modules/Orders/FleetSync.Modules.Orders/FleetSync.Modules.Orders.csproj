@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    FleetSync Orders module: transport orders and fare quotations.
+    A self-contained part of the modular monolith (ADR-0002): it owns its entities, database schema ("orders"),
+    migrations and HTTP endpoints. The host (FleetSync.Api) only calls AddOrdersModule() and MapOrdersEndpoints().
+    Plan: docs/design/orders-module-plan.md
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>FleetSync.Modules.Orders</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Gives the module ASP.NET Core types (endpoints, auth, HttpContext) without being a web app itself. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="12.0.0" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.13" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.13" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Shared kernel: policy and role names. -->
+    <ProjectReference Include="..\..\..\FleetSync.Application\FleetSync.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Module internals stay internal; only the test projects may see them. -->
+    <InternalsVisibleTo Include="FleetSync.Modules.Orders.UnitTests" />
+    <InternalsVisibleTo Include="FleetSync.IntegrationTests" />
+  </ItemGroup>
+
+</Project>

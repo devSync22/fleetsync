@@ -101,6 +101,9 @@ jobs:
       - name: Run Auth module unit tests
         run: dotnet test apps/api/tests/FleetSync.Modules.Auth.UnitTests/FleetSync.Modules.Auth.UnitTests.csproj --configuration Release --no-build
 
+      - name: Run Orders module unit tests
+        run: dotnet test apps/api/tests/FleetSync.Modules.Orders.UnitTests/FleetSync.Modules.Orders.UnitTests.csproj --configuration Release --no-build
+
 
   database:
     name: database
@@ -151,4 +154,7 @@ jobs:
 
       - name: Check for missing Auth module migrations
         run: dotnet ef migrations has-pending-model-changes --project apps/api/src/Modules/Auth/FleetSync.Modules.Auth --startup-project apps/api/src/FleetSync.Api --context AuthDbContext
+
+      - name: Check for missing Orders module migrations
+        run: dotnet ef migrations has-pending-model-changes --project apps/api/src/Modules/Orders/FleetSync.Modules.Orders --startup-project apps/api/src/FleetSync.Api --context OrdersDbContext
 
