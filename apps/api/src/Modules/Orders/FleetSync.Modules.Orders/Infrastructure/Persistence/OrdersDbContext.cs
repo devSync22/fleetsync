@@ -32,6 +32,17 @@ internal sealed class OrdersDbContext(DbContextOptions<OrdersDbContext> options)
         builder.HasSequence<long>(OrderNumberSequence).StartsAt(1100);
         builder.HasSequence<long>(QuotationNumberSequence).StartsAt(1);
         builder.ApplyConfigurationsFromAssembly(typeof(OrdersDbContext).Assembly);
+
+        // Every key is a GUID the domain creates itself (Guid.CreateVersion7). Telling EF the database never
+        // generates them makes EF insert a quotation or event added to an already-loaded order; otherwise a set key
+        // looks like an existing row, EF updates instead of inserting, and the save fails as a concurrency conflict.
+        foreach (var entity in builder.Model.GetEntityTypes())
+        {
+            if (entity.FindPrimaryKey() is { Properties: [{ ClrType: var type } key] } && type == typeof(Guid))
+            {
+                key.ValueGenerated = Microsoft.EntityFrameworkCore.Metadata.ValueGenerated.Never;
+            }
+        }
     }
 
     /// <summary>Conventions for every Orders entity; a configuration can still override one property.</summary>

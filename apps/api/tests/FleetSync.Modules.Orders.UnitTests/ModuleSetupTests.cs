@@ -22,6 +22,20 @@ public sealed class ModuleSetupTests
         Assert.Equal("orders", context.Model.GetDefaultSchema());
     }
 
+    [Fact]
+    public void Keys_AreNeverGeneratedByTheDatabase()
+    {
+        using var context = NewContext();
+
+        // The domain sets every key. If EF thought the database generated them, a quotation or event added to a
+        // loaded order would be UPDATEd instead of INSERTed and the save would fail as a concurrency conflict.
+        foreach (var entity in context.Model.GetEntityTypes())
+        {
+            var key = Assert.Single(entity.FindPrimaryKey()!.Properties, p => p.ClrType == typeof(Guid));
+            Assert.Equal(Microsoft.EntityFrameworkCore.Metadata.ValueGenerated.Never, key.ValueGenerated);
+        }
+    }
+
     [Theory]
     [InlineData("auth")]
     [InlineData("storage")]

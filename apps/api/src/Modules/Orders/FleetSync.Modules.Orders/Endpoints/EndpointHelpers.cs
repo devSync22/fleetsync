@@ -41,9 +41,10 @@ internal static class EndpointHelpers
 
     internal static ValidationProblem ToValidationProblem(FluentValidation.Results.ValidationResult result)
     {
-        // camelCase keys so they match the JSON field names the clients sent.
+        // camelCase keys so they match the JSON field names the clients sent, for nested fields too:
+        // "Lines[0].Kind" → "lines[0].kind" (ConvertName alone only lowers the first letter).
         var errors = result.Errors
-            .GroupBy(e => JsonNamingPolicy.CamelCase.ConvertName(e.PropertyName))
+            .GroupBy(e => string.Join('.', e.PropertyName.Split('.').Select(JsonNamingPolicy.CamelCase.ConvertName)))
             .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).Distinct().ToArray());
 
         // Same code and title as the Auth module, so the web handles every module's 400 the same way.
