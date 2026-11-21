@@ -12,11 +12,25 @@ FleetSync uses Entity Framework Core migrations to manage PostgreSQL database sc
 - Migration directory: `Persistence/Migrations`
 - Database provider: Npgsql / PostgreSQL
 
+### Module contexts
+
+Each backend module has its own DbContext, schema and migrations history table.
+
+| Module | DbContext        | Migration project                           | Schema | Migration directory                     |
+| ------ | ---------------- | ------------------------------------------- | ------ | --------------------------------------- |
+| Auth   | `AuthDbContext`  | `src/Modules/Auth/FleetSync.Modules.Auth`   | `identity` | `Infrastructure/Persistence/Migrations` |
+
+Always pass `--context` and the module's `--project` when running `dotnet ef`
+for a module. Example:
+
+`dotnet ef migrations add <Name> --project apps/api/src/Modules/Auth/FleetSync.Modules.Auth --startup-project apps/api/src/FleetSync.Api --context AuthDbContext --output-dir Infrastructure/Persistence/Migrations`
+
 ## Local prerequisites
 
 - .NET 10 SDK
 - Repository-local `dotnet-ef` tool
-- PostgreSQL running through Docker Compose
+- No database is needed to **create** a migration (`migrations add` works with the design-time factories)
+- To **apply** one: the team's Supabase database (only from `main`, ADR-0003) or an optional local PostgreSQL
 - Valid database connection configured in API User Secrets
 - `Development` environment configured
 
@@ -48,6 +62,9 @@ Review:
 Run `dotnet ef database update` with Infrastructure as the target project and API as the startup project.
 
 Never apply changes to a shared or production database without approval.
+
+The shared Supabase development database receives migrations **only from `main`**, applied by **Thamod, Senuth or
+Prasad** (ADR-0003). Production (Azure Database for PostgreSQL) follows its own approved deployment process.
 
 ## Check migration status
 
