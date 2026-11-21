@@ -43,8 +43,12 @@ function RootNavigator() {
         <Stack.Screen name="driver" />
       </Stack.Protected>
       <Stack.Protected guard={user?.role === 'mechanic'}>
+        <Stack.Screen name="(mechanic)" />
         <Stack.Screen name="mechanic" />
       </Stack.Protected>
+      <Stack.Screen name="chat" />
+      <Stack.Screen name="documents" />
+      <Stack.Screen name="profile" />
     </Stack>
   );
 }
