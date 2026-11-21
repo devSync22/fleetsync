@@ -11,7 +11,11 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { router, useLocalSearchParams } from 'expo-router';
-import { globalQueueItems, SharedQueueItem } from '../../../data/queueStore';
+import {
+  globalQueueItems,
+  SharedQueueItem,
+  updateQueueItem,
+} from '../../../data/queueStore';
 
 export default function RecordMaintenanceScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -78,12 +82,14 @@ export default function RecordMaintenanceScreen() {
   const handleSave = () => {
     // If saving from a live card, update its work done/fix description and store details
     if (selectedItem) {
-      selectedItem.defaultFix = workDone;
-      selectedItem.workDone = workDone;
-      selectedItem.cost = cost;
-      selectedItem.parts = parts;
-      selectedItem.nextOdometer = `${nextOdometer} km`;
-      selectedItem.nextDate = nextDate;
+      updateQueueItem(selectedItem.id, {
+        defaultFix: workDone,
+        workDone,
+        cost,
+        parts,
+        nextOdometer: `${nextOdometer} km`,
+        nextDate,
+      });
 
       // Navigate back to the Resolve Issue screen for this issue
       router.replace(`/issues/${selectedItem.id}`);
@@ -334,7 +340,7 @@ export default function RecordMaintenanceScreen() {
         >
           <Text style={styles.saveRecordBtnText}>Save record</Text>
         </TouchableOpacity>
-        <Text style={styles.bottomNoticeText}>Saved to the vehicle's maintenance history.</Text>
+        <Text style={styles.bottomNoticeText}>Saved to the vehicle&apos;s maintenance history.</Text>
       </View>
     </SafeAreaView>
   );

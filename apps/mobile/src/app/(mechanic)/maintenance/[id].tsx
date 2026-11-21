@@ -7,7 +7,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Platform,
-  Alert,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { router, useLocalSearchParams } from 'expo-router';

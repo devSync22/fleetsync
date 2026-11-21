@@ -10,7 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { router, Link } from 'expo-router';
+import { router } from 'expo-router';
 import { globalHistoryItems, SharedHistoryItem } from '../../../data/queueStore';
 
 export default function MaintenanceHistoryScreen() {
@@ -155,7 +155,7 @@ export default function MaintenanceHistoryScreen() {
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyTitle}>No matching vehicle found</Text>
               <Text style={styles.emptySubtitle}>
-                No past maintenance records found for "{searchQuery}".
+                No past maintenance records found for &quot;{searchQuery}&quot;.
               </Text>
             </View>
           )}

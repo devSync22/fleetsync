@@ -9,7 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { router, Link } from 'expo-router';
+import { router } from 'expo-router';
 import { globalQueueItems } from '../../data/queueStore';
 
 export default function MechanicQueueScreen() {

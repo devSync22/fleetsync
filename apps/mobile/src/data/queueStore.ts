@@ -407,6 +407,18 @@ export const INITIAL_SHARED_ITEMS: SharedQueueItem[] = [
 // Global in-memory mutable store so screen changes persist seamlessly
 export let globalQueueItems: SharedQueueItem[] = [...INITIAL_SHARED_ITEMS];
 
+export function updateQueueItem(id: string, updates: Partial<SharedQueueItem>) {
+  globalQueueItems = globalQueueItems.map((item) => {
+    if (item.id === id) {
+      return {
+        ...item,
+        ...updates,
+      };
+    }
+    return item;
+  });
+}
+
 export function updateItemOutcome(id: string, outcome: 'resolved' | 'needs_more_work', fixDescription?: string) {
   globalQueueItems = globalQueueItems.map((item) => {
     if (item.id === id) {
